@@ -10,11 +10,32 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as EgikombaRouteImport } from './routes/egikomba'
 import { Route as LaundryRouteImport } from './routes/laundry'
+import { Route as SellRouteImport } from './routes/sell'
+import { Route as ShopRouteImport } from './routes/shop'
+import { Route as TrackRouteImport } from './routes/track'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EgikombaRoute = EgikombaRouteImport.update({
+  id: '/egikomba',
+  path: '/egikomba',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LaundryRoute = LaundryRouteImport.update({
@@ -22,31 +43,95 @@ const LaundryRoute = LaundryRouteImport.update({
   path: '/laundry',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellRoute = SellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/egikomba': typeof EgikombaRoute
   '/laundry': typeof LaundryRoute
+  '/sell': typeof SellRoute
+  '/shop': typeof ShopRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/egikomba': typeof EgikombaRoute
   '/laundry': typeof LaundryRoute
+  '/sell': typeof SellRoute
+  '/shop': typeof ShopRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/egikomba': typeof EgikombaRoute
   '/laundry': typeof LaundryRoute
+  '/sell': typeof SellRoute
+  '/shop': typeof ShopRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/laundry'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/egikomba'
+    | '/laundry'
+    | '/sell'
+    | '/shop'
+    | '/track'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/laundry'
-  id: '__root__' | '/' | '/laundry'
+  to:
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/egikomba'
+    | '/laundry'
+    | '/sell'
+    | '/shop'
+    | '/track'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/contact'
+    | '/egikomba'
+    | '/laundry'
+    | '/sell'
+    | '/shop'
+    | '/track'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  ContactRoute: typeof ContactRoute
+  EgikombaRoute: typeof EgikombaRoute
   LaundryRoute: typeof LaundryRoute
+  SellRoute: typeof SellRoute
+  ShopRoute: typeof ShopRoute
+  TrackRoute: typeof TrackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +143,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/egikomba': {
+      id: '/egikomba'
+      path: '/egikomba'
+      fullPath: '/egikomba'
+      preLoaderRoute: typeof EgikombaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/laundry': {
       id: '/laundry'
       path: '/laundry'
@@ -65,12 +171,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LaundryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sell': {
+      id: '/sell'
+      path: '/sell'
+      fullPath: '/sell'
+      preLoaderRoute: typeof SellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  ContactRoute: ContactRoute,
+  EgikombaRoute: EgikombaRoute,
   LaundryRoute: LaundryRoute,
+  SellRoute: SellRoute,
+  ShopRoute: ShopRoute,
+  TrackRoute: TrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
