@@ -223,8 +223,8 @@ function PricingTeaser() {
           intro="Ironing, pickup and delivery are always free. Pay on delivery — cash or M-Pesa."
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_0.8fr]">
-          <PriceGroupCard group={priceGroups[0]} />
-          <PriceGroupCard group={priceGroups[1]} />
+          <PriceGroupCard group={priceGroups[0]!} />
+          <PriceGroupCard group={priceGroups[1]!} />
           <div className="flex flex-col justify-between rounded-2xl bg-primary p-6 text-primary-foreground">
             <div>
               <h3 className="font-display text-xl font-semibold">Every price, one place</h3>

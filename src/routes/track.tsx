@@ -95,7 +95,8 @@ function TrackPage() {
   const lookup = () => {
     const key = value.trim().toUpperCase();
     if (!key) return;
-    setResult(key in sampleTickets ? sampleTickets[key] : "none");
+    const found = sampleTickets[key];
+    setResult(found ?? "none");
   };
 
   return (
@@ -152,7 +153,7 @@ function TrackPage() {
                   type="button"
                   onClick={() => {
                     setValue(k);
-                    setResult(sampleTickets[k]);
+                    setResult(sampleTickets[k] ?? null);
                   }}
                   className="font-semibold text-primary underline underline-offset-4"
                 >
