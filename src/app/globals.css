@@ -1,0 +1,511 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Street Mart design system — the single source of truth for look and feel.
+ * Full reference: docs/design-system.md
+ *
+ * Three layers, and components only ever touch the last one:
+ *   1. Primitives  (:root, --cream-*, --bottle-*, --clay-*, …) raw palette, never used in components
+ *   2. Semantics   (:root / .dark, --primary, --clay, --success, …) what a colour is *for*
+ *   3. Theme       (@theme) the Tailwind utilities built from semantics: bg-primary, text-display-lg, …
+ *
+ * Fonts are loaded with next/font in src/app/layout.tsx:
+ *   Bricolage Grotesque (display) · Figtree (body) · JetBrains Mono (tickets, codes, figures)
+ */
+
+/* ---------------------------------------------------------------- 1. Primitives */
+
+:root {
+  /* Cream — the warm, sun-dried-linen ground */
+  --cream-50: oklch(0.995 0.003 95);
+  --cream-100: oklch(0.977 0.011 92);
+  --cream-200: oklch(0.945 0.015 94);
+  --cream-300: oklch(0.905 0.018 92);
+
+  /* Bottle green — ink, trust, "clean" */
+  --bottle-300: oklch(0.72 0.1 160);
+  --bottle-500: oklch(0.5 0.08 158);
+  --bottle-600: oklch(0.48 0.026 160);
+  --bottle-700: oklch(0.365 0.06 162);
+  --bottle-800: oklch(0.3 0.04 162);
+  --bottle-900: oklch(0.25 0.035 165);
+  --bottle-950: oklch(0.2 0.03 165);
+
+  /* Clay — terracotta market-stall accent, calls to action */
+  --clay-100: oklch(0.94 0.02 60);
+  --clay-200: oklch(0.925 0.045 60);
+  --clay-500: oklch(0.655 0.128 47);
+  --clay-600: oklch(0.58 0.13 45);
+  --clay-800: oklch(0.32 0.05 45);
+
+  /* Status hues */
+  --sun-200: oklch(0.94 0.06 85);
+  --sun-600: oklch(0.6 0.13 75);
+  --sky-200: oklch(0.93 0.035 230);
+  --sky-600: oklch(0.5 0.09 235);
+  --berry-200: oklch(0.93 0.04 25);
+  --berry-600: oklch(0.577 0.2 27);
+}
+
+/* ---------------------------------------------------------------- 2. Semantics */
+
+:root {
+  /* Surfaces */
+  --background: var(--cream-100);
+  --foreground: var(--bottle-900);
+  --card: var(--cream-50);
+  --card-foreground: var(--bottle-900);
+  --popover: var(--cream-50);
+  --popover-foreground: var(--bottle-900);
+  --muted: var(--cream-200);
+  --muted-foreground: var(--bottle-600);
+
+  /* Brand */
+  --primary: var(--bottle-700);
+  --primary-foreground: var(--cream-100);
+  --secondary: oklch(0.935 0.018 94);
+  --secondary-foreground: var(--bottle-800);
+  --accent: var(--clay-100);
+  --accent-foreground: var(--clay-800);
+  --clay: var(--clay-500);
+  --clay-foreground: var(--cream-50);
+  --clay-soft: var(--clay-200);
+  --leaf: var(--bottle-500);
+
+  /* Status — order tracking, form feedback, stock levels */
+  --success: var(--bottle-500);
+  --success-foreground: var(--cream-50);
+  --success-soft: oklch(0.93 0.035 158);
+  --warning: var(--sun-600);
+  --warning-foreground: var(--bottle-950);
+  --warning-soft: var(--sun-200);
+  --info: var(--sky-600);
+  --info-foreground: var(--cream-50);
+  --info-soft: var(--sky-200);
+  --destructive: var(--berry-600);
+  --destructive-foreground: var(--cream-50);
+  --destructive-soft: var(--berry-200);
+
+  /* Text on photos (category tiles, hero overlays) */
+  --on-media: var(--cream-50);
+
+  /* Lines and focus */
+  --border: var(--cream-300);
+  --input: var(--cream-300);
+  --ring: var(--clay-500);
+
+  /* Gradients — use through the bg-gradient-* utilities */
+  --gradient-primary: linear-gradient(
+    135deg,
+    var(--bottle-600) -20%,
+    var(--bottle-700) 45%,
+    var(--bottle-900) 110%
+  );
+  --gradient-clay: linear-gradient(
+    135deg,
+    oklch(0.72 0.13 55) 0%,
+    var(--clay-500) 50%,
+    var(--clay-600) 100%
+  );
+  --gradient-sunset: linear-gradient(
+    120deg,
+    var(--clay-500) 0%,
+    oklch(0.7 0.14 62) 55%,
+    var(--sun-600) 100%
+  );
+  --gradient-forest: linear-gradient(135deg, var(--bottle-500) 0%, var(--bottle-700) 100%);
+  --gradient-cream: linear-gradient(180deg, var(--cream-50) 0%, var(--cream-200) 100%);
+  --gradient-scrim: linear-gradient(
+    to top,
+    oklch(0.2 0.03 165 / 0.92) 0%,
+    oklch(0.2 0.03 165 / 0.45) 45%,
+    transparent 100%
+  );
+  --gradient-mesh:
+    radial-gradient(60% 80% at 100% 0%, oklch(0.655 0.128 47 / 0.35) 0%, transparent 60%),
+    radial-gradient(50% 70% at 0% 100%, oklch(0.5 0.08 158 / 0.55) 0%, transparent 65%),
+    var(--gradient-primary);
+  --gradient-glow:
+    radial-gradient(45% 60% at 85% 10%, oklch(0.925 0.045 60 / 0.9) 0%, transparent 70%),
+    radial-gradient(40% 50% at 5% 90%, oklch(0.93 0.035 158 / 0.7) 0%, transparent 70%);
+
+  /* Shape */
+  --radius: 0.75rem;
+
+  /* Layering — use as z-(--z-header) */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-header: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
+}
+
+.dark {
+  --background: var(--bottle-950);
+  --foreground: oklch(0.96 0.012 92);
+  --card: var(--bottle-900);
+  --card-foreground: oklch(0.96 0.012 92);
+  --popover: var(--bottle-900);
+  --popover-foreground: oklch(0.96 0.012 92);
+  --muted: var(--bottle-800);
+  --muted-foreground: oklch(0.72 0.03 160);
+
+  --primary: var(--bottle-300);
+  --primary-foreground: var(--bottle-950);
+  --secondary: var(--bottle-800);
+  --secondary-foreground: oklch(0.96 0.012 92);
+  --accent: var(--clay-800);
+  --accent-foreground: oklch(0.96 0.012 92);
+  --clay-soft: oklch(0.34 0.06 48);
+  --leaf: oklch(0.6 0.08 158);
+
+  --success-soft: oklch(0.32 0.05 158);
+  --warning-soft: oklch(0.34 0.06 80);
+  --info-soft: oklch(0.32 0.05 235);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-soft: oklch(0.32 0.07 25);
+
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+}
+
+/* ---------------------------------------------------------------- 3. Theme */
+
+@theme inline {
+  /* Families */
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-figtree), ui-sans-serif, sans-serif;
+  --font-heading: var(--font-display);
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Colours */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-clay: var(--clay);
+  --color-clay-foreground: var(--clay-foreground);
+  --color-clay-soft: var(--clay-soft);
+  --color-leaf: var(--leaf);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-on-media: var(--on-media);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Radius — derived from one knob so the whole site can round up or down together */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Elevation — green-tinted, never grey */
+  --shadow-card: 0 1px 2px oklch(0.24 0.032 165 / 0.04), 0 10px 30px oklch(0.24 0.032 165 / 0.07);
+  --shadow-lift: 0 2px 6px oklch(0.24 0.032 165 / 0.05), 0 20px 48px oklch(0.24 0.032 165 / 0.13);
+  --shadow-ticket: 0 24px 60px oklch(0.24 0.032 165 / 0.16);
+  --shadow-glow-primary: 0 10px 28px -8px oklch(0.365 0.06 162 / 0.6);
+  --shadow-glow-clay: 0 10px 28px -8px oklch(0.655 0.128 47 / 0.65);
+  --inset-shadow-highlight: inset 0 1px 0 oklch(1 0 0 / 0.22);
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-fade-up: fade-up 0.7s var(--ease-out-expo) both;
+  --animate-fade-in: fade-in 0.4s var(--ease-out-expo) both;
+}
+
+/*
+ * Type scale — fluid from 360px phones to 1280px desktops, so headings never need
+ * sm:/lg: size overrides. Each step carries its own line-height and tracking.
+ * Pair display steps with `font-display`; body steps use the default sans.
+ */
+@theme {
+  --text-display-xl: clamp(2.75rem, 1.6rem + 4.6vw, 5rem);
+  --text-display-xl--line-height: 1;
+  --text-display-xl--letter-spacing: -0.035em;
+
+  --text-display-lg: clamp(2.25rem, 1.5rem + 3vw, 3.75rem);
+  --text-display-lg--line-height: 1.04;
+  --text-display-lg--letter-spacing: -0.03em;
+
+  --text-display: clamp(1.875rem, 1.4rem + 1.9vw, 2.75rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.025em;
+
+  --text-title: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.015em;
+
+  --text-subtitle: 1.125rem;
+  --text-subtitle--line-height: 1.4;
+  --text-subtitle--letter-spacing: -0.005em;
+
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.65;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.55;
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.01em;
+
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1;
+  --text-overline--letter-spacing: 0.14em;
+
+  /* Layout */
+  --container-page: 72rem;
+  --container-reading: 40rem;
+  --container-narrow: 28rem;
+  --spacing-gutter: clamp(1rem, 0.6rem + 1.8vw, 1.5rem);
+  --spacing-section: clamp(4rem, 2.8rem + 5vw, 6rem);
+  --spacing-header: 4rem;
+
+  /* Breakpoint for small phones (360–480px) */
+  --breakpoint-xs: 30rem;
+}
+
+/* ---------------------------------------------------------------- Keyframes */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------- Base */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--spacing-header);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background font-sans text-body text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--clay);
+    color: var(--clay-foreground);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- Utilities */
+
+/* Small uppercase label; inherits colour (footer columns, field labels) */
+@utility overline {
+  font-size: var(--text-overline);
+  line-height: var(--text-overline--line-height);
+  font-weight: 700;
+  letter-spacing: var(--text-overline--letter-spacing);
+  text-transform: uppercase;
+}
+
+/* Clay overline above a heading */
+@utility eyebrow {
+  font-size: var(--text-overline);
+  line-height: var(--text-overline--line-height);
+  font-weight: 700;
+  letter-spacing: var(--text-overline--letter-spacing);
+  text-transform: uppercase;
+  color: var(--clay);
+}
+
+/* Inline text link inside running copy */
+@utility text-link {
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: color-mix(in oklch, var(--clay) 60%, transparent);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.2s;
+
+  &:hover {
+    text-decoration-color: var(--clay);
+  }
+}
+
+/* Gradient fills */
+@utility bg-gradient-primary {
+  background-image: var(--gradient-primary);
+}
+@utility bg-gradient-clay {
+  background-image: var(--gradient-clay);
+}
+@utility bg-gradient-sunset {
+  background-image: var(--gradient-sunset);
+}
+@utility bg-gradient-forest {
+  background-image: var(--gradient-forest);
+}
+@utility bg-gradient-cream {
+  background-image: var(--gradient-cream);
+}
+@utility bg-gradient-scrim {
+  background-image: var(--gradient-scrim);
+}
+/* Deep green band with clay and leaf light pooling in the corners */
+@utility bg-mesh {
+  background-color: var(--primary);
+  background-image: var(--gradient-mesh);
+}
+/* Soft warm glow for light sections and heroes */
+@utility bg-glow {
+  background-image: var(--gradient-glow);
+}
+
+/*
+ * Re-scope the semantic tokens for anything sitting on a dark band (bg-mesh, Card variant="brand").
+ * Components inside keep using text-foreground / text-muted-foreground / border-border / bg-card
+ * and automatically turn light. Set --ink to change the light colour (e.g. clay cards).
+ */
+@utility surface-inverse {
+  --foreground: var(--ink, var(--primary-foreground));
+  --card-foreground: var(--ink, var(--primary-foreground));
+  --muted-foreground: color-mix(in oklch, var(--ink, var(--primary-foreground)) 74%, transparent);
+  --border: color-mix(in oklch, var(--ink, var(--primary-foreground)) 18%, transparent);
+  --card: color-mix(in oklch, var(--ink, var(--primary-foreground)) 7%, transparent);
+  --secondary: color-mix(in oklch, var(--ink, var(--primary-foreground)) 12%, transparent);
+  --muted: color-mix(in oklch, var(--ink, var(--primary-foreground)) 10%, transparent);
+  color: var(--foreground);
+}
+
+/* Faint dot grid, like woven fabric, for muted sections */
+@utility bg-weave {
+  background-color: color-mix(in oklch, var(--secondary) 60%, var(--background));
+  background-image: radial-gradient(
+    color-mix(in oklch, var(--foreground) 9%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+}
+
+/* Gradient text for one highlighted word in a heading */
+@utility text-gradient-sunset {
+  background-image: var(--gradient-sunset);
+  background-clip: text;
+  color: transparent;
+}
+
+/* Light sweep across a surface on hover (buttons, featured cards) */
+@utility sheen {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 30%, oklch(1 0 0 / 0.28) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.8s var(--ease-out-expo);
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* Display face with heading weight and tracking; combine with any text-* size */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.06;
+}
+
+/* Prices, ticket numbers, quantities — digits line up in columns */
+@utility figures {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Centred page column with responsive side gutters */
+@utility container-page {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
+}

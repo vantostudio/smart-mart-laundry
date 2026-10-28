@@ -1,15 +1,53 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from "vite-plus";
 
+// Next.js owns dev/build (`next dev`, `next build`). Vite+ owns everything else:
+// tests (Vitest), lint (Oxlint), format (Oxfmt), staged-file checks and tasks.
 export default defineConfig({
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
+  // JSX is compiled by Oxc (automatic runtime) — no React plugin needed for tests.
+  oxc: { jsx: { runtime: "automatic" } },
+  resolve: {
+    tsconfigPaths: true,
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    css: false,
+  },
+  lint: {
+    plugins: ["typescript", "react", "nextjs", "jsx-a11y", "import", "vitest", "oxc"],
+    // shadcn/ui components and vendored agent skills (.claude) aren't ours — lint our code only.
+    ignorePatterns: [
+      ".next/**",
+      "out/**",
+      "coverage/**",
+      "next-env.d.ts",
+      ".claude/**",
+      "src/components/ui/**",
+    ],
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+    rules: {
+      "react/react-in-jsx-scope": "off",
+      "react/rules-of-hooks": "error",
+      "react/exhaustive-deps": "warn",
+    },
+  },
+  fmt: {
+    printWidth: 100,
+    semi: true,
+    singleQuote: false,
+    trailingComma: "all",
+    sortPackageJson: true,
+    sortTailwindcss: {
+      stylesheet: "./src/app/globals.css",
+      functions: ["cn", "cva"],
+    },
+    ignorePatterns: [".next/**", "out/**", ".claude/**", "pnpm-lock.yaml", "src/components/ui/**"],
+  },
+  staged: {
+    "*": "vp check --fix",
   },
 });
