@@ -10,16 +10,11 @@ import { Price } from "@/components/shared/price";
 import { Section } from "@/components/shared/section";
 import { StaggerGrid } from "@/components/shared/stagger-grid";
 import { homeImages } from "@/features/home/data";
-import { priceGroups } from "@/features/laundry/data";
+import { basketFrom } from "@/features/laundry/data";
 import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
 import { SectionIntro } from "./section-intro";
-
-// Cheapest basket, read from the price list so the two never disagree.
-const basketFrom = Math.min(
-  ...(priceGroups.find((g) => g.title === "Clothes by basket")?.items.map((i) => i.price) ?? [0]),
-);
 
 const channels = [
   { icon: MessageCircle, label: "WhatsApp" },
@@ -49,8 +44,7 @@ const photo = (key: keyof typeof homeImages) => (
 /*
  * Six things customers get, as a staggered grid: horizontal cards that mirror one after another
  * on phones, two columns with the right one dropped on tablets, three with the middle one dropped
- * on desktop. Photos for real results,
- * illustrations for the service around them.
+ * on desktop. Photos for real results, illustrations for the service around them.
  */
 export function WhyStreetMart() {
   return (

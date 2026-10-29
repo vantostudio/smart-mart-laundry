@@ -1,6 +1,6 @@
 /**
  * Pages mark their own main booking button with this attribute (e.g. the home hero's
- * "Book pickup"). While any such element is on screen the mobile action bar stays hidden,
+ * "Book a pickup"). While any such element is on screen the mobile action bar stays hidden,
  * so the same action is never shown twice.
  */
 export const HERO_CTA_SELECTOR = "[data-hero-cta]";

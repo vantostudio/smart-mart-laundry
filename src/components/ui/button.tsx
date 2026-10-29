@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
  * Street Mart button. Pill-shaped by default, generous touch targets.
  *
  * Solid:     primary · clay · secondary · inverse (on dark bands)
- * Gradient:  gradient-primary · gradient-clay · gradient-sunset · gradient-forest (with hover sheen)
- * Quiet:     outline · outline-inverse · soft · ghost · link · destructive
+ * Gradient:  gradient-primary · gradient-clay (with hover sheen)
+ * Quiet:     outline · outline-inverse · soft · ghost
  */
 const buttonVariants = cva(
   [
@@ -32,27 +32,18 @@ const buttonVariants = cva(
           "sheen bg-gradient-primary text-primary-foreground inset-shadow-highlight hover:-translate-y-px hover:shadow-glow-primary",
         "gradient-clay":
           "sheen bg-gradient-clay text-clay-foreground inset-shadow-highlight hover:-translate-y-px hover:shadow-glow-clay",
-        "gradient-sunset":
-          "sheen bg-gradient-sunset text-clay-foreground inset-shadow-highlight hover:-translate-y-px hover:shadow-glow-clay",
-        "gradient-forest":
-          "sheen bg-gradient-forest text-primary-foreground inset-shadow-highlight hover:-translate-y-px hover:shadow-glow-primary",
         outline:
           "border border-foreground/15 bg-card/60 text-foreground backdrop-blur-sm hover:border-primary/40 hover:bg-card",
         "outline-inverse":
           "border border-primary-foreground/30 text-primary-foreground hover:border-primary-foreground/60 hover:bg-primary-foreground/10",
         soft: "bg-clay-soft text-accent-foreground hover:bg-clay hover:text-clay-foreground",
         ghost: "text-foreground hover:bg-secondary",
-        link: "h-auto! rounded-none px-0! text-primary underline-offset-4 hover:underline",
-        destructive:
-          "bg-destructive-soft text-destructive hover:bg-destructive hover:text-destructive-foreground",
       },
       size: {
         sm: "h-9 px-4 text-sm",
         md: "h-11 px-6 text-sm",
         lg: "h-12 px-7 text-base",
         xl: "h-14 px-9 text-base [&_svg:not([class*='size-'])]:size-5",
-        "icon-sm": "size-8 [&_svg:not([class*='size-'])]:size-3.5",
-        icon: "size-10 [&_svg:not([class*='size-'])]:size-5",
         "icon-lg": "size-12 [&_svg:not([class*='size-'])]:size-5",
       },
       block: {
@@ -85,4 +76,4 @@ function Button({ className, variant, size, block, asChild = false, ...props }: 
   );
 }
 
-export { Button, buttonVariants, type ButtonProps };
+export { Button, buttonVariants };

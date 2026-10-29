@@ -11,7 +11,7 @@ import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
 /** "Size M", "S–XL", "38–44", "Ages 2–8". */
-export function sizeSummary(sizes: readonly string[]) {
+function sizeSummary(sizes: readonly string[]) {
   if (sizes.length === 1) return `Size ${sizes[0]}`;
   const first = sizes[0]!;
   const last = sizes.at(-1)!;

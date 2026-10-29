@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, type MouseEvent, type RefObject } from "react";
+import { useRef, useState, type MouseEvent, type RefObject } from "react";
 
 import { Section } from "@/components/shared/section";
 import { bookingParams, parseBooking, type Booking } from "@/features/booking/schedule";
@@ -9,21 +9,19 @@ import { useNow } from "@/features/booking/use-now";
 import { useCart } from "@/features/cart/cart-provider";
 import { DEFAULT_NOTIFY, type LaundryCategory, type NotifyMethod } from "@/features/laundry/data";
 import { buildPickupMessage } from "@/features/laundry/lib/pickup-message";
-import { clearSavedDetails, readSavedDetails, writeSavedDetails } from "@/lib/saved-details";
-import { revealById, revealElement } from "@/lib/scroll";
 import { DEFAULT_TAB, parseTab } from "@/features/laundry/lib/tabs";
 import { validateOrder, type OrderField } from "@/features/laundry/lib/validate-order";
 import { resolveWhen } from "@/features/laundry/lib/when";
+import { useContactDetails } from "@/lib/saved-details";
+import { revealById, revealElement } from "@/lib/scroll";
 
-import { DetailsStep, type ContactField, type Details } from "./details-step";
+import { DetailsStep, type ContactField } from "./details-step";
 import { ITEMS_HEADING_ID, LaundryItems } from "./laundry-items";
 import { OrderSummary, SUMMARY_HEADING_ID, SUMMARY_ID } from "./order-summary";
 import { StickyCartBar } from "./sticky-cart-bar";
 import { WHEN_HEADING_ID, WHEN_ID, WhenStep } from "./when-step";
 
-type Params = Pick<URLSearchParams, "get" | "has" | "toString"> | null;
-
-const emptyDetails: Details = { location: "", name: "", phone: "", notes: "" };
+type Params = Pick<URLSearchParams, "get" | "toString"> | null;
 
 /** Reads the booking from the URL. Must sit inside <Suspense> (useSearchParams). */
 export function LaundryOrderFromUrl() {
@@ -49,8 +47,7 @@ export function LaundryOrder({ params }: { params: Params }) {
   const booking = now ? resolveWhen(when, now).choice : null;
 
   const [tab, setTab] = useState<LaundryCategory>(() => parseTab(params?.get("tab")));
-  const [details, setDetails] = useState<Details>(emptyDetails);
-  const [remembered, setRemembered] = useState(false);
+  const { details, remembered, setField, remember, forget } = useContactDetails();
   const [notify, setNotify] = useState<NotifyMethod>(DEFAULT_NOTIFY);
   const [attempted, setAttempted] = useState(false);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
@@ -59,15 +56,6 @@ export function LaundryOrder({ params }: { params: Params }) {
     name: useRef<HTMLInputElement>(null),
     phone: useRef<HTMLInputElement>(null),
   };
-
-  useEffect(() => {
-    // Saved details live in localStorage, which only exists after hydration.
-    const saved = readSavedDetails();
-    if (!saved) return;
-    // oxlint-disable-next-line react/set-state-in-effect
-    setDetails((d) => ({ ...d, ...saved }));
-    setRemembered(true);
-  }, []);
 
   const problems = validateOrder({ booking, itemCount: count, ...details });
   const missing = Object.entries(problems) as [OrderField, string][];
@@ -92,16 +80,6 @@ export function LaundryOrder({ params }: { params: Params }) {
     window.history.replaceState(window.history.state, "", url);
   }
 
-  function changeDetail(field: keyof Details, value: string) {
-    setDetails((d) => ({ ...d, [field]: value }));
-  }
-
-  function forgetDetails() {
-    clearSavedDetails();
-    setDetails((d) => ({ ...emptyDetails, notes: d.notes }));
-    setRemembered(false);
-  }
-
   function fix(field: OrderField) {
     if (field === "when") revealById(WHEN_ID, WHEN_HEADING_ID);
     else if (field === "items") revealById("items", ITEMS_HEADING_ID);
@@ -117,7 +95,7 @@ export function LaundryOrder({ params }: { params: Params }) {
       return;
     }
     // Valid: the link opens WhatsApp. Remember the contact details for next time.
-    writeSavedDetails({ location: details.location, name: details.name, phone: details.phone });
+    remember();
     setSentMessage(message);
   }
 
@@ -131,13 +109,13 @@ export function LaundryOrder({ params }: { params: Params }) {
         <LaundryItems tab={tab} onTabChange={changeTab} error={errors.items} />
         <DetailsStep
           details={details}
-          onChange={changeDetail}
+          onChange={setField}
           notify={notify}
           onNotifyChange={setNotify}
           errors={errors}
           refs={refs}
           remembered={remembered}
-          onForget={forgetDetails}
+          onForget={forget}
         />
       </div>
 

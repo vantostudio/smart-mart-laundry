@@ -17,9 +17,6 @@ export type ChoiceChipOption<T extends string> = {
   icon?: LucideIcon;
   /** Full name read by screen readers when the visible text is abbreviated. */
   srLabel?: string;
-  disabled?: boolean;
-  /** Replaces the second line while disabled, e.g. "Closed". */
-  disabledLabel?: ReactNode;
 };
 
 type Props<T extends string> = {
@@ -50,8 +47,7 @@ type Props<T extends string> = {
 const columnClass = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" } as const;
 
 /**
- * Single-choice chip group (WAI-ARIA radio group): one tab stop, arrow keys move and select,
- * disabled chips stay visible with a reason and are skipped.
+ * Single-choice chip group (WAI-ARIA radio group): one tab stop, arrow keys move and select.
  */
 export function ChoiceChips<T extends string>({
   label,
@@ -65,21 +61,16 @@ export function ChoiceChips<T extends string>({
   ...aria
 }: Props<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const enabled = options.flatMap((o, i) => (o.disabled ? [] : [i]));
-  const selectedIndex = options.findIndex((o) => o.value === value && !o.disabled);
-  const tabStop = selectedIndex >= 0 ? selectedIndex : (enabled[0] ?? -1);
+  const selectedIndex = options.findIndex((o) => o.value === value);
+  const tabStop = Math.max(selectedIndex, 0);
 
   function move(from: number, key: string) {
-    if (enabled.length === 0) return;
-    let next: number | undefined;
-    if (key === "Home") next = enabled[0];
-    else if (key === "End") next = enabled.at(-1);
-    else if (key === "ArrowRight" || key === "ArrowDown") {
-      next = enabled.find((i) => i > from) ?? enabled[0];
-    } else {
-      next = enabled.filter((i) => i < from).at(-1) ?? enabled.at(-1);
-    }
-    if (next === undefined) return;
+    const n = options.length;
+    let next: number;
+    if (key === "Home") next = 0;
+    else if (key === "End") next = n - 1;
+    else if (key === "ArrowRight" || key === "ArrowDown") next = (from + 1) % n;
+    else next = (from - 1 + n) % n;
     refs.current[next]?.focus();
     refs.current[next]?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
     onChange(options[next]!.value);
@@ -111,8 +102,6 @@ export function ChoiceChips<T extends string>({
     >
       {options.map((option, index) => {
         const checked = index === selectedIndex;
-        const disabled = Boolean(option.disabled);
-        const second = disabled ? (option.disabledLabel ?? option.sublabel) : option.sublabel;
         const Icon = option.icon;
         const muted = checked ? "text-primary-foreground/75" : "text-muted-foreground";
 
@@ -127,9 +116,8 @@ export function ChoiceChips<T extends string>({
             // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
             role="radio"
             aria-checked={checked}
-            aria-disabled={disabled || undefined}
             tabIndex={index === tabStop ? 0 : -1}
-            onClick={() => !disabled && onChange(option.value)}
+            onClick={() => onChange(option.value)}
             onKeyDown={(e) => onKeyDown(e, index)}
             className={cn(
               "group/chip relative min-w-0 rounded-xl border leading-tight outline-none select-none",
@@ -142,11 +130,7 @@ export function ChoiceChips<T extends string>({
               layout === "rail" && "w-15 shrink-0 snap-start @sm:w-auto",
               checked
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground",
-              !checked &&
-                !disabled &&
-                "hover:border-primary/40 hover:bg-secondary/50 active:scale-[0.97]",
-              disabled && "cursor-not-allowed border-dashed bg-transparent text-muted-foreground",
+                : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary/50 active:scale-[0.97]",
             )}
           >
             {option.srLabel && <span className="sr-only">{option.srLabel}</span>}
@@ -156,11 +140,7 @@ export function ChoiceChips<T extends string>({
                   className={cn(
                     // A bare icon: a bubble would take room the label and time can't spare.
                     "flex shrink-0 items-center justify-center transition-colors [&_svg]:size-4",
-                    checked
-                      ? "text-primary-foreground"
-                      : disabled
-                        ? "text-muted-foreground"
-                        : "text-clay",
+                    checked ? "text-primary-foreground" : "text-clay",
                   )}
                 >
                   <Icon aria-hidden />
@@ -179,9 +159,9 @@ export function ChoiceChips<T extends string>({
               {variant === "tile" ? (
                 <span className="grid min-w-0">
                   <span className="truncate text-body-sm font-semibold">{option.label}</span>
-                  {second && (
+                  {option.sublabel && (
                     <span className={cn("mt-0.5 truncate text-caption figures", muted)}>
-                      {second}
+                      {option.sublabel}
                     </span>
                   )}
                 </span>
@@ -197,7 +177,7 @@ export function ChoiceChips<T extends string>({
                   >
                     {option.label}
                   </span>
-                  {second && (
+                  {option.sublabel && (
                     <span
                       className={cn(
                         "mt-0.5 text-caption whitespace-nowrap figures",
@@ -205,7 +185,7 @@ export function ChoiceChips<T extends string>({
                         muted,
                       )}
                     >
-                      {second}
+                      {option.sublabel}
                     </span>
                   )}
                 </>

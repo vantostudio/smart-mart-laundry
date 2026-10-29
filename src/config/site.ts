@@ -1,6 +1,9 @@
 import type { OpeningHours } from "@/lib/opening-hours";
 
-/** Structured opening hours, in the shop's time zone. Keep in sync with `site.hours`. */
+/**
+ * Structured opening hours, in the shop's time zone, on the hour (pickup booking reads whole
+ * hours). Keep in sync with `site.hours`.
+ */
 const openingHours: OpeningHours = [
   { days: [1, 2, 3, 4, 5, 6], open: "07:00", close: "20:00" },
   { days: [0], open: "09:00", close: "16:00" },
@@ -8,8 +11,6 @@ const openingHours: OpeningHours = [
 
 export const site = {
   name: "Street Mart Kenya",
-  shortName: "Street Mart",
-  tagline: "Laundry and clothes in Chuka",
   description:
     "Free laundry pickup, delivery and ironing across Chuka. Plus mtumba and brand new clothes and shoes from our shop at Chuka General.",
   url: "https://streetmart.africa",

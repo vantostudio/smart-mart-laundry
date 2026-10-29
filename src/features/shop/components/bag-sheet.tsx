@@ -1,20 +1,15 @@
 "use client";
 
-import { CheckCircle2, Copy, Phone, ShoppingBag, Store, Truck } from "lucide-react";
+import { ShoppingBag, Store, Truck } from "lucide-react";
 import Image from "next/image";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type MouseEvent,
-  type RefObject,
-} from "react";
+import { useRef, useState, type ChangeEvent, type MouseEvent, type RefObject } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { FormField } from "@/components/shared/form-field";
+import { OrderSent } from "@/components/shared/order-sent";
 import { Price } from "@/components/shared/price";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
+import { RememberedNotice } from "@/components/shared/remembered-notice";
 import { StillNeeded } from "@/components/shared/still-needed";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
@@ -29,7 +24,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { phoneHref, site } from "@/config/site";
 import { useBag } from "@/features/cart/cart-provider";
 import { deliveryFor, fulfilOptions, type FulfilMethod } from "@/features/shop/lib/delivery";
 import {
@@ -40,12 +34,10 @@ import {
 } from "@/features/shop/lib/shop-message";
 import { ksh } from "@/lib/format";
 import { unsplash } from "@/lib/images";
-import { clearSavedDetails, readSavedDetails, writeSavedDetails } from "@/lib/saved-details";
+import { useContactDetails } from "@/lib/saved-details";
 
 type ContactField = Exclude<ShopField, "items">;
-type Details = Record<ContactField | "notes", string>;
 
-const emptyDetails: Details = { location: "", name: "", phone: "", notes: "" };
 const fulfilIcons = { delivery: Truck, pickup: Store };
 
 type Props = {
@@ -61,25 +53,14 @@ type Props = {
 export function BagSheet({ open, onOpenChange }: Props) {
   const { items, count, total, setQty, clear } = useBag();
   const [method, setMethod] = useState<FulfilMethod>("delivery");
-  const [details, setDetails] = useState<Details>(emptyDetails);
-  const [remembered, setRemembered] = useState(false);
+  const { details, remembered, setField, remember, forget } = useContactDetails();
   const [attempted, setAttempted] = useState(false);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const refs: Record<ContactField, RefObject<HTMLInputElement | null>> = {
     location: useRef<HTMLInputElement>(null),
     name: useRef<HTMLInputElement>(null),
     phone: useRef<HTMLInputElement>(null),
   };
-
-  useEffect(() => {
-    // Saved details live in localStorage, which only exists after hydration.
-    const saved = readSavedDetails();
-    if (!saved) return;
-    // oxlint-disable-next-line react/set-state-in-effect
-    setDetails((d) => ({ ...d, ...saved }));
-    setRemembered(true);
-  }, []);
 
   const order = { method, ...details };
   const problems = validateShopOrder(count, order);
@@ -105,30 +86,14 @@ export function BagSheet({ open, onOpenChange }: Props) {
       fix(first);
       return;
     }
-    writeSavedDetails({ location: details.location, name: details.name, phone: details.phone });
+    remember();
     setSentMessage(message);
-  }
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(message);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  }
-
-  function forget() {
-    clearSavedDetails();
-    setDetails((d) => ({ ...emptyDetails, notes: d.notes }));
-    setRemembered(false);
   }
 
   const input = (name: ContactField) => ({
     ref: refs[name],
     value: details[name],
-    onChange: (e: ChangeEvent<HTMLInputElement>) =>
-      setDetails((d) => ({ ...d, [name]: e.target.value })),
+    onChange: (e: ChangeEvent<HTMLInputElement>) => setField(name, e.target.value),
     "aria-invalid": errors[name] ? true : undefined,
     "aria-describedby": errors[name] ? `bag-${name}-error` : undefined,
   });
@@ -243,18 +208,7 @@ export function BagSheet({ open, onOpenChange }: Props) {
               </div>
 
               <div className="mt-5 grid gap-3.5">
-                {remembered && (
-                  <p className="flex flex-wrap items-center justify-between gap-x-3 rounded-2xl bg-secondary/70 py-1 pr-1 pl-3.5 text-caption text-muted-foreground">
-                    Filled in from your last order on this phone.
-                    <button
-                      type="button"
-                      onClick={forget}
-                      className="min-h-11 rounded-full px-3 font-semibold text-foreground underline-offset-4 hover:underline"
-                    >
-                      Not you? Clear
-                    </button>
-                  </p>
-                )}
+                {remembered && <RememberedNotice onForget={forget} />}
                 {method === "delivery" && (
                   <>
                     <FormField label="Delivery location">
@@ -288,7 +242,7 @@ export function BagSheet({ open, onOpenChange }: Props) {
                 >
                   <Textarea
                     value={details.notes}
-                    onChange={(e) => setDetails((d) => ({ ...d, notes: e.target.value }))}
+                    onChange={(e) => setField("notes", e.target.value)}
                     rows={2}
                     maxLength={300}
                   />
@@ -334,30 +288,11 @@ export function BagSheet({ open, onOpenChange }: Props) {
               >
                 Send order on WhatsApp
               </WhatsAppButton>
-              {/* Always mounted, so screen readers announce the message when it appears. */}
-              <div aria-live="polite">
-                {sent && (
-                  <div className="rounded-2xl bg-success-soft p-3">
-                    <p className="flex items-center gap-2 text-body-sm font-semibold text-success">
-                      <CheckCircle2 aria-hidden className="size-4 shrink-0" />
-                      Your order is ready in WhatsApp
-                    </p>
-                    <p className="mt-0.5 text-caption text-muted-foreground">
-                      Tap Send there. We&apos;ll confirm it&apos;s all in stock. Didn&apos;t open?
-                    </p>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <Button type="button" variant="secondary" size="md" onClick={copy}>
-                        <Copy aria-hidden /> {copied ? "Copied" : "Copy order"}
-                      </Button>
-                      <Button asChild variant="secondary" size="md">
-                        <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
-                          <Phone aria-hidden /> Call us
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <OrderSent sent={sent} message={message} className="p-3">
+                <p className="mt-0.5 text-caption text-muted-foreground">
+                  Tap Send there. We&apos;ll confirm it&apos;s all in stock. Didn&apos;t open?
+                </p>
+              </OrderSent>
             </SheetFooter>
           </>
         )}

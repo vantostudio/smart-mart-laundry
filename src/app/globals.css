@@ -5,6 +5,7 @@
 /* Agent skills ship example components; keep their classes out of our CSS. */
 @source not "../../.claude";
 
+/* No dark theme yet: shadcn's dark: classes only apply under a .dark ancestor, which nothing sets. */
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -13,7 +14,7 @@
  *
  * Three layers, and components only ever touch the last one:
  *   1. Primitives  (:root, --cream-*, --bottle-*, --clay-*, …) raw palette, never used in components
- *   2. Semantics   (:root / .dark, --primary, --clay, --success, …) what a colour is *for*
+ *   2. Semantics   (:root, --primary, --clay, --success, …) what a colour is *for*
  *   3. Theme       (@theme) the Tailwind utilities built from semantics: bg-primary, text-display-lg, …
  *
  * Fonts are self-hosted with next/font/local in src/app/layout.tsx:
@@ -30,13 +31,11 @@
   --cream-300: oklch(0.905 0.018 92);
 
   /* Bottle green — ink, trust, "clean" */
-  --bottle-300: oklch(0.72 0.1 160);
   --bottle-500: oklch(0.5 0.08 158);
   --bottle-600: oklch(0.48 0.026 160);
   --bottle-700: oklch(0.365 0.06 162);
   --bottle-800: oklch(0.3 0.04 162);
   --bottle-900: oklch(0.25 0.035 165);
-  --bottle-950: oklch(0.2 0.03 165);
 
   /* Clay — terracotta market-stall accent, calls to action */
   --clay-100: oklch(0.94 0.02 60);
@@ -46,10 +45,7 @@
   --clay-800: oklch(0.32 0.05 45);
 
   /* Status hues */
-  --sun-200: oklch(0.94 0.06 85);
   --sun-600: oklch(0.6 0.13 75);
-  --sky-200: oklch(0.93 0.035 230);
-  --sky-600: oklch(0.5 0.09 235);
   --berry-200: oklch(0.93 0.04 25);
   --berry-600: oklch(0.577 0.2 27);
 
@@ -65,8 +61,6 @@
   --foreground: var(--bottle-900);
   --card: var(--cream-50);
   --card-foreground: var(--bottle-900);
-  --popover: var(--cream-50);
-  --popover-foreground: var(--bottle-900);
   --muted: var(--cream-200);
   --muted-foreground: var(--bottle-600);
 
@@ -82,18 +76,10 @@
   --clay-soft: var(--clay-200);
   --leaf: var(--bottle-500);
 
-  /* Status — order tracking, form feedback, stock levels */
+  /* Status — badges, form feedback, stock levels */
   --success: var(--bottle-500);
-  --success-foreground: var(--cream-50);
   --success-soft: oklch(0.93 0.035 158);
-  --warning: var(--sun-600);
-  --warning-foreground: var(--bottle-950);
-  --warning-soft: var(--sun-200);
-  --info: var(--sky-600);
-  --info-foreground: var(--cream-50);
-  --info-soft: var(--sky-200);
   --destructive: var(--berry-600);
-  --destructive-foreground: var(--cream-50);
   --destructive-soft: var(--berry-200);
 
   /* Text on photos (category tiles, hero overlays) */
@@ -127,7 +113,6 @@
     var(--sun-600) 100%
   );
   --gradient-forest: linear-gradient(135deg, var(--bottle-500) 0%, var(--bottle-700) 100%);
-  --gradient-cream: linear-gradient(180deg, var(--cream-50) 0%, var(--cream-200) 100%);
   --gradient-scrim: linear-gradient(
     to top,
     oklch(0.2 0.03 165 / 0.92) 0%,
@@ -146,40 +131,9 @@
   --radius: 0.75rem;
 
   /* Layering — use as z-(--z-header) */
-  --z-base: 0;
-  --z-raised: 10;
   --z-header: 40;
   --z-overlay: 50;
   --z-toast: 60;
-}
-
-.dark {
-  --background: var(--bottle-950);
-  --foreground: oklch(0.96 0.012 92);
-  --card: var(--bottle-900);
-  --card-foreground: oklch(0.96 0.012 92);
-  --popover: var(--bottle-900);
-  --popover-foreground: oklch(0.96 0.012 92);
-  --muted: var(--bottle-800);
-  --muted-foreground: oklch(0.72 0.03 160);
-
-  --primary: var(--bottle-300);
-  --primary-foreground: var(--bottle-950);
-  --secondary: var(--bottle-800);
-  --secondary-foreground: oklch(0.96 0.012 92);
-  --accent: var(--clay-800);
-  --accent-foreground: oklch(0.96 0.012 92);
-  --clay-soft: oklch(0.34 0.06 48);
-  --leaf: oklch(0.6 0.08 158);
-
-  --success-soft: oklch(0.32 0.05 158);
-  --warning-soft: oklch(0.34 0.06 80);
-  --info-soft: oklch(0.32 0.05 235);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-soft: oklch(0.32 0.07 25);
-
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
 }
 
 /* ---------------------------------------------------------------- 3. Theme */
@@ -188,7 +142,6 @@
   /* Families */
   --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-clash), var(--font-satoshi), ui-sans-serif, sans-serif;
-  --font-heading: var(--font-display);
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
   /* Colours */
@@ -196,8 +149,6 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-primary: var(--primary);
@@ -211,16 +162,8 @@
   --color-clay-soft: var(--clay-soft);
   --color-leaf: var(--leaf);
   --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--success-soft);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-warning-soft: var(--warning-soft);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-info-soft: var(--info-soft);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-soft: var(--destructive-soft);
   --color-on-media: var(--on-media);
   --color-skin: var(--skin);
@@ -229,8 +172,6 @@
   --color-ring: var(--ring);
 
   /* Radius — derived from one knob so the whole site can round up or down together */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
@@ -247,12 +188,9 @@
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-fade-up: fade-up 0.7s var(--ease-out-expo) both;
-  --animate-fade-in: fade-in 0.4s var(--ease-out-expo) both;
   /* Magic UI Marquee (testimonials) */
   --animate-marquee: marquee var(--duration) infinite linear;
-  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
 }
 
 /*
@@ -337,30 +275,12 @@
   }
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes marquee {
   from {
     transform: translateX(0);
   }
   to {
     transform: translateX(calc(-100% - var(--gap)));
-  }
-}
-
-@keyframes marquee-vertical {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(calc(-100% - var(--gap)));
   }
 }
 
@@ -503,9 +423,6 @@
 @utility bg-gradient-forest {
   background-image: var(--gradient-forest);
 }
-@utility bg-gradient-cream {
-  background-image: var(--gradient-cream);
-}
 @utility bg-gradient-scrim {
   background-image: var(--gradient-scrim);
 }
@@ -533,16 +450,6 @@
   --secondary: color-mix(in oklab, var(--ink, var(--primary-foreground)) 12%, transparent);
   --muted: color-mix(in oklab, var(--ink, var(--primary-foreground)) 10%, transparent);
   color: var(--foreground);
-}
-
-/* Faint dot grid, like woven fabric, for muted sections */
-@utility bg-weave {
-  background-color: color-mix(in oklab, var(--secondary) 60%, var(--background));
-  background-image: radial-gradient(
-    color-mix(in oklab, var(--foreground) 9%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 18px 18px;
 }
 
 /* Gradient text for one highlighted word in a heading */

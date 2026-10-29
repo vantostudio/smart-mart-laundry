@@ -33,7 +33,7 @@ export function ShopTeaser() {
               title={c.name}
               caption={c.caption}
               href={`/shop?cat=${c.id}`}
-              aspect="4/5"
+
               sizes="(min-width: 1024px) 26vw, 50vw"
             />
           ))}

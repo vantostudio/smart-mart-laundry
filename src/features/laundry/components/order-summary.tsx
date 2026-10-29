@@ -1,22 +1,13 @@
 "use client";
 
-import {
-  Check,
-  CheckCircle2,
-  Copy,
-  PackageCheck,
-  Phone,
-  ShoppingBasket,
-  Trash2,
-  Truck,
-} from "lucide-react";
-import { useState, type MouseEvent } from "react";
+import { Check, PackageCheck, ShoppingBasket, Trash2, Truck } from "lucide-react";
+import type { MouseEvent } from "react";
 
+import { OrderSent } from "@/components/shared/order-sent";
 import { Price } from "@/components/shared/price";
 import { StillNeeded } from "@/components/shared/still-needed";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
-import { phoneHref, site } from "@/config/site";
 import {
   formatDay,
   formatHour,
@@ -58,17 +49,7 @@ type Props = {
  */
 export function OrderSummary({ booking, missing, onFix, message, onSend, sent }: Props) {
   const { items, count, total, clear } = useCart();
-  const [copied, setCopied] = useState(false);
   const back = booking ? returnFor(booking) : null;
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(message);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   const when = [
     {
@@ -191,30 +172,11 @@ export function OrderSummary({ booking, missing, onFix, message, onSend, sent }:
             Send order on WhatsApp
           </WhatsAppButton>
 
-          {/* Always mounted, so screen readers announce the message when it appears. */}
-          <div aria-live="polite">
-            {sent && (
-              <div className="mt-4 rounded-2xl bg-success-soft p-4">
-                <p className="flex items-center gap-2 text-body-sm font-semibold text-success">
-                  <CheckCircle2 aria-hidden className="size-4 shrink-0" />
-                  Your order is ready in WhatsApp
-                </p>
-                <p className="mt-1 text-caption text-muted-foreground">
-                  Tap Send in WhatsApp to place it. Didn&apos;t open?
-                </p>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Button type="button" variant="secondary" size="md" onClick={copy}>
-                    <Copy aria-hidden /> {copied ? "Copied" : "Copy order"}
-                  </Button>
-                  <Button asChild variant="secondary" size="md">
-                    <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
-                      <Phone aria-hidden /> Call us
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+          <OrderSent sent={sent} message={message} className="mt-4 p-4">
+            <p className="mt-1 text-caption text-muted-foreground">
+              Tap Send in WhatsApp to place it. Didn&apos;t open?
+            </p>
+          </OrderSent>
 
           <p className="mt-3 text-center text-caption text-muted-foreground">
             Cash or M-Pesa when it&apos;s back. No deposit.

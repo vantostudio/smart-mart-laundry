@@ -21,13 +21,12 @@ export type CartItem = {
   max?: number;
 };
 
-export type CartContextValue = {
+type CartContextValue = {
   items: CartItem[];
   count: number;
   total: number;
   add: (item: Omit<CartItem, "qty">, qty?: number) => void;
   setQty: (id: string, qty: number) => void;
-  remove: (id: string) => void;
   clear: () => void;
 };
 
@@ -47,7 +46,7 @@ function readStored(key: string): CartItem[] {
  * A cart kept in localStorage under `storageKey`. Each call makes its own context, so the laundry
  * basket and the shop bag never mix.
  */
-export function createCart(storageKey: string, name: string) {
+function createCart(storageKey: string, name: string) {
   const Context = createContext<CartContextValue | null>(null);
 
   function Provider({ children }: { children: ReactNode }) {
@@ -93,17 +92,13 @@ export function createCart(storageKey: string, name: string) {
       );
     }, []);
 
-    const remove = useCallback((id: string) => {
-      setItems((prev) => prev.filter((i) => i.id !== id));
-    }, []);
-
     const clear = useCallback(() => setItems([]), []);
 
     const value = useMemo<CartContextValue>(() => {
       const count = items.reduce((sum, i) => sum + i.qty, 0);
       const total = items.reduce((sum, i) => sum + i.qty * i.price, 0);
-      return { items, count, total, add, setQty, remove, clear };
-    }, [items, add, setQty, remove, clear]);
+      return { items, count, total, add, setQty, clear };
+    }, [items, add, setQty, clear]);
 
     return <Context.Provider value={value}>{children}</Context.Provider>;
   }

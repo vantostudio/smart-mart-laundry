@@ -1,6 +1,6 @@
 /*
  * Pickup scheduling rules. Pure functions only, so the same logic can later run on the server
- * (Lovable Cloud) when bookings become real orders.
+ * when bookings become real orders.
  *
  * Dates are calendar dates in the shop's local time (Africa/Nairobi, UTC+3, no daylight saving).
  * The site is static, so the visitor's clock stands in for local time: every helper reads local
@@ -8,37 +8,35 @@
  * slips to the wrong day.
  */
 
-/** Opening hours as whole hours on a 24 h clock. Index 0 is Sunday (matches Date#getDay). */
-export const openingHours: readonly { open: number; close: number }[] = [
-  { open: 9, close: 16 }, // Sunday
-  { open: 7, close: 20 }, // Monday
-  { open: 7, close: 20 },
-  { open: 7, close: 20 },
-  { open: 7, close: 20 },
-  { open: 7, close: 20 },
-  { open: 7, close: 20 }, // Saturday
-];
+import { site } from "@/config/site";
+import type { Weekday } from "@/lib/opening-hours";
+
+/** Opening hours in whole hours (24 h clock) from the site config, indexed by Date#getDay. */
+const openingHours = Array.from({ length: 7 }, (_, day) => {
+  const period = site.openingHours.find((p) => p.days.includes(day as Weekday))!;
+  return { open: parseInt(period.open, 10), close: parseInt(period.close, 10) };
+});
 
 /** How many days ahead a pickup can be booked, today included. */
-export const BOOKING_DAYS = 7;
+const BOOKING_DAYS = 7;
 
 /** A window can't be booked once we're this close to its start. */
-export const LEAD_TIME_HOURS = 1;
+const LEAD_TIME_HOURS = 1;
 
 /** Latest hour we deliver back on a normal day. */
-export const RETURN_BY_HOUR = 19;
+const RETURN_BY_HOUR = 19;
 
-export const pickupWindows = [
+const pickupWindows = [
   { id: "morning", label: "Morning", time: "7–10 AM", start: 7, end: 10 },
   { id: "midday", label: "Midday", time: "10 AM–1 PM", start: 10, end: 13 },
   { id: "afternoon", label: "Afternoon", time: "1–4 PM", start: 13, end: 16 },
   { id: "evening", label: "Evening", time: "4–7 PM", start: 16, end: 19 },
 ] as const;
 
-export type PickupWindow = (typeof pickupWindows)[number];
+type PickupWindow = (typeof pickupWindows)[number];
 export type WindowId = PickupWindow["id"];
 
-export const returnOptions = [
+const returnOptions = [
   { id: "same-day", label: "Same day", days: 0 },
   { id: "next-day", label: "Next day", days: 1 },
   { id: "two-days", label: "2 days", days: 2 },
@@ -59,8 +57,6 @@ export type Booking = {
 };
 
 export type CompleteBooking = { pickup: string; window: WindowId; return: ReturnId };
-
-export const emptyBooking: Booking = { pickup: null, window: null, return: null };
 
 // ---------------------------------------------------------------------------------------------
 // Calendar dates
@@ -147,7 +143,7 @@ export function hoursFor(iso: string): { open: number; close: number } {
 // Days and windows
 // ---------------------------------------------------------------------------------------------
 
-export type WindowStatus = PickupWindow & { disabled: boolean; reason?: string };
+type WindowStatus = PickupWindow & { disabled: boolean; reason?: string };
 
 /** Every window for a day, with the ones that can't be booked marked and explained. */
 export function windowsFor(iso: string, now: Date): WindowStatus[] {
@@ -166,11 +162,11 @@ export function windowsFor(iso: string, now: Date): WindowStatus[] {
   });
 }
 
-export function isWindowAvailable(iso: string, window: WindowId, now: Date): boolean {
+function isWindowAvailable(iso: string, window: WindowId, now: Date): boolean {
   return windowsFor(iso, now).some((w) => w.id === window && !w.disabled);
 }
 
-export type UpcomingDay = {
+type UpcomingDay = {
   iso: string;
   /** "Today", "Tomorrow" or "Fri 31". */
   label: string;
@@ -201,16 +197,11 @@ export function upcomingDays(now: Date, count = BOOKING_DAYS): UpcomingDay[] {
   });
 }
 
-/** First bookable day, or null if none in the next `count` days. */
-export function earliestDay(now: Date, count = BOOKING_DAYS): string | null {
-  return upcomingDays(now, count).find((d) => !d.disabled)?.iso ?? null;
-}
-
 // ---------------------------------------------------------------------------------------------
 // Returns
 // ---------------------------------------------------------------------------------------------
 
-export type ReturnStatus = {
+type ReturnStatus = {
   id: ReturnId;
   label: string;
   /** Calendar date the order comes back. */
@@ -255,12 +246,6 @@ export function returnFor(booking: CompleteBooking): ReturnStatus {
 
 export function windowById(id: WindowId): PickupWindow {
   return pickupWindows.find((w) => w.id === id)!;
-}
-
-/** "Pickup Thu 29 · 7–10 AM · back Fri 30". */
-export function bookingSummary(booking: CompleteBooking): string {
-  const back = returnFor(booking);
-  return `Pickup ${formatDay(booking.pickup)} · ${windowById(booking.window).time} · back ${formatDay(back.iso)}`;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -311,19 +296,10 @@ export function parseBooking(source: ParamSource, now: Date = new Date()): Booki
   return { pickup, window, return: ret };
 }
 
-export function isCompleteBooking(booking: Booking | null | undefined): booking is CompleteBooking {
-  return Boolean(booking?.pickup && booking.window && booking.return);
-}
-
 export function bookingParams(choice: CompleteBooking): URLSearchParams {
   return new URLSearchParams({
     pickup: choice.pickup,
     window: choice.window,
     return: choice.return,
   });
-}
-
-/** Link to the laundry page with the booking filled in. */
-export function bookingHref(choice: CompleteBooking): `/laundry?${string}` {
-  return `/laundry?${bookingParams(choice).toString()}`;
 }

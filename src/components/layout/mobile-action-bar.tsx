@@ -112,8 +112,9 @@ function useTextEntryFocused() {
 
 /**
  * Phone-only bottom bar with the two main actions. It stays out of the way: hidden while the
- * page's own hero CTA (`[data-hero-cta]`) or the footer is on screen, on /laundry (which has
- * its own cart bar) and while the keyboard is up. Starts hidden, so server and client agree.
+ * page's own hero CTA (`[data-hero-cta]`) or the footer is on screen, on /laundry and /shop
+ * (which have their own bottom bars) and while the keyboard is up. Starts hidden, so server and
+ * client agree.
  */
 export function MobileActionBar() {
   const pathname = usePathname();

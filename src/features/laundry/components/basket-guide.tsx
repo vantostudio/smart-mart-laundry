@@ -1,11 +1,11 @@
 import { ChevronDown, Ruler } from "lucide-react";
 
 import { Price } from "@/components/shared/price";
-import { laundryItems } from "@/features/laundry/data";
+import { itemsIn } from "@/features/laundry/data";
 import { waLink } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 
-const baskets = laundryItems.filter((i) => i.category === "baskets");
+const baskets = itemsIn("baskets");
 // Relative size only: a quarter step per basket, smallest to biggest.
 const fill = ["w-1/4", "w-2/4", "w-3/4", "w-full"] as const;
 

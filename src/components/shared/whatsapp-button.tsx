@@ -9,14 +9,11 @@ type Props = Omit<React.ComponentProps<"a">, "href"> &
   VariantProps<typeof buttonVariants> & {
     /** Pre-filled chat message. */
     message?: string;
-    /** Show the chat icon before the label. */
-    icon?: boolean;
   };
 
-/** Button that opens a WhatsApp chat with a pre-filled message, in a new tab. */
+/** Button with the chat icon that opens WhatsApp with a pre-filled message, in a new tab. */
 export function WhatsAppButton({
   message = WHATSAPP_ORDER_DEFAULT,
-  icon = true,
   variant = "clay",
   size,
   block,
@@ -26,7 +23,7 @@ export function WhatsAppButton({
   return (
     <Button asChild variant={variant} size={size} block={block}>
       <a href={waLink(message)} target="_blank" rel="noreferrer" {...props}>
-        {icon && <MessageCircle aria-hidden />}
+        <MessageCircle aria-hidden />
         {children}
       </a>
     </Button>

@@ -44,7 +44,6 @@ export function ShopPage() {
       >
         <div className="min-w-0">
           <SectionHeading
-            align="left"
             title="How buying works"
             intro="No stall-hopping in the sun. The shop comes to your phone, and the rider comes to you."
           />
@@ -84,7 +83,6 @@ export function ShopPage() {
       >
         <div className="min-w-0">
           <SectionHeading
-            align="left"
             title="Come and try it on"
             intro="We are right at Chuka General, next to the main stage. Prices are marked in shop, and our team will help you find your size."
           />

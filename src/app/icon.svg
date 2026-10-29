@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Street Mart mark: cream "S" on bottle green with the wordmark's clay full stop.
+       Browser icons can't read CSS variables; keep in sync with --bottle-700, --cream-50 and
+       --clay-500 in src/app/globals.css. -->
+  <rect width="64" height="64" rx="16" fill="#1e4a3b"/>
+  <text x="28" y="47" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="44" font-weight="500" fill="#fdfcf8">S</text>
+  <circle cx="47" cy="43" r="4.5" fill="#cf7442"/>
+</svg>

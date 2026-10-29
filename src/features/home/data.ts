@@ -26,7 +26,7 @@ export const orderUpdates = [
   { status: "On its way back", detail: "Sent to you by SMS" },
 ] as const;
 
-export type HowStep = {
+type HowStep = {
   title: string;
   body: string;
   /** Short reassurance under the copy. */

@@ -11,14 +11,6 @@ function Sheet(props: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
-function SheetTrigger(props: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
-}
-
-function SheetClose(props: React.ComponentProps<typeof SheetPrimitive.Close>) {
-  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
-}
-
 function SheetOverlay({
   className,
   ...props
@@ -43,9 +35,8 @@ function SheetOverlay({
 function SheetContent({
   className,
   children,
-  showCloseButton = true,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & { showCloseButton?: boolean }) {
+}: React.ComponentProps<typeof SheetPrimitive.Content>) {
   return (
     <SheetPrimitive.Portal>
       <SheetOverlay />
@@ -67,17 +58,15 @@ function SheetContent({
           className="mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full bg-border lg:hidden"
         />
         {children}
-        {showCloseButton && (
-          <SheetPrimitive.Close asChild>
-            <Button
-              variant="secondary"
-              className="absolute top-3 right-3 size-11 rounded-full p-0 lg:top-4 lg:right-4"
-            >
-              <XIcon aria-hidden className="size-5" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </SheetPrimitive.Close>
-        )}
+        <SheetPrimitive.Close asChild>
+          <Button
+            variant="secondary"
+            className="absolute top-3 right-3 size-11 rounded-full p-0 lg:top-4 lg:right-4"
+          >
+            <XIcon aria-hidden className="size-5" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPrimitive.Portal>
   );
@@ -144,11 +133,9 @@ function SheetDescription({
 export {
   Sheet,
   SheetBody,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 };

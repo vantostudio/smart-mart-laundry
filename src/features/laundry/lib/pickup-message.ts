@@ -9,7 +9,7 @@ import type { CartItem } from "@/features/cart/cart-provider";
 import { DEFAULT_NOTIFY, notifyOption, type NotifyMethod } from "@/features/laundry/data";
 import { ksh } from "@/lib/format";
 
-export type PickupDetails = {
+type PickupDetails = {
   /** Null until the visitor has picked a day, window and return. */
   booking: CompleteBooking | null;
   location: string;

@@ -8,8 +8,6 @@
     "build": "next build",
     "start": "next start",
     "test": "vp test",
-    "lint": "next typegen && vp lint",
-    "fmt": "vp fmt",
     "check": "next typegen && vp check",
     "typecheck": "next typegen && tsc --noEmit",
     "prepare": "vp config && next typegen",

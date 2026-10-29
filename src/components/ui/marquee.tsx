@@ -1,74 +1,46 @@
-import { type ComponentPropsWithoutRef } from "react"
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
+
+// Copies of the content in a row: enough to fill wide screens while the first one scrolls out.
+const REPEAT = 4;
 
 interface MarqueeProps extends ComponentPropsWithoutRef<"div"> {
-  /**
-   * Optional CSS class name to apply custom styles
-   */
-  className?: string
-  /**
-   * Whether to reverse the animation direction
-   * @default false
-   */
-  reverse?: boolean
-  /**
-   * Whether to pause the animation on hover
-   * @default false
-   */
-  pauseOnHover?: boolean
-  /**
-   * Content to be displayed in the marquee
-   */
-  children: React.ReactNode
-  /**
-   * Whether to animate vertically instead of horizontally
-   * @default false
-   */
-  vertical?: boolean
-  /**
-   * Number of times to repeat the content
-   * @default 4
-   */
-  repeat?: number
+  /** Scroll the other way. */
+  reverse?: boolean;
+  /** Pause the animation while hovered. */
+  pauseOnHover?: boolean;
+  children: ReactNode;
 }
 
+/** Magic UI Marquee, horizontal only: the content repeats and drifts sideways forever. */
 export function Marquee({
   className,
   reverse = false,
   pauseOnHover = false,
   children,
-  vertical = false,
-  repeat = 4,
   ...props
 }: MarqueeProps) {
   return (
     <div
       {...props}
       className={cn(
-        "group flex gap-(--gap) overflow-hidden p-2 [--duration:40s] [--gap:1rem]",
-        {
-          "flex-row": !vertical,
-          "flex-col": vertical,
-        },
-        className
+        "group flex flex-row gap-(--gap) overflow-hidden p-2 [--duration:40s] [--gap:1rem]",
+        className,
       )}
     >
-      {Array(repeat)
-        .fill(0)
-        .map((_, i) => (
-          <div
-            key={i}
-            className={cn("flex shrink-0 justify-around gap-(--gap)", {
-              "animate-marquee flex-row": !vertical,
-              "animate-marquee-vertical flex-col": vertical,
-              "group-hover:[animation-play-state:paused]": pauseOnHover,
-              "[animation-direction:reverse]": reverse,
-            })}
-          >
-            {children}
-          </div>
-        ))}
+      {Array.from({ length: REPEAT }, (_, i) => (
+        <div
+          key={i}
+          className={cn(
+            "flex shrink-0 animate-marquee flex-row justify-around gap-(--gap)",
+            pauseOnHover && "group-hover:[animation-play-state:paused]",
+            reverse && "[animation-direction:reverse]",
+          )}
+        >
+          {children}
+        </div>
+      ))}
     </div>
-  )
+  );
 }

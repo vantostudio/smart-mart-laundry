@@ -3,13 +3,12 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Card } from "@/components/shared/card";
 import { InfoItem } from "@/components/shared/info-item";
 import { PageHero } from "@/components/shared/page-hero";
 import { Section } from "@/components/shared/section";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
-import { site } from "@/config/site";
+import { phoneHref, site } from "@/config/site";
 import { aboutPhotos } from "@/features/about/data";
 import { promises } from "@/features/laundry/data";
 import { cn } from "@/lib/utils";
@@ -118,7 +117,6 @@ export function AboutPage() {
 
       <Section className="border-t border-border/70">
         <SectionHeading
-          align="left"
           title="Free where it counts"
           intro="Every laundry basket includes pickup, delivery and ironing at no extra cost — and you only pay when your clothes are back in your hands."
         />
@@ -129,13 +127,13 @@ export function AboutPage() {
               key={p.title}
               className={cn("min-w-0", i === 1 && "sm:translate-y-10 lg:translate-y-14")}
             >
-              <Card radius="xl" className="h-full shadow-none lg:p-7">
+              <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card p-5 text-card-foreground sm:p-6 lg:p-7">
                 <span aria-hidden className="display text-display text-muted-foreground/40 figures">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <h3 className="mt-4 display text-title sm:mt-6">{p.title}</h3>
                 <p className="mt-2 text-body-sm text-muted-foreground">{p.body}</p>
-              </Card>
+              </div>
             </li>
           ))}
         </ol>
@@ -146,11 +144,10 @@ export function AboutPage() {
         containerClassName="grid grid-cols-1 gap-10 sm:gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:items-center lg:gap-16"
       >
         <SectionHeading
-          align="left"
           title="Chuka General, next to the main stage"
           intro="Right in the middle of things — stop by the shop, drop off a question, or watch the riders head out for their next pickup."
         />
-        <Card radius="xl" className="min-w-0 p-5 sm:p-6 lg:p-8">
+        <div className="relative flex min-w-0 flex-col overflow-hidden rounded-3xl border border-border bg-card p-5 text-card-foreground shadow-card sm:p-6 lg:p-8">
           <ul className="space-y-5">
             <InfoItem icon={MapPin} title={site.location.point}>
               {site.location.country}
@@ -165,7 +162,7 @@ export function AboutPage() {
             </InfoItem>
             <InfoItem icon={Phone} title="Call or WhatsApp">
               <a
-                href={`tel:+${site.whatsapp}`}
+                href={phoneHref}
                 className="-my-3 inline-flex min-h-11 items-center transition-colors hover:text-clay"
               >
                 {site.phoneDisplay}
@@ -183,7 +180,7 @@ export function AboutPage() {
           <WhatsAppButton variant="clay" size="lg" block className="mt-6 sm:mt-8">
             Chat on WhatsApp
           </WhatsAppButton>
-        </Card>
+        </div>
       </Section>
     </>
   );

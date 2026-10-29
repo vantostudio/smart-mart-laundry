@@ -1,27 +1,17 @@
 # dependencies
 /node_modules
-.pnpm-store/
 
 # next.js
 /.next/
-/out/
 next-env.d.ts
+*.tsbuildinfo
 
-# testing
-/coverage
-
-# production
-/build
-
-# vite+
+# vite+ git hooks (installed by `vp config`)
 .vite-hooks/_
 
 # env files
 .env*
 !.env.example
-
-# typescript
-*.tsbuildinfo
 
 # vercel
 .vercel
@@ -30,11 +20,9 @@ next-env.d.ts
 *.log
 
 # editor / os
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode
 .idea
 .DS_Store
 
-# ui audit output
+# playwright output and ui audit screenshots
 /.audit

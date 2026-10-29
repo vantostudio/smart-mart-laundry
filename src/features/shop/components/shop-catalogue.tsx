@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
+import { PerkList } from "@/components/shared/perk-list";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -174,16 +175,7 @@ export function ShopCatalogue({ params }: { params: Params }) {
             From our counter at Chuka General and trusted local sellers. Add what you like to your
             bag and order on WhatsApp, or come try it on.
           </p>
-          <ul className="mt-5 flex flex-wrap gap-2">
-            {perks.map(({ icon: Icon, label }) => (
-              <li
-                key={label}
-                className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-body-sm font-medium shadow-card"
-              >
-                <Icon aria-hidden className="size-4 text-clay" /> {label}
-              </li>
-            ))}
-          </ul>
+          <PerkList perks={perks} className="mt-5" />
 
           <search className="relative mt-6 max-w-xl sm:mt-8">
             <label htmlFor="shop-search" className="sr-only">

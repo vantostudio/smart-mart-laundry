@@ -11,18 +11,19 @@ import type { ChangeEvent, RefObject } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { FormField } from "@/components/shared/form-field";
+import { RememberedNotice } from "@/components/shared/remembered-notice";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { notifyOption, notifyOptions, type NotifyMethod } from "@/features/laundry/data";
 import type { OrderField } from "@/features/laundry/lib/validate-order";
+import type { ContactDetails } from "@/lib/saved-details";
 
 import { StepSection } from "./step-section";
 
-export const DETAILS_ID = "details";
-export const DETAILS_HEADING_ID = "details-heading";
+const DETAILS_ID = "details";
+const DETAILS_HEADING_ID = "details-heading";
 
 export type ContactField = Extract<OrderField, "location" | "name" | "phone">;
-export type Details = Record<ContactField | "notes", string>;
 
 const NOTIFY_LABEL = "How should we tell you it's ready?";
 const notifyIcons: Record<NotifyMethod, LucideIcon> = {
@@ -32,8 +33,8 @@ const notifyIcons: Record<NotifyMethod, LucideIcon> = {
 };
 
 type Props = {
-  details: Details;
-  onChange: (field: keyof Details, value: string) => void;
+  details: ContactDetails;
+  onChange: (field: keyof ContactDetails, value: string) => void;
   notify: NotifyMethod;
   onNotifyChange: (value: NotifyMethod) => void;
   /** Inline messages, only after a send attempt. */
@@ -79,18 +80,7 @@ export function DetailsStep({
       intro="The rider calls you when they reach the gate."
     >
       <div className="grid gap-4 rounded-3xl bg-card p-4 shadow-card sm:p-6">
-        {remembered && (
-          <p className="flex flex-wrap items-center justify-between gap-x-3 rounded-2xl bg-secondary/70 py-1 pr-1 pl-3.5 text-caption text-muted-foreground">
-            Filled in from your last order on this phone.
-            <button
-              type="button"
-              onClick={onForget}
-              className="min-h-11 rounded-full px-3 font-semibold text-foreground underline-offset-4 hover:underline"
-            >
-              Not you? Clear
-            </button>
-          </p>
-        )}
+        {remembered && <RememberedNotice onForget={onForget} />}
 
         <div className="grid gap-4 @2xl:grid-cols-2">
           <div className="grid gap-3.5 @2xl:col-span-2">

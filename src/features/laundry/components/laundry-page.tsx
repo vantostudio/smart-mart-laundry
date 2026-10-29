@@ -1,6 +1,8 @@
 import { Sparkles, Truck, Wallet } from "lucide-react";
 import { Suspense } from "react";
 
+import { PerkList } from "@/components/shared/perk-list";
+
 import { GoodToKnow } from "./good-to-know";
 import { LaundryOrder, LaundryOrderFromUrl } from "./laundry-order";
 
@@ -20,16 +22,7 @@ export function LaundryPage() {
             Pick a time, add what needs washing, and send the order on WhatsApp. It takes about a
             minute.
           </p>
-          <ul className="mt-5 flex flex-wrap gap-2">
-            {perks.map(({ icon: Icon, label }) => (
-              <li
-                key={label}
-                className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-body-sm font-medium shadow-card"
-              >
-                <Icon aria-hidden className="size-4 text-clay" /> {label}
-              </li>
-            ))}
-          </ul>
+          <PerkList perks={perks} className="mt-5" />
         </div>
       </section>
 

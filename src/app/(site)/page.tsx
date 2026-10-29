@@ -9,8 +9,7 @@ import { pageMetadata } from "@/lib/metadata";
 export const metadata: Metadata = {
   ...pageMetadata({
     title: "Laundry & Clothes in Chuka",
-    description:
-      "Free laundry pickup, delivery and ironing across Chuka. Plus mtumba and brand new clothes and shoes from our shop at Chuka General.",
+    description: site.description,
     socialDescription:
       "Free pickup, free delivery and free ironing across Chuka — plus clothes and shoes from our shop.",
     image: ogImage(HERO_IMAGE_ID),

@@ -8,14 +8,11 @@ const sectionVariants = cva("relative", {
     tone: {
       plain: "",
       muted: "bg-secondary/60",
-      glow: "bg-glow",
       brand: "bg-mesh surface-inverse",
     },
     spacing: {
       default: "py-section",
-      top: "pt-section",
       bottom: "pb-section",
-      none: "",
     },
   },
   defaultVariants: { tone: "plain", spacing: "default" },

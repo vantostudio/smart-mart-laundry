@@ -11,12 +11,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [{ source: "/egikomba", destination: "/shop", permanent: true }];
   },
-  images: {
-    // Unsplash resizes on its own CDN; see src/lib/image-loader.ts.
-    loader: "custom",
-    loaderFile: "./src/lib/image-loader.ts",
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
-  },
+  // Unsplash resizes on its own CDN, so images never go through the Next optimizer
+  // (no remotePatterns needed); see src/lib/image-loader.ts.
+  images: { loader: "custom", loaderFile: "./src/lib/image-loader.ts" },
   turbopack: {
     rules: {
       "*.css": {

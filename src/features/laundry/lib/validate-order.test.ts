@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { isKenyanPhone, validateOrder } from "./validate-order";
+import { isKenyanPhone } from "@/lib/phone";
+
+import { validateOrder } from "./validate-order";
 
 const valid = {
   booking: { pickup: "2026-10-29", window: "morning", return: "next-day" },

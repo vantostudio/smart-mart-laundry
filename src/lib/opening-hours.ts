@@ -2,10 +2,10 @@
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 /** One block of opening hours; times are 24-hour "HH:MM" in the shop's time zone. */
-export type OpeningPeriod = { days: readonly Weekday[]; open: string; close: string };
+type OpeningPeriod = { days: readonly Weekday[]; open: string; close: string };
 export type OpeningHours = readonly OpeningPeriod[];
 
-export type OpenStatus = { open: boolean; label: string };
+type OpenStatus = { open: boolean; label: string };
 
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 const LONG_DAYS = [
@@ -34,10 +34,7 @@ export function formatTime(time: string): string {
 }
 
 /** Day of week and minutes since midnight for `date`, as seen in `timeZone`. */
-export function zonedDayAndMinutes(
-  date: Date,
-  timeZone: string,
-): { day: Weekday; minutes: number } {
+function zonedDayAndMinutes(date: Date, timeZone: string): { day: Weekday; minutes: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
     weekday: "short",

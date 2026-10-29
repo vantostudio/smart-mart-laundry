@@ -63,12 +63,12 @@ export function Testimonials() {
         aria-hidden
         className="-mx-gutter mt-8 flex flex-col gap-2 [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)] sm:mt-12"
       >
-        <Marquee pauseOnHover repeat={4} className="py-4 [--duration:55s] [--gap:1rem]">
+        <Marquee pauseOnHover className="py-4 [--duration:55s] [--gap:1rem]">
           {testimonials.map((t, i) => (
             <ReviewCard key={t.name} t={t} low={i % 2 === 1} />
           ))}
         </Marquee>
-        <Marquee pauseOnHover reverse repeat={4} className="py-4 [--duration:65s] [--gap:1rem]">
+        <Marquee pauseOnHover reverse className="py-4 [--duration:65s] [--gap:1rem]">
           {reversed.map((t, i) => (
             <ReviewCard key={t.name} t={t} low={i % 2 === 0} />
           ))}

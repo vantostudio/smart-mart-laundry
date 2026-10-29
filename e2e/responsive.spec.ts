@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { device } from "./helpers";
+
 /*
  * Every page at phone, tablet and desktop widths: no sideways scroll, the type scale in
  * src/app/globals.css lands on the right step for the device class, tap targets are at least
@@ -50,11 +52,7 @@ async function settle(page: Page) {
 
 for (const vp of viewports) {
   test.describe(`${vp.width}px`, () => {
-    test.use({
-      viewport: { width: vp.width, height: vp.height },
-      isMobile: vp.mobile,
-      hasTouch: vp.mobile,
-    });
+    test.use(device(vp));
 
     for (const { path, h1, h2 } of pages) {
       test(path, async ({ page }) => {

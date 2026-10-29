@@ -1,11 +1,9 @@
 import type { CompleteBooking } from "@/features/booking/schedule";
 import { isKenyanPhone } from "@/lib/phone";
 
-export { isKenyanPhone };
-
 export type OrderField = "when" | "items" | "location" | "name" | "phone";
 
-export type OrderInput = {
+type OrderInput = {
   booking: CompleteBooking | null;
   itemCount: number;
   location: string;
@@ -13,7 +11,7 @@ export type OrderInput = {
   phone: string;
 };
 
-export const orderMessages = {
+const orderMessages = {
   when: "Choose a pickup day and time.",
   items: "Add at least one basket or item.",
   location: "Tell us where to collect from.",

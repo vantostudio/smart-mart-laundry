@@ -1,10 +1,3 @@
-export type PriceGroup = {
-  id: string;
-  title: string;
-  note: string;
-  items: { label: string; price: number }[];
-};
-
 export type LaundryCategory = "baskets" | "duvets" | "mats" | "shoes";
 
 export type LaundryItem = {
@@ -18,56 +11,17 @@ export type LaundryItem = {
   tag?: string;
 };
 
-/** Tabs on the laundry page, in order. Ids match `priceGroups`. */
-export const laundryCategories: { id: LaundryCategory; label: string }[] = [
-  { id: "baskets", label: "Baskets" },
-  { id: "duvets", label: "Duvets" },
-  { id: "mats", label: "Mats" },
-  { id: "shoes", label: "Shoes" },
-];
-
-export const priceGroups: PriceGroup[] = [
-  {
-    id: "baskets",
-    title: "Clothes by basket",
-    note: "Washed, dried and ironed",
-    items: [
-      { label: "Small basket", price: 150 },
-      { label: "Medium basket", price: 250 },
-      { label: "Large basket", price: 350 },
-      { label: "Extra large basket", price: 400 },
-    ],
-  },
-  {
-    id: "duvets",
-    title: "Duvets",
-    note: "Deep cleaned and dried",
-    items: [
-      { label: "6 × 6 duvet", price: 350 },
-      { label: "4 × 6 duvet", price: 250 },
-      { label: "3.2 × 6 duvet", price: 200 },
-      { label: "Baby cot duvet", price: 150 },
-    ],
-  },
-  {
-    id: "mats",
-    title: "Mats",
-    note: "Scrubbed and dried",
-    items: [
-      { label: "Door mat", price: 50 },
-      { label: "Fluffy mat", price: 200 },
-      { label: "Floor mat", price: 350 },
-    ],
-  },
-  {
-    id: "shoes",
-    title: "Shoes",
-    note: "Per pair, hand cleaned",
-    items: [
-      { label: "Plain white shoes", price: 150 },
-      { label: "Coloured shoes", price: 100 },
-    ],
-  },
+/** Tabs on the laundry page, in order, with the heading and note the price list shows. */
+export const laundryCategories: {
+  id: LaundryCategory;
+  label: string;
+  title: string;
+  note: string;
+}[] = [
+  { id: "baskets", label: "Baskets", title: "Clothes by basket", note: "Washed, dried and ironed" },
+  { id: "duvets", label: "Duvets", title: "Duvets", note: "Deep cleaned and dried" },
+  { id: "mats", label: "Mats", title: "Mats", note: "Scrubbed and dried" },
+  { id: "shoes", label: "Shoes", title: "Shoes", note: "Per pair, hand cleaned" },
 ];
 
 export const laundryItems: LaundryItem[] = [
@@ -157,7 +111,6 @@ export const laundryItems: LaundryItem[] = [
     desc: "Deep cleaned on both sides.",
     price: 350,
   },
-  // Split from the old "Shoes, per pair" item so coloured shoes are charged their listed price.
   {
     id: "shoes-white",
     category: "shoes",
@@ -173,6 +126,18 @@ export const laundryItems: LaundryItem[] = [
     price: 100,
   },
 ];
+
+export const itemsIn = (category: LaundryCategory) =>
+  laundryItems.filter((i) => i.category === category);
+
+/** Cheapest basket, for "baskets from KSh …" lines. */
+export const basketFrom = Math.min(...itemsIn("baskets").map((i) => i.price));
+
+/** The price list: each category with its items' names and prices. */
+export const priceGroups = laundryCategories.map((c) => ({
+  ...c,
+  items: itemsIn(c.id).map((i) => ({ label: i.name, price: i.price })),
+}));
 
 /** How the customer wants to hear that their laundry is clean and on its way back. */
 export const notifyOptions = [

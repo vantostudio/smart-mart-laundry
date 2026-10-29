@@ -6,9 +6,9 @@ import { useRef, type KeyboardEvent } from "react";
 import { Price } from "@/components/shared/price";
 import { useCart } from "@/features/cart/cart-provider";
 import {
+  itemsIn,
   laundryCategories,
   laundryItems,
-  priceGroups,
   type LaundryCategory,
 } from "@/features/laundry/data";
 import { cn } from "@/lib/utils";
@@ -150,15 +150,11 @@ export function LaundryItems({ tab, onTabChange, error }: Props) {
           hidden={c.id !== tab}
           className="mt-3 outline-none"
         >
-          <p className="mb-3 px-1 text-caption text-muted-foreground">
-            {priceGroups.find((g) => g.id === c.id)?.note}
-          </p>
+          <p className="mb-3 px-1 text-caption text-muted-foreground">{c.note}</p>
           <ul className="grid gap-2.5 @3xl:grid-cols-2 @3xl:gap-3">
-            {laundryItems
-              .filter((i) => i.category === c.id)
-              .map((item) => (
-                <LaundryItemRow key={item.id} item={item} />
-              ))}
+            {itemsIn(c.id).map((item) => (
+              <LaundryItemRow key={item.id} item={item} />
+            ))}
           </ul>
           {c.id === "baskets" && (
             <div className="mt-3">

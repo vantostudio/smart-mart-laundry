@@ -2,14 +2,14 @@ import { unsplash } from "@/lib/images";
 
 /*
  * Shop — one place for clothes and shoes, mtumba and brand new. Stock comes from our own counter
- * at Chuka General and from local E-Gikomba sellers; customers don't need to know which.
- * Static sample stock for now; Lovable Cloud replaces `products` with API data later, so keep the
+ * at Chuka General and from local sellers; customers don't need to know which.
+ * Static sample stock for now; the backend replaces `products` with API data later, so keep the
  * shapes close to what a product API would return.
  */
 
 export type ShopCategoryId = "campus" | "ladies" | "men" | "shoes" | "formal" | "kids";
 
-export type ShopCategory = {
+type ShopCategory = {
   id: ShopCategoryId;
   name: string;
   caption: string;
@@ -506,9 +506,6 @@ export const products: Product[] = [
 export const SHOP_DELIVERY = { freeFrom: 1500, fee: 100 } as const;
 
 export const SHOP_HERO_IMAGE = "photo-1590955256762-e60f6e08122a";
-
-export const CATALOGUE_MESSAGE =
-  "Hi Street Mart, please send me today's clothes and shoes catalogue.";
 
 export const productByCode = (code: string | null | undefined) =>
   products.find((p) => p.code.toLowerCase() === code?.toLowerCase());

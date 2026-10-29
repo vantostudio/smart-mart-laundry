@@ -13,7 +13,7 @@ export const priceBands = [
   { id: "2000-plus", label: "Over KSh 2,000", min: 2001, max: Infinity },
 ] as const;
 
-export type PriceBand = (typeof priceBands)[number]["id"];
+type PriceBand = (typeof priceBands)[number]["id"];
 
 export const sortOptions = [
   { id: "newest", label: "Newest" },
@@ -112,7 +112,7 @@ function haystack(p: Product) {
 }
 
 /** Every word of the search has to appear (as the start of a word) in the product's text. */
-export function matchesSearch(p: Product, q: string) {
+function matchesSearch(p: Product, q: string) {
   const words = normalise(q).split(" ").filter(Boolean);
   if (words.length === 0) return true;
   const text = ` ${haystack(p)}`;

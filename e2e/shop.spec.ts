@@ -1,14 +1,15 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+import { phone, whatsappMessage } from "./helpers";
 
 /*
  * /shop: search, aisles and filters in the URL, the empty state's WhatsApp ask, the quick view
  * (size required, mtumba capped at one), and the bag through to the WhatsApp order.
  */
 
-test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+test.use(phone);
 
-const count = (page: import("@playwright/test").Page) =>
-  page.locator("#catalogue").getByText(/^\d+ items?$/);
+const count = (page: Page) => page.locator("#catalogue").getByText(/^\d+ items?$/);
 
 test("search, aisle and condition narrow the catalogue and land in the URL", async ({ page }) => {
   await page.goto("/shop");
@@ -36,9 +37,7 @@ test("an empty search offers to find it on WhatsApp", async ({ page }) => {
   await page.goto("/shop?q=tuxedo");
   await expect(page.getByText("Nothing matches “tuxedo”")).toBeVisible();
   const ask = page.getByRole("link", { name: "Ask us to find it" });
-  expect(decodeURIComponent((await ask.getAttribute("href")) ?? "")).toContain(
-    "I'm looking for tuxedo",
-  );
+  expect(await whatsappMessage(ask)).toContain("I'm looking for tuxedo");
 });
 
 test("filters sheet narrows by size and price", async ({ page }) => {
@@ -77,11 +76,10 @@ test("quick view needs a size, then the bag sends one WhatsApp order", async ({ 
   await bag.getByLabel("Phone number").fill("0712345678");
   await expect(bag.getByText("All set. Send it when you're ready.")).toBeVisible();
 
-  const send = bag.getByRole("link", { name: "Send order on WhatsApp" });
-  const href = decodeURIComponent((await send.getAttribute("href")) ?? "");
-  expect(href).toContain("1 × Oversized hoodie (SM-1002 · Size L) — KSh 1,500");
-  expect(href).toContain("Pick up in store");
-  expect(href).toContain("Total: KSh 1,500");
+  const message = await whatsappMessage(bag.getByRole("link", { name: "Send order on WhatsApp" }));
+  expect(message).toContain("1 × Oversized hoodie (SM-1002 · Size L) — KSh 1,500");
+  expect(message).toContain("Pick up in store");
+  expect(message).toContain("Total: KSh 1,500");
 });
 
 test("a mtumba piece adds from the card and stays at one", async ({ page }) => {

@@ -7,7 +7,6 @@ import { fieldVariants, type FieldVariantProps } from "./field-styles";
 function Input({
   className,
   type,
-  tone,
   shape,
   ...props
 }: React.ComponentProps<"input"> & FieldVariantProps) {
@@ -16,7 +15,7 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        fieldVariants({ tone, shape }),
+        fieldVariants({ shape }),
         shape === "pill" ? "h-12 px-5" : "h-11 px-3.5",
         className,
       )}

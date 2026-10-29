@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { phoneHref, site } from "@/config/site";
 import { homeImages } from "@/features/home/data";
 import {
-  laundryItems,
+  basketFrom,
+  itemsIn,
   priceGroups,
   turnaroundOptions,
   type LaundryCategory,
@@ -20,8 +21,7 @@ import { ksh } from "@/lib/format";
 import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
-const baskets = laundryItems.filter((i) => i.category === "baskets");
-const basketFrom = Math.min(...baskets.map((b) => b.price));
+const baskets = itemsIn("baskets");
 
 // Bar heights for the basket size ladder, smallest to largest.
 const ladder = ["h-14 sm:h-16", "h-20 sm:h-24", "h-26 sm:h-32", "h-32 sm:h-40"];
@@ -261,7 +261,6 @@ export function GoodToKnow() {
   return (
     <Section id="prices" tone="muted" className="overflow-hidden">
       <SectionHeading
-        align="left"
         title="Good to know"
         intro="Every price, up front. Pickup, delivery and ironing are always free, and you pay when your laundry is back."
       />

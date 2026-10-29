@@ -29,8 +29,7 @@ export const metadata: Metadata = {
     default: `${site.name} — Laundry & Clothes in Chuka`,
     template: `%s — ${site.name}`,
   },
-  description:
-    "Free laundry pickup, delivery and ironing across Chuka. Plus mtumba and brand new clothes and shoes from our shop at Chuka General.",
+  description: site.description,
   applicationName: site.name,
   openGraph: { type: "website", siteName: site.name, locale: "en_KE" },
   twitter: { card: "summary_large_image" },

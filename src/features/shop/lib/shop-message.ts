@@ -21,7 +21,7 @@ export function bagLine(p: Product, size: string): Omit<CartItem, "qty"> {
 /** The product behind a bag line, for its photo (lines from an old catalogue return undefined). */
 export const productForLine = (id: string) => products.find((p) => id.startsWith(`${p.code}:`));
 
-export type ShopDetails = {
+type ShopDetails = {
   method: FulfilMethod;
   location: string;
   name: string;
@@ -31,7 +31,7 @@ export type ShopDetails = {
 
 export type ShopField = "items" | "location" | "name" | "phone";
 
-export const shopMessages = {
+const shopMessages = {
   items: "Add something to your bag.",
   location: "Tell us where to deliver.",
   name: "Add your name.",

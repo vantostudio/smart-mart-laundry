@@ -2,14 +2,11 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
   addDays,
-  bookingHref,
-  bookingSummary,
+  bookingParams,
   daysBetween,
-  earliestDay,
   formatDay,
   formatHour,
   fromIsoDate,
-  isCompleteBooking,
   parseBooking,
   returnOptionsFor,
   toIsoDate,
@@ -111,7 +108,6 @@ describe("upcomingDays", () => {
     const days = upcomingDays(at(WED, 15, 30), 2);
     expect(days[0]).toMatchObject({ disabled: true, reason: "Too late" });
     expect(days[1]?.disabled).toBe(false);
-    expect(earliestDay(at(WED, 15, 30))).toBe("2026-10-29");
   });
 
   it("keeps today open while the evening window is more than an hour away", () => {
@@ -201,22 +197,11 @@ describe("parseBooking", () => {
   });
 });
 
-describe("booking links and summaries", () => {
-  const choice = { pickup: "2026-10-29", window: "morning", return: "next-day" } as const;
-
+describe("bookingParams", () => {
   it("round-trips through the URL", () => {
-    const href = bookingHref(choice);
-    expect(href).toBe("/laundry?pickup=2026-10-29&window=morning&return=next-day");
-    expect(parseBooking(new URL(href, "https://x.test").searchParams, at(WED, 8))).toEqual(choice);
-  });
-
-  it("knows when a booking is complete", () => {
-    expect(isCompleteBooking(choice)).toBe(true);
-    expect(isCompleteBooking({ ...choice, window: null })).toBe(false);
-    expect(isCompleteBooking(null)).toBe(false);
-  });
-
-  it("summarises a booking in one line", () => {
-    expect(bookingSummary(choice)).toBe("Pickup Thu 29 · 7–10 AM · back Fri 30");
+    const choice = { pickup: "2026-10-29", window: "morning", return: "next-day" } as const;
+    const params = bookingParams(choice);
+    expect(params.toString()).toBe("pickup=2026-10-29&window=morning&return=next-day");
+    expect(parseBooking(params, at(WED, 8))).toEqual(choice);
   });
 });

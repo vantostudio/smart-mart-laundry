@@ -13,28 +13,18 @@ type Props = {
   footer?: ReactNode;
   /** `accent` gives the one card that matters most a warm highlight. */
   tone?: "card" | "accent";
-  className?: string;
 };
 
 /*
  * Card with a visual and short copy. Phones: horizontal, a square visual beside the text, so the
  * card stays wide and short (StaggerGrid mirrors every other one). Tablet and up: visual on top.
  */
-export function MediaCard({
-  visual,
-  eyebrow,
-  title,
-  children,
-  footer,
-  tone = "card",
-  className,
-}: Props) {
+export function MediaCard({ visual, eyebrow, title, children, footer, tone = "card" }: Props) {
   return (
     <article
       className={cn(
         "flex h-full items-center gap-4 rounded-3xl p-3 sm:flex-col sm:items-stretch sm:gap-0 sm:pb-5 lg:p-3.5 lg:pb-6",
         tone === "accent" ? "bg-accent" : "bg-card shadow-card",
-        className,
       )}
     >
       <div

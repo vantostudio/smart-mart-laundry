@@ -3,18 +3,14 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-import { fieldVariants, type FieldVariantProps } from "./field-styles";
+import { fieldVariants } from "./field-styles";
 
 /** Native <select> (best on phones) styled like Input, with our own chevron. */
-function NativeSelect({
-  className,
-  tone,
-  ...props
-}: React.ComponentProps<"select"> & Omit<FieldVariantProps, "shape">) {
+function NativeSelect({ className, ...props }: React.ComponentProps<"select">) {
   return (
     <div data-slot="native-select" className={cn("relative", className)}>
       <select
-        className={cn(fieldVariants({ tone }), "h-11 cursor-pointer appearance-none pr-9 pl-3.5")}
+        className={cn(fieldVariants(), "h-11 cursor-pointer appearance-none pr-9 pl-3.5")}
         {...props}
       />
       <ChevronDown
