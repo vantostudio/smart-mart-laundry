@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Container } from "@/components/shared/section";
 import { Wordmark } from "@/components/shared/wordmark";
 import { Button } from "@/components/ui/button";
-import { footerNav } from "@/config/navigation";
-import { phoneHref, site } from "@/config/site";
+import { siteNav } from "@/config/navigation";
+import { areasText, phoneHref, site } from "@/config/site";
 import { formatHoursSummary } from "@/lib/opening-hours";
 import { WHATSAPP_ORDER_DEFAULT, waLink } from "@/lib/whatsapp";
 
@@ -64,7 +64,7 @@ export function SiteFooter() {
         <div className="hidden lg:col-start-1 lg:row-start-1 lg:block">
           <Wordmark />
           <p className="mt-3 text-body-sm text-muted-foreground">
-            Laundry pickup and delivery, plus clothes and shoes, in Chuka.
+            Laundry pickup and delivery, plus mtumba and new clothes and shoes, in Chuka.
           </p>
         </div>
 
@@ -75,19 +75,22 @@ export function SiteFooter() {
         </div>
 
         <div className="text-body-sm lg:col-start-3 lg:row-start-1">
-          <p>{site.location.point}</p>
+          <p>
+            {site.location.point}, {site.location.town}
+          </p>
           <p className="text-muted-foreground">{hoursSummary}</p>
+          <p className="mt-2 text-muted-foreground">Pickup and delivery: {areasText}</p>
         </div>
 
         <nav aria-label="Footer" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <ul className="border-t border-border">
-            {footerNav.map((l) => (
+            {siteNav.map((l) => (
               <li key={l.href} className="border-b border-border">
                 <Link
                   href={l.href}
                   className="group flex min-h-11 items-center justify-between gap-4 text-body font-medium transition-colors hover:text-clay"
                 >
-                  {l.label}
+                  {l.title}
                   <ChevronRight
                     aria-hidden
                     className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"

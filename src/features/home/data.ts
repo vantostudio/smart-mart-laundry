@@ -64,6 +64,16 @@ export const faqs = [
       "Small fits a week of clothes for one person. Medium suits a couple's weekly load, large a family load, and extra large heavy household loads. Baskets cost KSh 150 to 400, ironing included.",
   },
   {
+    question: "Where do you pick up from?",
+    answer:
+      "Chuka University hostels, Ndagani estates and anywhere in Chuka town. The rider collects from your gate, hostel or office and brings everything back the same way.",
+  },
+  {
+    question: "Can I buy clothes and shoes from you too?",
+    answer:
+      "Yes. Our shop at Chuka General has mtumba and brand new clothes and shoes. Order on the shop page and we deliver to your hostel or gate, or come try it on.",
+  },
+  {
     question: "When do I pay?",
     answer:
       "On delivery, when your clothes are back in your hands. Pay cash or M-Pesa; there is no deposit.",

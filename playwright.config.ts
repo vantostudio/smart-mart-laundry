@@ -10,7 +10,8 @@ export default defineConfig({
   outputDir: ".audit/playwright",
   timeout: 90_000,
   fullyParallel: true,
-  workers: 4,
+  // More workers overload a dev server (routes compile on first hit) and tests time out.
+  workers: 2,
   // A dev server compiles routes on first hit; give navigations and URL updates time to land.
   expect: { timeout: 15_000 },
   use: {

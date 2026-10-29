@@ -139,26 +139,26 @@ and `inverse` / `outline-inverse` on brand bands.
 
 **Shared** (`src/components/shared`, built from the primitives):
 
-| Component              | Use                                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------------ |
-| `Section`, `Container` | Page band (`tone` plain / muted / brand, `spacing` default / bottom) and page column                   |
-| `SectionHeading`       | h2 + intro, left aligned                                                                               |
-| `PageHero`             | Inner-page hero: eyebrow, h1, intro (/about)                                                           |
-| `ImageTile`            | Linked photo with scrim and caption (home shop teaser)                                                 |
-| `StaggerGrid`          | Grid whose columns sit at different heights: 2 columns (right one dropped) on phones, 3 or 4 on lg     |
-| `MediaCard`            | Visual + title + copy (+ footer): horizontal on phones (mirrored in a StaggerGrid), stacked from 640px |
-| `ChoiceChips`          | Radio group as chips, calendar dates or icon tiles; rail scrolls on narrow cards, grid on wide         |
-| `Price`                | KSh amount in the display face with tabular figures                                                    |
-| `QuantityStepper`      | − qty + control with a 44px hit area, optional `max` (one-off mtumba pieces)                           |
-| `StillNeeded`          | "2 of 5 done" meter and a checklist of missing fields that jump to each one; "All set" when complete   |
-| `OrderSent`            | "Your order is ready in WhatsApp" with Copy order / Call us, after a send                              |
-| `RememberedNotice`     | "Filled in from your last order on this phone. Not you? Clear"                                         |
-| `FloatingCartBar`      | Bottom pill with count, caption, total and an action (laundry cart, shop bag)                          |
-| `PerkList`             | Row of icon pills under a page heading                                                                 |
-| `InfoItem`             | Icon + title + detail list item                                                                        |
-| `FormField`            | Label wrapping a control, with an optional hint                                                        |
-| `WhatsAppButton`       | Button that opens a pre-filled WhatsApp chat                                                           |
-| `Wordmark`             | "Street Mart" logotype                                                                                 |
+| Component              | Use                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Section`, `Container` | Page band (`tone` plain / muted / brand, `spacing` default / bottom) and page column                                                                    |
+| `SectionHeading`       | h2 + intro, left aligned                                                                                                                                |
+| `PageHero`             | Inner-page hero: eyebrow, h1, intro (/about)                                                                                                            |
+| `ImageTile`            | Linked photo with scrim and caption (home shop teaser)                                                                                                  |
+| `StaggerGrid`          | Grid whose columns sit at different heights: 2 columns (right one dropped) on phones, 3 or 4 on lg                                                      |
+| `MediaCard`            | Visual + title + copy (+ footer): horizontal on phones (mirrored in a StaggerGrid), stacked from 640px                                                  |
+| `ChoiceChips`          | Radio group as chips, calendar dates or icon tiles; rail scrolls on narrow cards, grid on wide                                                          |
+| `Price`                | KSh amount in the display face with tabular figures                                                                                                     |
+| `QuantityStepper`      | − qty + control with a 44px hit area, optional `max` (one-off mtumba pieces)                                                                            |
+| `StillNeeded`          | "2 of 5 done" meter and a checklist of missing fields that jump to each one; "All set" when complete                                                    |
+| `OrderSent`            | "Your order is ready in WhatsApp" with Copy order / Call us, after a send                                                                               |
+| `RememberedNotice`     | "Filled in from your last order on this phone. Not you? Clear"                                                                                          |
+| `FloatingCartBar`      | Bottom pill with count, caption, total and an action (laundry cart, shop bag)                                                                           |
+| `PerkList`             | Row of icon pills under a page heading                                                                                                                  |
+| `InfoItem`             | Icon + title + detail list item                                                                                                                         |
+| `FormField`            | Label wrapping a control, with an optional hint                                                                                                         |
+| `WhatsAppButton`       | Button that opens a pre-filled WhatsApp chat                                                                                                            |
+| `Wordmark`, `LogoMark` | Logo: the hanger "S" mark (in `currentColor`) + "Street Mart" with the sunset full stop. `LOGO_PATHS` also draw `src/app/icon.svg` and `apple-icon.tsx` |
 
 Site chrome (header, footer, phone action bar, open-now status) lives in `src/components/layout`.
 Feature-specific pieces stay in `src/features/<name>/components`; anything used by two or more

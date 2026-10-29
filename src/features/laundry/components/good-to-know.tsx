@@ -8,7 +8,7 @@ import { Section } from "@/components/shared/section";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
-import { phoneHref, site } from "@/config/site";
+import { areasText, phoneHref, site } from "@/config/site";
 import { homeImages } from "@/features/home/data";
 import {
   basketFrom,
@@ -156,7 +156,7 @@ function FreeTile() {
 
       <div className="absolute inset-x-0 bottom-0 p-5 text-on-media sm:p-6">
         <h3 className="display text-title">Always free</h3>
-        <p className="mt-1 text-body-sm opacity-85">Anywhere in Chuka, on every order.</p>
+        <p className="mt-1 text-body-sm opacity-85">{areasText}, on every order.</p>
         <ul className="mt-3 flex flex-wrap gap-1.5">
           {["Pickup", "Delivery", "Ironing"].map((label) => (
             <li

@@ -1,17 +1,24 @@
 import { LaundryPage } from "@/features/laundry/components/laundry-page";
+import { JsonLd } from "@/features/seo/json-ld";
+import { laundryServiceJsonLd } from "@/features/seo/structured-data";
 import { ogImage } from "@/lib/images";
 import { pageMetadata } from "@/lib/metadata";
 
 export const metadata = pageMetadata({
-  title: "Laundry & Prices",
+  title: "Laundry Service in Chuka: Pickup, Ironing & Prices",
   description:
-    "Laundry prices in Chuka: baskets from KSh 150, duvets, mats and shoes. Free pickup, delivery and ironing — pay on delivery, cash or M-Pesa.",
+    "Laundry pickup and delivery for Chuka University, Ndagani and Chuka town. Baskets from KSh 150, duvets, mats and shoes. Free pickup, ironing and delivery, pay on delivery.",
   socialDescription:
-    "Free pickup, delivery and ironing across Chuka. Clear prices — pay on delivery.",
+    "Laundry pickup for Chuka University, Ndagani and Chuka town. Free ironing and delivery, pay on delivery.",
   image: ogImage("photo-1758279744970-b32360a5e907"),
   path: "/laundry",
 });
 
 export default function Page() {
-  return <LaundryPage />;
+  return (
+    <>
+      <LaundryPage />
+      <JsonLd data={laundryServiceJsonLd()} />
+    </>
+  );
 }

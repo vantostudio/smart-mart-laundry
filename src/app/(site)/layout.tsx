@@ -2,6 +2,8 @@ import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { BagProvider, CartProvider } from "@/features/cart/cart-provider";
+import { JsonLd } from "@/features/seo/json-ld";
+import { businessJsonLd } from "@/features/seo/structured-data";
 
 export default function SiteLayout({ children }: LayoutProps<"/">) {
   return (
@@ -20,6 +22,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
           </main>
           <SiteFooter />
           <MobileActionBar />
+          <JsonLd data={businessJsonLd()} />
         </div>
       </BagProvider>
     </CartProvider>
