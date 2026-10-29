@@ -44,15 +44,22 @@ test("/laundry lists its prices as structured data", async ({ page }) => {
 
 test("logo icons, manifest, sitemap and robots are served", async ({ page, request }) => {
   await page.goto("/");
-  const icon = await page.locator('link[rel="icon"]').getAttribute("href");
-  const apple = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
-  for (const [url, type] of [
-    [icon, "image/svg+xml"],
-    [apple, "image/png"],
-  ] as const) {
-    const res = await request.get(url!);
-    expect(res.headers()["content-type"]).toContain(type);
-  }
+  // favicon.ico too: browsers ask for it directly and would otherwise keep a cached old icon.
+  const icons = await page.locator('link[rel="icon"], link[rel="apple-touch-icon"]').all();
+  const types = await Promise.all(
+    icons.map(async (link) => {
+      const res = await request.get((await link.getAttribute("href"))!);
+      expect(res.ok()).toBe(true);
+      return res.headers()["content-type"];
+    }),
+  );
+  expect(types).toEqual(
+    expect.arrayContaining([
+      expect.stringContaining("image/x-icon"),
+      expect.stringContaining("image/svg+xml"),
+      expect.stringContaining("image/png"),
+    ]),
+  );
 
   const manifest = await (await request.get("/manifest.webmanifest")).json();
   expect(manifest).toMatchObject({ short_name: "Street Mart" });
