@@ -8,15 +8,15 @@ import { pageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   ...pageMetadata({
-    title: "Laundry, Clothing & E-Gikomba in Chuka",
+    title: "Laundry & Clothes in Chuka",
     description:
-      "Free laundry pickup, delivery and ironing across Chuka. Our own clothing shop and the E-Gikomba clothes and shoes marketplace at Chuka General.",
+      "Free laundry pickup, delivery and ironing across Chuka. Plus mtumba and brand new clothes and shoes from our shop at Chuka General.",
     socialDescription:
-      "Free pickup, free delivery and free ironing across Chuka — plus our clothing shop and the E-Gikomba marketplace.",
+      "Free pickup, free delivery and free ironing across Chuka — plus clothes and shoes from our shop.",
     image: ogImage(HERO_IMAGE_ID),
     path: "/",
   }),
-  title: { absolute: `${site.name} — Laundry, Clothing & E-Gikomba in Chuka` },
+  title: { absolute: `${site.name} — Laundry & Clothes in Chuka` },
 };
 
 export default function Page() {

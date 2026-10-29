@@ -1,46 +1,86 @@
-import { unsplash } from "@/lib/images";
+/** Unsplash photos (free Unsplash License) used on the home page. */
+export const homeImages = {
+  hero: {
+    id: "photo-1761403460807-a89b7de9b4d3",
+    alt: "Clothes tumbling inside stacked commercial washing machines",
+  },
+  folded: {
+    id: "photo-1635274605638-d44babc08a4f",
+    alt: "Stacks of freshly washed, folded shirts",
+  },
+  stack: { id: "photo-1640747669771-b82a6e40f534", alt: "A neat stack of folded, ironed clothes" },
+  laundryRoom: {
+    id: "photo-1696546761269-a8f9d2b80512",
+    alt: "A laundry room with a basket of fresh linen in front of the washing machines",
+  },
+} as const;
 
-export const HERO_IMAGE_ID = "photo-1780253200136-77514727a5da";
+/** Also the home page's Open Graph image. */
+export const HERO_IMAGE_ID = homeImages.hero.id;
 
-export const howSteps = [
+/** Order updates the hero cycles through, as a customer receives them. */
+export const orderUpdates = [
+  { status: "Rider at your gate", detail: "Collecting 1 medium basket" },
+  { status: "Washing now", detail: "Sorted by colour, gentle cycle" },
+  { status: "Ironed and folded", detail: "Packed and ready to go" },
+  { status: "On its way back", detail: "Sent to you by SMS" },
+] as const;
+
+export type HowStep = {
+  title: string;
+  body: string;
+  /** Short reassurance under the copy. */
+  perk: string;
+};
+
+export const howSteps: HowStep[] = [
   {
-    title: "Book your pickup",
-    body: "Order online or on WhatsApp — tell us what needs cleaning and when you need it back.",
+    title: "Book in two minutes",
+    body: "Pick a day and a time, add your baskets, duvets, mats or shoes, and send the order on WhatsApp.",
+    perk: "No account needed",
   },
   {
-    title: "We collect from your gate",
-    body: "A boda rider picks up your basket, duvets, mats or shoes — free, anywhere in Chuka.",
+    title: "We pick it up",
+    body: "A rider collects from your gate, hostel or office, anywhere in Chuka.",
+    perk: "Free pickup",
   },
   {
-    title: "Washed, dried, pressed",
-    body: "Every load is washed with care and ironed free of charge before it leaves.",
+    title: "Cleaned with care",
+    body: "Washed, dried and pressed properly. Ironing is always on us.",
+    perk: "Free ironing",
   },
   {
     title: "Back before your deadline",
-    body: "Delivered to your door and paid for on delivery — cash or M-Pesa when we arrive.",
+    body: "We tell you it's on the way by WhatsApp, SMS or a call, whichever you chose. Pay when it arrives.",
+    perk: "Cash or M-Pesa on delivery",
   },
 ];
 
-export const tourSteps = [
+/** Answers use only facts stated elsewhere on the site (prices, turnaround, payment). */
+export const faqs = [
   {
-    title: "We collect from your gate",
-    body: "Free pickup anywhere in Chuka — baskets, duvets, mats or shoes.",
-    image: unsplash("photo-1536505748812-02f39989d287"),
+    question: "Which basket do I need?",
+    answer:
+      "Small fits a week of clothes for one person. Medium suits a couple's weekly load, large a family load, and extra large heavy household loads. Baskets cost KSh 150 to 400, ironing included.",
   },
   {
-    title: "Washed and deep cleaned",
-    body: "Every load washed, rinsed and dried with care.",
-    image: unsplash("photo-1764117379509-6d1e3e966cc0"),
+    question: "When do I pay?",
+    answer:
+      "On delivery, when your clothes are back in your hands. Pay cash or M-Pesa; there is no deposit.",
   },
   {
-    title: "Pressed and folded, free",
-    body: "Ironed, folded or hung — never a separate charge.",
-    image: unsplash("photo-1710294772664-8c6b057ce7b7"),
+    question: "Is pickup really free?",
+    answer: "Yes. Pickup, delivery and ironing are free on every order, anywhere in Chuka.",
   },
   {
-    title: "Back before your deadline",
-    body: "Same day, next day or standard — you set it.",
-    image: unsplash("photo-1656068218535-85db26125e13"),
+    question: "Do you clean duvets, mats and shoes?",
+    answer:
+      "Yes. Duvets are deep cleaned and dried, mats are scrubbed and dried, and shoes are hand cleaned per pair. Every price is on the laundry page.",
+  },
+  {
+    question: "How fast can I get my clothes back?",
+    answer:
+      "You choose: same day (back by evening), next day (back by the next evening) or standard (within two days).",
   },
 ];
 
@@ -59,8 +99,8 @@ export const testimonials = [
   },
   {
     quote:
-      "I sell mtumba on E-Gikomba. My stall shows first on the Pro plan and Street Mart delivers every order for me. Worth every shilling.",
+      "I got two pairs of jeans and sneakers off the WhatsApp catalogue between lectures. The rider dropped them at my hostel the same evening.",
     name: "Faith N.",
-    where: "E-Gikomba seller, Chuka",
+    where: "Student, Chuka University",
   },
 ];

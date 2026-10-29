@@ -35,3 +35,6 @@ next-env.d.ts
 !.vscode/settings.json
 .idea
 .DS_Store
+
+# ui audit output
+/.audit

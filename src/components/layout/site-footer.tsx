@@ -1,83 +1,114 @@
+import { ChevronRight, MapPin, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/shared/section";
-import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Wordmark } from "@/components/shared/wordmark";
+import { Button } from "@/components/ui/button";
 import { footerNav } from "@/config/navigation";
-import { site } from "@/config/site";
+import { phoneHref, site } from "@/config/site";
+import { formatHoursSummary } from "@/lib/opening-hours";
+import { WHATSAPP_ORDER_DEFAULT, waLink } from "@/lib/whatsapp";
+
+import { SITE_FOOTER_ID } from "./action-bar-visibility";
+import { OpenNow } from "./open-now";
 
 // Evaluated once per server start / build, so the footer stays fully static.
 const copyrightYear = new Date().getFullYear();
+const hoursSummary = formatHoursSummary(site.openingHours);
 
-const columnTitle = "overline text-muted-foreground";
-const footerLink = "transition-colors hover:text-clay";
+// Tall tile: icon above a short label.
+const actionClass = "h-auto min-h-16 flex-col gap-1 rounded-2xl px-2 py-2.5 text-body-sm";
 
+function FooterActions() {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <Button asChild variant="outline-inverse" className={actionClass}>
+        <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
+          <Phone aria-hidden className="size-5" />
+          Call
+        </a>
+      </Button>
+      <Button asChild variant="gradient-clay" className={actionClass}>
+        <a
+          href={waLink(WHATSAPP_ORDER_DEFAULT)}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Chat on WhatsApp"
+        >
+          <MessageCircle aria-hidden className="size-5" />
+          WhatsApp
+        </a>
+      </Button>
+      <Button asChild variant="outline-inverse" className={actionClass}>
+        <a href={site.mapsUrl} target="_blank" rel="noreferrer">
+          <MapPin aria-hidden className="size-5" />
+          Directions
+        </a>
+      </Button>
+    </div>
+  );
+}
+
+/*
+ * DOM order is the phone order (open now → actions → address → links). On lg the blocks are
+ * placed into three columns: brand + actions | links | address + open now.
+ */
 export function SiteFooter() {
   return (
-    <footer className="bg-mesh surface-inverse">
-      <Container className="grid gap-10 py-16 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
+    <footer
+      id={SITE_FOOTER_ID}
+      // The phone action bar hides while the footer is on screen, so only the notch area needs room.
+      className="bg-mesh pb-[env(safe-area-inset-bottom)] surface-inverse"
+    >
+      <Container className="grid gap-7 py-10 lg:grid-cols-[1.3fr_1fr_1fr] lg:gap-x-12 lg:gap-y-6 lg:py-16">
+        <div className="hidden lg:col-start-1 lg:row-start-1 lg:block">
           <Wordmark />
-          <p className="mt-4 max-w-xs text-body-sm text-muted-foreground">
-            Laundry pickup and delivery, our own clothing shop and the E-Gikomba marketplace — all
-            from {site.location.point}, {site.location.area}.
+          <p className="mt-3 text-body-sm text-muted-foreground">
+            Laundry pickup and delivery, plus clothes and shoes, in Chuka.
           </p>
-          <WhatsAppButton variant="gradient-clay" size="sm" className="mt-6">
-            Chat on WhatsApp
-          </WhatsAppButton>
         </div>
 
-        <nav aria-label="Footer">
-          <p className={columnTitle}>Explore</p>
-          <ul className="mt-5 space-y-3 text-body-sm">
+        <OpenNow className="lg:col-start-3 lg:row-start-2" />
+
+        <div className="lg:col-start-1 lg:row-start-2 lg:max-w-sm">
+          <FooterActions />
+        </div>
+
+        <div className="text-body-sm lg:col-start-3 lg:row-start-1">
+          <p>{site.location.point}</p>
+          <p className="text-muted-foreground">{hoursSummary}</p>
+        </div>
+
+        <nav aria-label="Footer" className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <ul className="border-t border-border">
             {footerNav.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className={footerLink}>
+              <li key={l.href} className="border-b border-border">
+                <Link
+                  href={l.href}
+                  className="group flex min-h-11 items-center justify-between gap-4 text-body font-medium transition-colors hover:text-clay"
+                >
                   {l.label}
+                  <ChevronRight
+                    aria-hidden
+                    className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                  />
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
-
-        <div>
-          <p className={columnTitle}>Find us</p>
-          <ul className="mt-5 space-y-3 text-body-sm">
-            <li>{site.location.point}</li>
-            <li>
-              {site.location.area}, {site.location.country}
-            </li>
-            <li>
-              <a href={`tel:+${site.whatsapp}`} className={footerLink}>
-                {site.phoneDisplay}
-              </a>
-            </li>
-            <li>
-              <a href={`mailto:${site.email}`} className={footerLink}>
-                {site.email}
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <p className={columnTitle}>Opening hours</p>
-          <ul className="mt-5 space-y-3 text-body-sm">
-            {site.hours.map((h) => (
-              <li key={h.days}>
-                <span className="block font-semibold">{h.days}</span>
-                <span className="text-muted-foreground">{h.time}</span>
-              </li>
-            ))}
-            <li className="text-caption text-muted-foreground">{site.hoursNote}</li>
-          </ul>
-        </div>
       </Container>
 
-      <div className="border-t border-border py-5">
-        <Container>
-          <p className="text-center text-caption text-muted-foreground">
-            © {copyrightYear} {site.name} · Chuka, Tharaka Nithi County · Payment on delivery
+      <div className="border-t border-border py-4">
+        <Container className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-caption text-muted-foreground">
+          <p>
+            © {copyrightYear} {site.name}
+          </p>
+          <p>
+            Pay on delivery ·{" "}
+            <a href={phoneHref} className="font-mono transition-colors hover:text-clay">
+              {site.phoneDisplay}
+            </a>
           </p>
         </Container>
       </div>

@@ -7,7 +7,7 @@ const sectionVariants = cva("relative", {
   variants: {
     tone: {
       plain: "",
-      muted: "bg-weave",
+      muted: "bg-secondary/60",
       glow: "bg-glow",
       brand: "bg-mesh surface-inverse",
     },

@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Agent skills ship example components; keep their classes out of our CSS. */
+@source not "../../.claude";
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -13,8 +16,8 @@
  *   2. Semantics   (:root / .dark, --primary, --clay, --success, …) what a colour is *for*
  *   3. Theme       (@theme) the Tailwind utilities built from semantics: bg-primary, text-display-lg, …
  *
- * Fonts are loaded with next/font in src/app/layout.tsx:
- *   Bricolage Grotesque (display) · Figtree (body) · JetBrains Mono (tickets, codes, figures)
+ * Fonts are self-hosted with next/font/local in src/app/layout.tsx:
+ *   Clash Display (headings) · Satoshi (content, figures)
  */
 
 /* ---------------------------------------------------------------- 1. Primitives */
@@ -49,6 +52,9 @@
   --sky-600: oklch(0.5 0.09 235);
   --berry-200: oklch(0.93 0.04 25);
   --berry-600: oklch(0.577 0.2 27);
+
+  /* Skin tone for illustrations */
+  --umber-500: oklch(0.56 0.085 52);
 }
 
 /* ---------------------------------------------------------------- 2. Semantics */
@@ -92,6 +98,9 @@
 
   /* Text on photos (category tiles, hero overlays) */
   --on-media: var(--cream-50);
+
+  /* People in illustrations (src/components/illustrations) */
+  --skin: var(--umber-500);
 
   /* Lines and focus */
   --border: var(--cream-300);
@@ -177,10 +186,10 @@
 
 @theme inline {
   /* Families */
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-figtree), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-clash), var(--font-satoshi), ui-sans-serif, sans-serif;
   --font-heading: var(--font-display);
-  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
   /* Colours */
   --color-background: var(--background);
@@ -214,6 +223,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-soft: var(--destructive-soft);
   --color-on-media: var(--on-media);
+  --color-skin: var(--skin);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -228,9 +238,9 @@
   --radius-4xl: calc(var(--radius) + 16px);
 
   /* Elevation — green-tinted, never grey */
-  --shadow-card: 0 1px 2px oklch(0.24 0.032 165 / 0.04), 0 10px 30px oklch(0.24 0.032 165 / 0.07);
-  --shadow-lift: 0 2px 6px oklch(0.24 0.032 165 / 0.05), 0 20px 48px oklch(0.24 0.032 165 / 0.13);
-  --shadow-ticket: 0 24px 60px oklch(0.24 0.032 165 / 0.16);
+  --shadow-card: 0 1px 2px oklch(0.24 0.032 165 / 0.03), 0 8px 24px oklch(0.24 0.032 165 / 0.05);
+  --shadow-lift: 0 2px 6px oklch(0.24 0.032 165 / 0.04), 0 18px 40px oklch(0.24 0.032 165 / 0.1);
+  --shadow-ticket: 0 20px 50px oklch(0.24 0.032 165 / 0.12);
   --shadow-glow-primary: 0 10px 28px -8px oklch(0.365 0.06 162 / 0.6);
   --shadow-glow-clay: 0 10px 28px -8px oklch(0.655 0.128 47 / 0.65);
   --inset-shadow-highlight: inset 0 1px 0 oklch(1 0 0 / 0.22);
@@ -240,45 +250,62 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-fade-up: fade-up 0.7s var(--ease-out-expo) both;
   --animate-fade-in: fade-in 0.4s var(--ease-out-expo) both;
+  /* Magic UI Marquee (testimonials) */
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
 }
 
 /*
- * Type scale — fluid from 360px phones to 1280px desktops, so headings never need
- * sm:/lg: size overrides. Each step carries its own line-height and tracking.
- * Pair display steps with `font-display`; body steps use the default sans.
+ * Type and spacing — one fixed step per device class, so every screen size gets its own sizes:
+ *   phone < 640px · tablet 640–1023px · desktop ≥ 1024px  (overrides in Base below)
+ *
+ *   token        phone  tablet  desktop
+ *   display-xl    38     52      72      home hero h1
+ *   display-lg    32     42      56      page h1
+ *   display       28     36      44      section h2
+ *   title         18     20      22      card / step h3
+ *   subtitle      17     18      18
+ *   body-lg       16     17      18      intros
+ *   body          15     16      16      running text
+ *   body-sm       14     14      15      card copy
+ *   caption       12     13      13      notes, meta
+ *   gutter        20     32      40      page side padding
+ *   section       64     88      120     band padding
+ *
+ * Form fields stay at 16px (text-base) so iOS doesn't zoom. Headings never need sm:/lg: size
+ * overrides. Pair display steps with `display` (Clash Display); body steps use Satoshi.
  */
 @theme {
-  --text-display-xl: clamp(2.75rem, 1.6rem + 4.6vw, 5rem);
+  --text-display-xl: 2.375rem;
   --text-display-xl--line-height: 1;
-  --text-display-xl--letter-spacing: -0.035em;
+  --text-display-xl--letter-spacing: -0.02em;
 
-  --text-display-lg: clamp(2.25rem, 1.5rem + 3vw, 3.75rem);
-  --text-display-lg--line-height: 1.04;
-  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg: 2rem;
+  --text-display-lg--line-height: 1.05;
+  --text-display-lg--letter-spacing: -0.02em;
 
-  --text-display: clamp(1.875rem, 1.4rem + 1.9vw, 2.75rem);
+  --text-display: 1.75rem;
   --text-display--line-height: 1.1;
-  --text-display--letter-spacing: -0.025em;
+  --text-display--letter-spacing: -0.015em;
 
-  --text-title: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
-  --text-title--line-height: 1.2;
-  --text-title--letter-spacing: -0.015em;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.005em;
 
-  --text-subtitle: 1.125rem;
+  --text-subtitle: 1.0625rem;
   --text-subtitle--line-height: 1.4;
-  --text-subtitle--letter-spacing: -0.005em;
 
-  --text-body-lg: 1.125rem;
-  --text-body-lg--line-height: 1.65;
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.6;
 
-  --text-body: 1rem;
+  --text-body: 0.9375rem;
   --text-body--line-height: 1.6;
 
   --text-body-sm: 0.875rem;
   --text-body-sm--line-height: 1.55;
 
   --text-caption: 0.75rem;
-  --text-caption--line-height: 1.4;
+  --text-caption--line-height: 1.45;
   --text-caption--letter-spacing: 0.01em;
 
   --text-overline: 0.75rem;
@@ -289,8 +316,8 @@
   --container-page: 72rem;
   --container-reading: 40rem;
   --container-narrow: 28rem;
-  --spacing-gutter: clamp(1rem, 0.6rem + 1.8vw, 1.5rem);
-  --spacing-section: clamp(4rem, 2.8rem + 5vw, 6rem);
+  --spacing-gutter: 1.25rem;
+  --spacing-section: 4rem;
   --spacing-header: 4rem;
 
   /* Breakpoint for small phones (360–480px) */
@@ -319,9 +346,56 @@
   }
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+
 /* ---------------------------------------------------------------- Base */
 
 @layer base {
+  /* Tablet and desktop steps of the type and spacing scale (phone values live in @theme) */
+  @media (width >= 40rem) {
+    :root {
+      --text-display-xl: 3.25rem;
+      --text-display-lg: 2.625rem;
+      --text-display: 2.25rem;
+      --text-title: 1.25rem;
+      --text-subtitle: 1.125rem;
+      --text-body-lg: 1.0625rem;
+      --text-body: 1rem;
+      --text-caption: 0.8125rem;
+      --spacing-gutter: 2rem;
+      --spacing-section: 5.5rem;
+    }
+  }
+
+  @media (width >= 64rem) {
+    :root {
+      --text-display-xl: 4.5rem;
+      --text-display-lg: 3.5rem;
+      --text-display: 2.75rem;
+      --text-title: 1.375rem;
+      --text-body-lg: 1.125rem;
+      --text-body-sm: 0.9375rem;
+      --spacing-gutter: 2.5rem;
+      --spacing-section: 7.5rem;
+    }
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -349,6 +423,17 @@
     text-wrap: pretty;
   }
 
+  /* Taps respond immediately (no double-tap-to-zoom delay) */
+  a,
+  button,
+  label,
+  input,
+  select,
+  textarea,
+  [role="radio"] {
+    touch-action: manipulation;
+  }
+
   ::selection {
     background-color: var(--clay);
     color: var(--clay-foreground);
@@ -372,7 +457,7 @@
 /* ---------------------------------------------------------------- Utilities */
 
 /* Small uppercase label; inherits colour (footer columns, field labels) */
-@utility overline {
+@utility caps-label {
   font-size: var(--text-overline);
   line-height: var(--text-overline--line-height);
   font-weight: 700;
@@ -396,7 +481,7 @@
   color: var(--primary);
   text-decoration-line: underline;
   text-decoration-thickness: 1.5px;
-  text-decoration-color: color-mix(in oklch, var(--clay) 60%, transparent);
+  text-decoration-color: color-mix(in oklab, var(--clay) 60%, transparent);
   text-underline-offset: 4px;
   transition: text-decoration-color 0.2s;
 
@@ -442,19 +527,19 @@
 @utility surface-inverse {
   --foreground: var(--ink, var(--primary-foreground));
   --card-foreground: var(--ink, var(--primary-foreground));
-  --muted-foreground: color-mix(in oklch, var(--ink, var(--primary-foreground)) 74%, transparent);
-  --border: color-mix(in oklch, var(--ink, var(--primary-foreground)) 18%, transparent);
-  --card: color-mix(in oklch, var(--ink, var(--primary-foreground)) 7%, transparent);
-  --secondary: color-mix(in oklch, var(--ink, var(--primary-foreground)) 12%, transparent);
-  --muted: color-mix(in oklch, var(--ink, var(--primary-foreground)) 10%, transparent);
+  --muted-foreground: color-mix(in oklab, var(--ink, var(--primary-foreground)) 74%, transparent);
+  --border: color-mix(in oklab, var(--ink, var(--primary-foreground)) 18%, transparent);
+  --card: color-mix(in oklab, var(--ink, var(--primary-foreground)) 7%, transparent);
+  --secondary: color-mix(in oklab, var(--ink, var(--primary-foreground)) 12%, transparent);
+  --muted: color-mix(in oklab, var(--ink, var(--primary-foreground)) 10%, transparent);
   color: var(--foreground);
 }
 
 /* Faint dot grid, like woven fabric, for muted sections */
 @utility bg-weave {
-  background-color: color-mix(in oklch, var(--secondary) 60%, var(--background));
+  background-color: color-mix(in oklab, var(--secondary) 60%, var(--background));
   background-image: radial-gradient(
-    color-mix(in oklch, var(--foreground) 9%, transparent) 1px,
+    color-mix(in oklab, var(--foreground) 9%, transparent) 1px,
     transparent 1px
   );
   background-size: 18px 18px;
@@ -489,12 +574,10 @@
   }
 }
 
-/* Display face with heading weight and tracking; combine with any text-* size */
+/* Display face at heading weight; the text-* step it's paired with sets line-height and tracking */
 @utility display {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.06;
+  font-weight: 600;
 }
 
 /* Prices, ticket numbers, quantities — digits line up in columns */

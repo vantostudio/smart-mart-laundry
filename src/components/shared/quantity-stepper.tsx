@@ -11,6 +11,8 @@ type Props = {
   tone?: "default" | "inverse";
   /** Stretch to the container width, buttons at the ends. */
   block?: boolean;
+  /** Highest allowed value; the + button disables there (e.g. 1 for a one-off piece). */
+  max?: number;
   className?: string;
 };
 
@@ -20,11 +22,14 @@ export function QuantityStepper({
   label,
   tone = "default",
   block = false,
+  max,
   className,
 }: Props) {
+  const atMax = max !== undefined && value >= max;
   const inverse = tone === "inverse";
+  // 32px to look at, 44px to tap: the ::after pads the hit area without changing the layout.
   const stepClass = cn(
-    "flex size-8 items-center justify-center rounded-full transition-[background-color,scale] duration-200 active:scale-90",
+    "relative flex size-8 items-center justify-center rounded-full transition-[background-color,scale] duration-200 after:absolute after:-inset-1.5 after:content-[''] active:scale-90",
     inverse ? "hover:bg-primary-foreground/12" : "hover:bg-background",
   );
 
@@ -52,8 +57,10 @@ export function QuantityStepper({
         type="button"
         aria-label={`Add one ${label}`}
         onClick={() => onChange(value + 1)}
+        disabled={atMax}
         className={cn(
           stepClass,
+          "disabled:pointer-events-none disabled:opacity-40",
           !inverse &&
             "bg-primary text-primary-foreground inset-shadow-highlight hover:bg-primary hover:shadow-glow-primary",
         )}

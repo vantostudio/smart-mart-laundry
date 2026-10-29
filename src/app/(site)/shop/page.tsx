@@ -1,13 +1,15 @@
 import { ShopPage } from "@/features/shop/components/shop-page";
+import { SHOP_HERO_IMAGE } from "@/features/shop/data";
 import { ogImage } from "@/lib/images";
 import { pageMetadata } from "@/lib/metadata";
 
 export const metadata = pageMetadata({
-  title: "Clothing Shop",
+  title: "Shop Clothes & Shoes",
   description:
-    "Our own clothing shop at Chuka General — everyday wear, campus trends, dresses, suits and shoes. Visit us or ask on WhatsApp.",
-  socialDescription: "Everyday wear, campus trends, dresses, suits and shoes at Chuka General.",
-  image: ogImage("photo-1590955256762-e60f6e08122a"),
+    "Mtumba and brand new clothes and shoes at Chuka General — campus trends, ladies, men, kids, suits and shoes. Browse on WhatsApp, try on in store or get it delivered.",
+  socialDescription:
+    "Mtumba and new clothes and shoes in Chuka — browse on WhatsApp, delivered to your gate.",
+  image: ogImage(SHOP_HERO_IMAGE),
   path: "/shop",
 });
 

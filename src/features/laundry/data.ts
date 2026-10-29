@@ -1,5 +1,3 @@
-import { unsplash } from "@/lib/images";
-
 export type PriceGroup = {
   id: string;
   title: string;
@@ -7,14 +5,26 @@ export type PriceGroup = {
   items: { label: string; price: number }[];
 };
 
+export type LaundryCategory = "baskets" | "duvets" | "mats" | "shoes";
+
 export type LaundryItem = {
   id: string;
+  category: LaundryCategory;
   name: string;
   desc: string;
   price: number;
-  image: string;
+  /** Size shown in the item's badge ("S", "6×6"); items without one show their category icon. */
+  mark?: string;
   tag?: string;
 };
+
+/** Tabs on the laundry page, in order. Ids match `priceGroups`. */
+export const laundryCategories: { id: LaundryCategory; label: string }[] = [
+  { id: "baskets", label: "Baskets" },
+  { id: "duvets", label: "Duvets" },
+  { id: "mats", label: "Mats" },
+  { id: "shoes", label: "Shoes" },
+];
 
 export const priceGroups: PriceGroup[] = [
   {
@@ -63,115 +73,138 @@ export const priceGroups: PriceGroup[] = [
 export const laundryItems: LaundryItem[] = [
   {
     id: "basket-small",
+    category: "baskets",
     name: "Small basket",
     desc: "Fits a week of clothes for one person.",
     price: 150,
+    mark: "S",
     tag: "Popular",
-    image: unsplash("photo-1758279744970-b32360a5e907"),
   },
   {
     id: "basket-medium",
+    category: "baskets",
     name: "Medium basket",
     desc: "Ideal for a couple's weekly load.",
     price: 250,
-    image: unsplash("photo-1789003712201-b60e9c229674"),
+    mark: "M",
   },
   {
     id: "basket-large",
+    category: "baskets",
     name: "Large basket",
     desc: "Plenty of room for a family load.",
     price: 350,
-    image: unsplash("photo-1760722974657-f64bce2f9cc5"),
+    mark: "L",
   },
   {
     id: "basket-xl",
+    category: "baskets",
     name: "Extra large basket",
     desc: "Our biggest basket for heavy household loads.",
     price: 400,
-    image: unsplash("photo-1642720574580-45b9bedb77e6"),
+    mark: "XL",
   },
   {
     id: "duvet-6x6",
+    category: "duvets",
     name: "6 × 6 duvet",
     desc: "Deep cleaned and dried, returned fresh and fluffy.",
     price: 350,
-    image: unsplash("photo-1638878468165-a974415fed4f"),
+    mark: "6×6",
   },
   {
     id: "duvet-4x6",
+    category: "duvets",
     name: "4 × 6 duvet",
     desc: "Ready to go straight back on the bed.",
     price: 250,
-    image: unsplash("photo-1545173168-9f1947eebb7f"),
+    mark: "4×6",
   },
   {
     id: "duvet-3-2x6",
+    category: "duvets",
     name: "3.2 × 6 duvet",
     desc: "Deep cleaned and dried, quick turnaround.",
     price: 200,
-    image: unsplash("photo-1545173168-9f1947eebb7f"),
+    mark: "3.2×6",
   },
   {
     id: "duvet-cot",
+    category: "duvets",
     name: "Baby cot duvet",
     desc: "Gentle wash for the littlest bedding.",
     price: 150,
-    image: unsplash("photo-1522771930-78848d9293e8"),
+    mark: "Cot",
   },
   {
     id: "mat-door",
+    category: "mats",
     name: "Door mat",
     desc: "Mud and dust lifted out, scrubbed and dried.",
     price: 50,
-    image: unsplash("photo-1674552641751-fb7ca800deae"),
   },
   {
     id: "mat-fluffy",
+    category: "mats",
     name: "Fluffy mat",
     desc: "Pile brushed back up after drying.",
     price: 200,
-    image: unsplash("photo-1675781471069-c2b59f3a357a"),
   },
   {
     id: "mat-floor",
+    category: "mats",
     name: "Floor mat",
     desc: "Deep cleaned on both sides.",
     price: 350,
-    image: unsplash("photo-1669101602108-fa5ba89507ee"),
+  },
+  // Split from the old "Shoes, per pair" item so coloured shoes are charged their listed price.
+  {
+    id: "shoes-white",
+    category: "shoes",
+    name: "Plain white shoes",
+    desc: "Hand cleaned, per pair.",
+    price: 150,
   },
   {
-    id: "shoes-pair",
-    name: "Shoes, per pair",
-    desc: "Hand cleaned — plain white or coloured.",
-    price: 150,
-    image: unsplash("photo-1579528542333-4148f1769c35"),
+    id: "shoes-coloured",
+    category: "shoes",
+    name: "Coloured shoes",
+    desc: "Hand cleaned, per pair.",
+    price: 100,
   },
 ];
 
+/** How the customer wants to hear that their laundry is clean and on its way back. */
+export const notifyOptions = [
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    reassurance: "We'll message you on WhatsApp when it's clean and on its way back.",
+  },
+  {
+    id: "sms",
+    label: "SMS",
+    reassurance: "We'll text you when it's clean and on its way back.",
+  },
+  {
+    id: "call",
+    label: "Phone call",
+    reassurance: "We'll call you when it's clean and on its way back.",
+  },
+] as const;
+
+export type NotifyMethod = (typeof notifyOptions)[number]["id"];
+
+export const DEFAULT_NOTIFY: NotifyMethod = "whatsapp";
+
+export function notifyOption(id: NotifyMethod) {
+  return notifyOptions.find((o) => o.id === id)!;
+}
+
 export const turnaroundOptions = [
-  { label: "Same day", note: "Back by evening, same day" },
+  { label: "Same day", note: "Pick up before 1 PM, back by 7 PM" },
   { label: "Next day", note: "Back by the next evening" },
-  { label: "Standard (2 days)", note: "Back within two days" },
-] as const;
-export const dayOptions = [
-  "Today",
-  "Tomorrow",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-] as const;
-export const timeOptions = [
-  "7:00 AM",
-  "9:00 AM",
-  "11:00 AM",
-  "1:00 PM",
-  "3:00 PM",
-  "5:00 PM",
-  "7:00 PM",
+  { label: "2 days", note: "Back within two days" },
 ] as const;
 
 export const promises = [

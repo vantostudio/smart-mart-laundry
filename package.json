@@ -12,12 +12,14 @@
     "fmt": "vp fmt",
     "check": "next typegen && vp check",
     "typecheck": "next typegen && tsc --noEmit",
-    "prepare": "vp config && next typegen"
+    "prepare": "vp config && next typegen",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "lucide-react": "^1.63.0",
+    "motion": "^14.7.1",
     "next": "16.4.3",
     "radix-ui": "^1.8.1",
     "react": "19.3.1",
@@ -25,6 +27,7 @@
     "shadcn": "^4.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

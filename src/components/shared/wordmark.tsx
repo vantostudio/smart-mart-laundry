@@ -8,12 +8,12 @@ export function Wordmark({ className }: { className?: string }) {
     <Link
       href="/"
       aria-label="Street Mart home"
-      className={cn("inline-flex items-baseline gap-1 text-foreground", className)}
+      className={cn("inline-flex min-h-11 items-center gap-1 text-foreground", className)}
     >
-      <span className="font-display text-title leading-none font-bold tracking-tight">
+      <span className="font-display text-title leading-none font-semibold tracking-tight">
         Street&nbsp;Mart
       </span>
-      <span aria-hidden className="size-2 rounded-full bg-gradient-sunset" />
+      <span aria-hidden className="mt-2 size-2 rounded-full bg-gradient-sunset" />
     </Link>
   );
 }

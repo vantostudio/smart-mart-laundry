@@ -4,9 +4,8 @@ import { pageMetadata } from "@/lib/metadata";
 export const metadata = pageMetadata({
   title: "About Us",
   description:
-    "Street Mart Kenya is a laundry pickup and delivery service, a clothing shop and the E-Gikomba marketplace — all based at Chuka General, Tharaka Nithi County.",
-  socialDescription:
-    "Laundry, clothing shop and the E-Gikomba marketplace — all from Chuka General.",
+    "Street Mart Kenya is a laundry pickup and delivery service and a clothes and shoes shop — both based at Chuka General.",
+  socialDescription: "Laundry pickup and a clothes & shoes shop — both from Chuka General.",
   path: "/about",
 });
 
