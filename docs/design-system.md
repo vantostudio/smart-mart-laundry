@@ -95,8 +95,8 @@ Standard section: `<Section>` (or `<section className="py-section"><div classNam
   `inset-shadow-highlight` (1px top highlight on solid buttons).
 - **Motion.** Easing `ease-out-expo` for transitions. The page hero rises in on load
   (`animate-fade-up`); `animate-marquee` drives the reviews `Marquee`; the home hero's order updates
-  animate with `motion`. Never start content at opacity 0 on scroll. `prefers-reduced-motion` turns
-  animation off globally.
+  animate with `motion`. Never start content at opacity 0 on scroll. Motion runs on every device,
+  including phones set to reduce motion (a product decision), so keep it gentle and slow.
 - **Z-index.** `z-(--z-header)` 40, `z-(--z-overlay)` 50, `z-(--z-toast)` 60.
 
 ## Gradients and textures

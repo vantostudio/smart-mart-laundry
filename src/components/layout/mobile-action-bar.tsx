@@ -139,7 +139,7 @@ export function MobileActionBar() {
       data-visible={visible}
       className={cn(
         "fixed inset-x-0 bottom-0 z-(--z-header) border-t border-border/70 bg-background/90 px-gutter pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 sm:hidden",
-        "motion-safe:transition-[translate,visibility] motion-safe:duration-300 motion-safe:ease-out-expo",
+        "transition-[translate,visibility] duration-300 ease-out-expo",
         !visible && "invisible translate-y-full",
       )}
     >

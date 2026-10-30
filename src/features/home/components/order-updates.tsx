@@ -1,7 +1,7 @@
 "use client";
 
 import { Bike, MessageSquareText, Shirt, WashingMachine } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { orderUpdates } from "@/features/home/data";
@@ -12,19 +12,17 @@ const VISIBLE = 3;
 
 /**
  * Decorative stack of order updates over the hero photo, like notifications arriving on a phone:
- * a new one slides in on top every few seconds and the oldest drops away. Static (the latest
- * three) when the visitor prefers reduced motion.
+ * a new one slides in on top every few seconds and the oldest drops away. Always moving, also on
+ * devices set to reduce motion (a product decision: the site's motion is part of the brand).
  */
 export function OrderUpdates({ className }: { className?: string }) {
-  const reduce = useReducedMotion();
   // Counts up forever; the update shown is tick modulo the list, and the tick is the React key.
   const [tick, setTick] = useState(VISIBLE - 1);
 
   useEffect(() => {
-    if (reduce) return;
     const id = window.setInterval(() => setTick((t) => t + 1), 2600);
     return () => window.clearInterval(id);
-  }, [reduce]);
+  }, []);
 
   const shown = Array.from({ length: VISIBLE }, (_, k) => tick - k).filter((t) => t >= 0);
 

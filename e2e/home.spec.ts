@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { phone } from "./helpers";
 
-/* The home page: the hero's way into booking, and the reviews marquee (still with reduced motion). */
+/* The home page: the hero's way into booking, and motion that runs on every device. */
 
 test.use(phone);
 
@@ -23,17 +23,24 @@ test.describe("reviews marquee", () => {
     const after = await row.evaluate((el) => el.getBoundingClientRect().x);
     expect(after).not.toBe(before);
   });
+});
 
-  test.describe("with reduced motion", () => {
-    test.use({ reducedMotion: "reduce" });
+// Phones with "Reduce motion" / "Remove animations" (often turned on by battery saver) still move.
+test.describe("on a phone set to reduce motion", () => {
+  test.use({ reducedMotion: "reduce" });
 
-    test("stands still", async ({ page }) => {
-      await page.goto("/");
-      const row = page.locator(".animate-marquee").first();
-      await page.waitForTimeout(300);
-      const before = await row.evaluate((el) => el.getBoundingClientRect().x);
-      await page.waitForTimeout(800);
-      expect(await row.evaluate((el) => el.getBoundingClientRect().x)).toBe(before);
-    });
+  test("the reviews still drift", async ({ page }) => {
+    await page.goto("/");
+    const row = page.locator(".animate-marquee").first();
+    const before = await row.evaluate((el) => el.getBoundingClientRect().x);
+    await page.waitForTimeout(800);
+    expect(await row.evaluate((el) => el.getBoundingClientRect().x)).not.toBe(before);
+  });
+
+  test("the hero order updates still cycle", async ({ page }) => {
+    await page.goto("/");
+    const newest = page.locator("ul[aria-hidden] li").first();
+    const first = await newest.textContent();
+    await expect.poll(() => newest.textContent(), { timeout: 8_000 }).not.toBe(first);
   });
 });

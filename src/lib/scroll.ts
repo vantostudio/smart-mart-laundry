@@ -1,11 +1,10 @@
-/** Smooth-scroll an element into view (instant with reduced motion) and move focus to it. */
+/** Smooth-scroll an element into view and move focus to it. */
 export function revealElement(
   target: HTMLElement | null,
   focusTarget: HTMLElement | null = target,
 ) {
   if (!target) return;
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
   focusTarget?.focus({ preventScroll: true });
 }
 

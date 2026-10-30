@@ -37,8 +37,7 @@ function ReviewCard({ t, low }: { t: Testimonial; low?: boolean }) {
 }
 
 /*
- * Two rows of reviews drifting in opposite directions (Magic UI Marquee), pausing on hover and
- * standing still for reduced motion. The moving rows repeat the cards, so they're hidden from
+ * Two rows of reviews drifting in opposite directions (Magic UI Marquee), pausing on hover. The moving rows repeat the cards, so they're hidden from
  * screen readers and a plain list carries the reviews instead.
  */
 export function Testimonials() {
