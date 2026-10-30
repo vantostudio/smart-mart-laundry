@@ -1,13 +1,4 @@
-import {
-  BedDouble,
-  Check,
-  Clock,
-  Footprints,
-  Grid3x3,
-  Layers,
-  Phone,
-  type LucideIcon,
-} from "lucide-react";
+import { BedDouble, Check, Clock, Footprints, Layers, Phone, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 
@@ -280,7 +271,6 @@ export function GoodToKnow() {
           <div className="grid grid-cols-1 items-start gap-4 sm:gap-5 @lg:grid-cols-2 @lg:gap-6">
             <div className="grid gap-4 sm:gap-5 @lg:gap-6">
               <PriceTile id="duvets" icon={BedDouble} />
-              <PriceTile id="carpets" icon={Grid3x3} />
               <PayTile />
             </div>
             <div className="grid grid-cols-1 items-start gap-4 sm:gap-5 @xs:grid-cols-2 @lg:mt-12 @lg:grid-cols-1 @lg:gap-6">

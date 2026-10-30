@@ -116,10 +116,10 @@ export function WhyStreetMart() {
         <MediaCard
           key="duvets"
           visual={photo("laundryRoom")}
-          title="Duvets, carpets & shoes"
+          title="Duvets, mats & shoes"
           footer={<Perk>Priced per item</Perk>}
         >
-          <p>Duvets, mats, carpets and shoes too, not just clothes.</p>
+          <p>Duvets, mats and shoes too, not just clothes.</p>
         </MediaCard>
 
         <MediaCard

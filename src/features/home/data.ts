@@ -52,9 +52,9 @@ export const faqs = [
     answer: "Yes. Pickup, delivery and ironing are free on every order, anywhere in Chuka.",
   },
   {
-    question: "Do you clean duvets, mats, carpets and shoes?",
+    question: "Do you clean duvets, mats and shoes?",
     answer:
-      "Yes. Duvets are deep cleaned and dried, mats scrubbed, carpets deep washed by size, and shoes hand cleaned per pair. Every price is on the laundry page.",
+      "Yes. Duvets are deep cleaned and dried, mats scrubbed and dried, and shoes hand cleaned per pair. Every price is on the laundry page.",
   },
   {
     question: "How fast can I get my clothes back?",

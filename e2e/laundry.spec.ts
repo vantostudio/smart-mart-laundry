@@ -77,16 +77,16 @@ test.describe("booking", () => {
 
     // Every item card shows a real photo that has loaded.
     const cardPhotos = page.locator("main ul li img");
-    await expect(cardPhotos).toHaveCount(16);
+    await expect(cardPhotos).toHaveCount(13);
     await expect
       .poll(() => cardPhotos.first().evaluate((img: HTMLImageElement) => img.naturalWidth))
       .toBeGreaterThan(0);
 
     // A category narrows the grid and lands in the URL.
-    await page.getByRole("button", { name: "Carpets", exact: true }).click();
-    await expect(page).toHaveURL(/cat=carpets/);
+    await page.getByRole("button", { name: "Mats", exact: true }).click();
+    await expect(page).toHaveURL(/cat=mats/);
     await expect(page.getByRole("heading", { name: "Baskets" })).toHaveCount(0);
-    await addLaundryItem(page, "Medium carpet");
+    await addLaundryItem(page, "Floor mat");
     await page.getByRole("button", { name: "All", exact: true }).click();
     await addLaundryItem(page, "Small basket");
     await page.getByRole("button", { name: "Add one Small basket" }).click();
@@ -96,7 +96,7 @@ test.describe("booking", () => {
       .last()
       .click();
     const sheet = page.getByRole("dialog", { name: "Book pickup" });
-    await expect(sheet.getByText("Medium carpet")).toBeVisible();
+    await expect(sheet.getByText("Floor mat")).toBeVisible();
 
     // The button says what's next until everything is picked.
     await expect(sheet.getByRole("button", { name: /Pick a collection day/ })).toBeVisible();
@@ -116,7 +116,7 @@ test.describe("booking", () => {
       sheet.getByRole("link", { name: /Send order on WhatsApp/ }),
     );
     expect(message).toContain("2 × Small basket — KSh 300");
-    expect(message).toContain("1 × Medium carpet — KSh 700");
+    expect(message).toContain("1 × Floor mat — KSh 350");
     expect(message).toMatch(/Collection: \w{3} \d+ \w{3}/);
     expect(message).toMatch(/Return: \w{3} \d+ \w{3}/);
     expect(message).toContain("Area: Ndagani");

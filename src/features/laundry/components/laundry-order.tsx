@@ -31,7 +31,7 @@ const grid = "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:g
 /**
  * Laundry, shop style: pick a category, tap the pictures to add items, then "Book pickup" opens
  * the sheet with the dates and area. The category and dates live in the URL
- * (`?cat=carpets&pickup=…&back=…`), so a link opens the same view. `params` is null in the
+ * (`?cat=mats&pickup=…&back=…`), so a link opens the same view. `params` is null in the
  * Suspense fallback (static prerender), which shows everything.
  */
 export function LaundryOrder({ params }: { params: Params }) {

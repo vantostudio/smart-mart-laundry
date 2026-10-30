@@ -1,4 +1,4 @@
-export type LaundryCategory = "baskets" | "duvets" | "mats" | "carpets" | "shoes";
+export type LaundryCategory = "baskets" | "duvets" | "mats" | "shoes";
 
 export type LaundryItem = {
   id: string;
@@ -42,13 +42,6 @@ export const laundryCategories: {
     title: "Mats",
     note: "Scrubbed and dried",
     image: "photo-1549295265-b0c1f7fb6147",
-  },
-  {
-    id: "carpets",
-    label: "Carpets",
-    title: "Carpets",
-    note: "Deep washed and dried, by size",
-    image: "photo-1757618978085-850cad5b020a",
   },
   {
     id: "shoes",
@@ -156,34 +149,6 @@ export const laundryItems: LaundryItem[] = [
     desc: "Deep cleaned on both sides.",
     price: 350,
     image: "photo-1672403391906-810131b660eb",
-  },
-  // Carpet prices are placeholders until the client confirms them.
-  {
-    id: "carpet-small",
-    category: "carpets",
-    name: "Small carpet",
-    desc: "Up to 4 × 6 ft, deep washed and dried.",
-    price: 400,
-    image: "photo-1762758889413-64d717f81b0d",
-    mark: "4×6",
-  },
-  {
-    id: "carpet-medium",
-    category: "carpets",
-    name: "Medium carpet",
-    desc: "About 5 × 8 ft, deep washed and dried.",
-    price: 700,
-    image: "photo-1714647211963-fa82bd5b3a7a",
-    mark: "5×8",
-  },
-  {
-    id: "carpet-large",
-    category: "carpets",
-    name: "Large carpet",
-    desc: "About 7 × 10 ft, deep washed and dried.",
-    price: 1000,
-    image: "photo-1757618978085-850cad5b020a",
-    mark: "7×10",
   },
   {
     id: "shoes-white",

@@ -4,7 +4,7 @@ import { bookingGaps, buildPickupMessage } from "./pickup-message";
 
 const items = [
   { id: "basket-small", name: "Small basket", price: 150, qty: 2 },
-  { id: "carpet-medium", name: "Medium carpet", price: 700, qty: 1 },
+  { id: "mat-floor", name: "Floor mat", price: 350, qty: 1 },
 ];
 const details = { pickup: "2026-10-29", back: "2026-10-30", area: "Ndagani" };
 
@@ -12,8 +12,8 @@ describe("buildPickupMessage", () => {
   it("lists the items, total, dates and area, with no name or phone", () => {
     const message = buildPickupMessage(items, details);
     expect(message).toContain("• 2 × Small basket — KSh 300");
-    expect(message).toContain("• 1 × Medium carpet — KSh 700");
-    expect(message).toContain("Total: KSh 1,000");
+    expect(message).toContain("• 1 × Floor mat — KSh 350");
+    expect(message).toContain("Total: KSh 650");
     expect(message).toContain("Collection: Thu 29 Oct");
     expect(message).toContain("Return: Fri 30 Oct");
     expect(message).toContain("Area: Ndagani");

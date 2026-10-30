@@ -31,10 +31,10 @@ const sentText = (sheet: HTMLElement) =>
 
 describe("LaundryOrder", () => {
   it("shows every category as picture cards, or one from the URL", () => {
-    renderOrder("cat=carpets");
-    expect(screen.getByRole("heading", { name: "Carpets" })).toBeInTheDocument();
+    renderOrder("cat=mats");
+    expect(screen.getByRole("heading", { name: "Mats" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Baskets" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add Large carpet" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add Floor mat" })).toBeInTheDocument();
   });
 
   it("books with taps only: items, two days and an area", async () => {
