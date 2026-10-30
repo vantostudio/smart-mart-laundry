@@ -23,7 +23,7 @@ export const orderUpdates = [
   { status: "Rider at your gate", detail: "Collecting 1 medium basket" },
   { status: "Washing now", detail: "Sorted by colour, gentle cycle" },
   { status: "Ironed and folded", detail: "Packed and ready to go" },
-  { status: "On its way back", detail: "Sent to you by SMS" },
+  { status: "On its way back", detail: "Sent to you on WhatsApp" },
 ] as const;
 
 type HowStep = {
@@ -36,7 +36,7 @@ type HowStep = {
 export const howSteps: HowStep[] = [
   {
     title: "Book in two minutes",
-    body: "Pick a day and a time, add your baskets, duvets, mats or shoes, and send the order on WhatsApp.",
+    body: "Tap your baskets, duvets, mats, carpets or shoes, pick your days and send the order on WhatsApp.",
     perk: "No account needed",
   },
   {
@@ -51,7 +51,7 @@ export const howSteps: HowStep[] = [
   },
   {
     title: "Back before your deadline",
-    body: "We tell you it's on the way by WhatsApp, SMS or a call, whichever you chose. Pay when it arrives.",
+    body: "We tell you on WhatsApp when it's on the way. Pay when it arrives.",
     perk: "Cash or M-Pesa on delivery",
   },
 ];
@@ -83,9 +83,9 @@ export const faqs = [
     answer: "Yes. Pickup, delivery and ironing are free on every order, anywhere in Chuka.",
   },
   {
-    question: "Do you clean duvets, mats and shoes?",
+    question: "Do you clean duvets, mats, carpets and shoes?",
     answer:
-      "Yes. Duvets are deep cleaned and dried, mats are scrubbed and dried, and shoes are hand cleaned per pair. Every price is on the laundry page.",
+      "Yes. Duvets are deep cleaned and dried, mats scrubbed, carpets deep washed by size, and shoes hand cleaned per pair. Every price is on the laundry page.",
   },
   {
     question: "How fast can I get my clothes back?",

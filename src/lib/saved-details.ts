@@ -1,78 +1,45 @@
 import { useEffect, useState } from "react";
 
-/**
- * The customer's contact details, kept on their own phone (localStorage) after they send an
- * order, so the next order is a couple of taps. Nothing leaves the browser.
+/*
+ * Where the customer wants pickup or delivery, remembered on their own phone (localStorage) after
+ * they send an order, so the next order is preselected. The WhatsApp message itself carries their
+ * name and number, so nothing else needs asking. Nothing leaves the browser.
  */
-type SavedDetails = { location: string; name: string; phone: string };
 
-/** An order form's contact fields: the saved details plus notes, which are never saved. */
-export type ContactDetails = SavedDetails & { notes: string };
+export const SAVED_AREA_KEY = "streetmart-area";
 
-export const SAVED_DETAILS_KEY = "streetmart-details";
-
-const emptyDetails: ContactDetails = { location: "", name: "", phone: "", notes: "" };
-
-function readSavedDetails(): SavedDetails | null {
+function readArea(areas: readonly string[]): string | null {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(SAVED_DETAILS_KEY) ?? "null");
-    if (!parsed || typeof parsed !== "object") return null;
-    const { location, name, phone } = parsed as Record<string, unknown>;
-    if (typeof location !== "string" || typeof name !== "string" || typeof phone !== "string") {
-      return null;
-    }
-    return { location, name, phone };
+    const saved = localStorage.getItem(SAVED_AREA_KEY);
+    return saved && areas.includes(saved) ? saved : null;
   } catch {
     return null;
   }
 }
 
-function writeSavedDetails(details: SavedDetails) {
-  try {
-    localStorage.setItem(SAVED_DETAILS_KEY, JSON.stringify(details));
-  } catch {
-    // storage unavailable: nothing to remember
-  }
-}
-
-function clearSavedDetails() {
-  try {
-    localStorage.removeItem(SAVED_DETAILS_KEY);
-  } catch {
-    // storage unavailable
-  }
-}
-
 /**
- * Contact fields for an order form, filled in from this phone's saved details after hydration
- * (`remembered`). `remember` saves them once an order is sent; `forget` clears them, keeping notes.
+ * The area choice plus an optional note (hostel, gate) for an order. The area is restored from
+ * this phone after hydration; `remember` saves it once an order is sent. Notes are never saved.
  */
-export function useContactDetails() {
-  const [details, setDetails] = useState<ContactDetails>(emptyDetails);
-  const [remembered, setRemembered] = useState(false);
+export function useOrderPlace(areas: readonly string[]) {
+  const [area, setArea] = useState<string | null>(null);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
-    // Saved details live in localStorage, which only exists after hydration.
-    const saved = readSavedDetails();
-    if (!saved) return;
+    // localStorage only exists after hydration.
+    const saved = readArea(areas);
     // oxlint-disable-next-line react/set-state-in-effect
-    setDetails((d) => ({ ...d, ...saved }));
-    setRemembered(true);
-  }, []);
-
-  function setField(field: keyof ContactDetails, value: string) {
-    setDetails((d) => ({ ...d, [field]: value }));
-  }
+    if (saved) setArea(saved);
+  }, [areas]);
 
   function remember() {
-    writeSavedDetails({ location: details.location, name: details.name, phone: details.phone });
+    if (!area) return;
+    try {
+      localStorage.setItem(SAVED_AREA_KEY, area);
+    } catch {
+      // storage unavailable: nothing to remember
+    }
   }
 
-  function forget() {
-    clearSavedDetails();
-    setDetails((d) => ({ ...emptyDetails, notes: d.notes }));
-    setRemembered(false);
-  }
-
-  return { details, remembered, setField, remember, forget };
+  return { area, setArea, note, setNote, remember };
 }

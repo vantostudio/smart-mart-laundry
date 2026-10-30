@@ -152,13 +152,13 @@ and `inverse` / `outline-inverse` on brand bands.
 | `ChoiceChips`          | Radio group as chips, calendar dates or icon tiles; rail scrolls on narrow cards, grid on wide                                                          |
 | `Price`                | KSh amount in the display face with tabular figures                                                                                                     |
 | `QuantityStepper`      | − qty + control with a 44px hit area, optional `max` (one-off mtumba pieces)                                                                            |
-| `StillNeeded`          | "2 of 5 done" meter and a checklist of missing fields that jump to each one; "All set" when complete                                                    |
 | `OrderSent`            | "Your order is ready in WhatsApp" with Copy order / Call us, after a send                                                                               |
-| `RememberedNotice`     | "Filled in from your last order on this phone. Not you? Clear"                                                                                          |
+| `DateCalendar`         | Day picker showing just the bookable weeks (no month pages); greyed-out days, filled ends, shaded range                                                 |
+| `AreaPicker`           | The three areas we serve as big icon buttons (`site.areas`), so nobody types an address                                                                 |
+| `OptionalNote`         | "Add a note (optional)" link that opens a small text box: the only typing in checkout                                                                   |
 | `FloatingCartBar`      | Bottom pill with count, caption, total and an action (laundry cart, shop bag)                                                                           |
 | `PerkList`             | Row of icon pills under a page heading                                                                                                                  |
 | `InfoItem`             | Icon + title + detail list item                                                                                                                         |
-| `FormField`            | Label wrapping a control, with an optional hint                                                                                                         |
 | `WhatsAppButton`       | Button that opens a pre-filled WhatsApp chat                                                                                                            |
 | `Wordmark`, `LogoMark` | Logo: the hanger "S" mark (in `currentColor`) + "Street Mart" with the sunset full stop. `LOGO_PATHS` also draw `src/app/icon.svg` and `apple-icon.tsx` |
 
@@ -169,6 +169,8 @@ features moves to `src/components/shared`. Add shadcn components only when a fea
 
 If you add a utility that shares a Tailwind prefix (`text-*`, `bg-*`, `shadow-*`), register it in
 `src/lib/utils.ts` so `cn()` doesn't strip it.
+
+**Laundry item art** (`src/features/laundry/components/item-art.tsx`): hand-drawn SVGs for every laundry item on a 120×96 canvas in fill-* tokens (baskets fill up S → XL, rugs, mats, duvets, sneakers), each on its category tint (`categoryTint`). Add an entry to the `art` map for a new item.
 
 **Illustrations** (`src/components/illustrations`): unDraw art (free, no attribution) converted to
 React components by `node scripts/undraw.mjs Name=<cdn path>`, which maps unDraw's colours to fill

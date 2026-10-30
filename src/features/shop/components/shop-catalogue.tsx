@@ -2,7 +2,7 @@
 
 import { SearchX, Search, SlidersHorizontal, Store, Truck, Wallet, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { PerkList } from "@/components/shared/perk-list";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useBag } from "@/features/cart/cart-provider";
+import { useOpenCart } from "@/features/cart/open-cart";
 import {
   categoryName,
   productByCode,
@@ -34,7 +35,6 @@ import {
   type Filters,
   type SortId,
 } from "@/features/shop/lib/filters";
-import { BAG_HASH, OPEN_BAG_EVENT } from "@/features/shop/lib/open-bag";
 import { bagLine, bagLineId } from "@/features/shop/lib/shop-message";
 import { ksh } from "@/lib/format";
 
@@ -93,14 +93,8 @@ export function ShopCatalogue({ params }: { params: Params }) {
   const sizes = sizeOptions(products, filters.cat);
   const narrowing = activeFilterCount(filters) + (filters.q.trim() ? 1 : 0);
 
-  useEffect(() => {
-    // The header's bag button opens the bag here, or links to /shop#bag from other pages.
-    const open = () => setBagOpen(true);
-    // oxlint-disable-next-line react/set-state-in-effect
-    if (window.location.hash === BAG_HASH) open();
-    window.addEventListener(OPEN_BAG_EVENT, open);
-    return () => window.removeEventListener(OPEN_BAG_EVENT, open);
-  }, []);
+  // The header's orders button opens the bag here, or links to /shop#bag from other pages.
+  useOpenCart("bag", () => setBagOpen(true));
 
   function writeUrl(f: Filters, item: string | null) {
     const url = new URL(window.location.href);

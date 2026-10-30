@@ -1,7 +1,6 @@
 import type { CartItem } from "@/features/cart/cart-provider";
 import { products, type Product } from "@/features/shop/data";
 import { ksh } from "@/lib/format";
-import { isKenyanPhone } from "@/lib/phone";
 
 import { deliveryFor, fulfilOptions, type FulfilMethod } from "./delivery";
 
@@ -23,41 +22,31 @@ export const productForLine = (id: string) => products.find((p) => id.startsWith
 
 type ShopDetails = {
   method: FulfilMethod;
-  location: string;
-  name: string;
-  phone: string;
-  notes?: string;
+  /** Delivery area; not needed for pick up. */
+  area: string | null;
+  note?: string;
 };
 
-export type ShopField = "items" | "location" | "name" | "phone";
+export type ShopGap = "items" | "area";
 
-const shopMessages = {
-  items: "Add something to your bag.",
-  location: "Tell us where to deliver.",
-  name: "Add your name.",
-  phone: "Add a phone number.",
-  phoneFormat: "Use a number like 0712 345 678.",
-} as const;
+/** The send button's label while something is missing. */
+export const shopGapLabels: Record<ShopGap, string> = {
+  items: "Add something to your bag",
+  area: "Choose your area",
+};
 
-/** Problems with the bag, in form order, so the first key is the field to focus. */
-export function validateShopOrder(
-  itemCount: number,
-  d: ShopDetails,
-): Partial<Record<ShopField, string>> {
-  const errors: Partial<Record<ShopField, string>> = {};
-  if (itemCount === 0) errors.items = shopMessages.items;
-  if (d.method === "delivery" && d.location.trim().length < 3) {
-    errors.location = shopMessages.location;
-  }
-  if (!d.name.trim()) errors.name = shopMessages.name;
-  if (!d.phone.trim()) errors.phone = shopMessages.phone;
-  else if (!isKenyanPhone(d.phone)) errors.phone = shopMessages.phoneFormat;
-  return errors;
+/** What's still missing, in the order the bag asks for it. */
+export function shopGaps(itemCount: number, d: ShopDetails): ShopGap[] {
+  return [
+    ...(itemCount === 0 ? (["items"] as const) : []),
+    ...(d.method === "delivery" && !d.area ? (["area"] as const) : []),
+  ];
 }
 
-const orPlaceholder = (value: string, placeholder: string) => value.trim() || placeholder;
-
-/** The WhatsApp message sent from the bag. Payment is on delivery or at the counter. */
+/**
+ * The WhatsApp message sent from the bag. It arrives from the customer's own number, so their
+ * name and phone aren't asked for. Payment is on delivery or at the counter.
+ */
 export function buildShopMessage(items: CartItem[], d: ShopDetails): string {
   const subtotal = items.reduce((sum, i) => sum + i.qty * i.price, 0);
   const delivery = deliveryFor(subtotal, d.method);
@@ -79,10 +68,8 @@ export function buildShopMessage(items: CartItem[], d: ShopDetails): string {
     `Total: ${ksh(subtotal + delivery.fee)}`,
     "",
     `${method.label}`,
-    ...(d.method === "delivery" ? [`Location: ${orPlaceholder(d.location, "(location)")}`] : []),
-    `Name: ${orPlaceholder(d.name, "(name)")}`,
-    `Phone: ${orPlaceholder(d.phone, "(phone)")}`,
-    ...(d.notes?.trim() ? [`Notes: ${d.notes.trim()}`] : []),
+    ...(d.method === "delivery" ? [`Area: ${d.area ?? "(area)"}`] : []),
+    ...(d.note?.trim() ? [`Note: ${d.note.trim()}`] : []),
     "",
     "Please confirm these are still available.",
     d.method === "delivery"

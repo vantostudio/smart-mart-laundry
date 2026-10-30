@@ -8,7 +8,7 @@ import { device } from "./helpers";
  * 44px and form fields 16px. Section screenshots for review go to .audit/sections/.
  */
 
-// h2: the first section heading on the page (/laundry's step titles are deliberately smaller).
+// h2: the first section heading on the page (/laundry's category titles are deliberately smaller).
 const pages = [
   { path: "/", h1: "display-xl", h2: "main h2" },
   { path: "/laundry", h1: "display-lg", h2: "#prices h2" },

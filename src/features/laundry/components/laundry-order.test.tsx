@@ -3,30 +3,18 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { CartProvider } from "@/features/cart/cart-provider";
-import { SAVED_DETAILS_KEY } from "@/lib/saved-details";
+import { SAVED_AREA_KEY } from "@/lib/saved-details";
 
 import { LaundryOrder } from "./laundry-order";
 
-const replace = vi.fn<(href: string, options?: { scroll?: boolean }) => void>();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace }),
-  useSearchParams: () => new URLSearchParams(),
-}));
-
 beforeEach(() => {
-  // Wednesday 28 Oct 2026, 8:00 AM: today's morning window has already closed.
-  vi.useFakeTimers({ now: new Date(2026, 9, 28, 8, 0), toFake: ["Date"] });
+  // Wednesday 28 Oct 2026, 9 AM: today can still be booked.
+  vi.useFakeTimers({ now: new Date(2026, 9, 28, 9, 0), toFake: ["Date"] });
   window.HTMLElement.prototype.scrollIntoView = () => {};
-  window.IntersectionObserver = class {
-    observe() {}
-    disconnect() {}
-  } as unknown as typeof IntersectionObserver;
-  localStorage.clear();
 });
 
 afterEach(() => {
   vi.useRealTimers();
-  replace.mockClear();
 });
 
 const renderOrder = (query = "") =>
@@ -36,93 +24,76 @@ const renderOrder = (query = "") =>
     </CartProvider>,
   );
 
-const sendLink = () => screen.getByRole("link", { name: "Send order on WhatsApp" });
-const sentText = () => decodeURIComponent(sendLink().getAttribute("href") ?? "");
-
-async function fillDetails(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText("Pickup location"), "Ndagani, blue gate");
-  await user.type(screen.getByLabelText("Your name"), "Jane");
-  await user.type(screen.getByLabelText("Phone number"), "0712 345 678");
-}
+const sentText = (sheet: HTMLElement) =>
+  decodeURIComponent(
+    within(sheet).getByRole("link", { name: "Send order on WhatsApp" }).getAttribute("href") ?? "",
+  );
 
 describe("LaundryOrder", () => {
-  it("shows the three steps and offers only today's open times", () => {
-    renderOrder();
-    for (const name of [
-      /When should we pick up/,
-      /What needs washing/,
-      /Where should we collect/,
-      "Your order",
-    ]) {
-      expect(screen.getByRole("heading", { name })).toBeInTheDocument();
-    }
-    const times = screen.getByRole("radiogroup", { name: "Pickup time" });
-    expect(within(times).queryByRole("radio", { name: /Morning/ })).not.toBeInTheDocument();
-    expect(screen.getByText("Earlier times today have passed.")).toBeInTheDocument();
+  it("shows every category as picture cards, or one from the URL", () => {
+    renderOrder("cat=carpets");
+    expect(screen.getByRole("heading", { name: "Carpets" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Baskets" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add Large carpet" })).toBeInTheDocument();
   });
 
-  it("applies a pickup time as soon as it's tapped", async () => {
+  it("books with taps only: items, two days and an area", async () => {
     const user = userEvent.setup();
     renderOrder();
-    const times = screen.getByRole("radiogroup", { name: "Pickup time" });
-    await user.click(within(times).getByRole("radio", { name: /Midday/ }));
-    expect(replace).toHaveBeenCalledWith(
-      "/laundry?pickup=2026-10-28&window=midday&return=next-day",
-      { scroll: false },
+    await user.click(screen.getByRole("button", { name: "Add Small basket" }));
+    await user.click(screen.getByRole("button", { name: "Add one Small basket" }));
+    await user.click(screen.getByRole("button", { name: /Book pickup/ }));
+
+    const sheet = screen.getByRole("dialog", { name: "Book pickup" });
+    expect(within(sheet).getByRole("button", { name: /Pick a collection day/ })).toBeVisible();
+    // Past days can't be picked; today can.
+    expect(within(sheet).getByRole("button", { name: "Tuesday 27 October" })).toBeDisabled();
+    await user.click(within(sheet).getByRole("button", { name: "Thursday 29 October" }));
+
+    // The return is suggested as the next day.
+    expect(within(sheet).getByRole("button", { name: "Friday 30 October" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
-    expect(screen.getByText("Wed 28, 10 AM–1 PM")).toBeInTheDocument();
+    await user.click(within(sheet).getByRole("button", { name: /Choose your area/ }));
+    await user.click(within(sheet).getByRole("radio", { name: "Ndagani" }));
+
+    const message = sentText(sheet);
+    expect(message).toContain("2 × Small basket — KSh 300");
+    expect(message).toContain("Collection: Thu 29 Oct");
+    expect(message).toContain("Return: Fri 30 Oct");
+    expect(message).toContain("Area: Ndagani");
+    expect(within(sheet).queryByRole("textbox")).not.toBeInTheDocument();
+
+    // Sending remembers the area for next time.
+    await user.click(within(sheet).getByRole("link", { name: "Send order on WhatsApp" }));
+    expect(localStorage.getItem(SAVED_AREA_KEY)).toBe("Ndagani");
+    expect(within(sheet).getByText("Your order is ready in WhatsApp")).toBeInTheDocument();
   });
 
-  it("lists what's missing and jumps to it", async () => {
+  it("returns within a week only, and notes a same-day return", async () => {
     const user = userEvent.setup();
-    renderOrder("pickup=2026-10-29&window=morning&return=next-day");
-    expect(screen.queryByRole("button", { name: /pickup day and time/ })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Add at least one basket/ }));
-    expect(screen.getByRole("heading", { name: /What needs washing/ })).toHaveFocus();
+    renderOrder("pickup=2026-10-29");
+    await user.click(screen.getByRole("button", { name: "Add Door mat" }));
+    await user.click(screen.getByRole("button", { name: /Book pickup/ }));
+    const sheet = screen.getByRole("dialog", { name: "Book pickup" });
 
-    await user.click(screen.getByRole("button", { name: "Add Small basket" }));
-    await user.click(sendLink());
-    expect(screen.getByText("Tell us where to collect from.", { selector: "p" })).toBeVisible();
-    expect(screen.getByLabelText("Pickup location")).toHaveFocus();
-
-    await user.type(screen.getByLabelText("Pickup location"), "Chuka town");
-    await user.type(screen.getByLabelText("Your name"), "Jane");
-    await user.type(screen.getByLabelText("Phone number"), "12345");
-    await user.click(sendLink());
-    expect(screen.getByLabelText("Phone number")).toHaveFocus();
-    expect(screen.getByText("Use a number like 0712 345 678.", { selector: "p" })).toBeVisible();
+    await user.click(within(sheet).getByRole("radio", { name: /Return/ }));
+    expect(within(sheet).getByRole("button", { name: "Friday 6 November" })).toBeDisabled();
+    await user.click(within(sheet).getByRole("button", { name: "Thursday 29 October" }));
+    expect(within(sheet).getByText(/Same day needs a morning collection/)).toBeInTheDocument();
   });
 
-  // Types a lot and remounts, so it gets more than the default 5s on a slow machine.
-  it("sends notes and the notify choice, then remembers the details", async () => {
+  it("adds a note only when asked", async () => {
     const user = userEvent.setup();
-    const { unmount } = renderOrder("pickup=2026-10-29&window=morning&return=next-day");
-    await user.click(screen.getByRole("button", { name: "Add Small basket" }));
-    await fillDetails(user);
-    await user.type(screen.getByLabelText(/Notes for us/), "Coffee stain on the white shirt");
-    const notify = screen.getByRole("radiogroup", { name: "How should we tell you it's ready?" });
-    await user.click(within(notify).getByRole("radio", { name: "SMS" }));
-
-    expect(sentText()).toContain("1 × Small basket — KSh 150");
-    expect(sentText()).toContain("Pickup: Thu 29 Oct, morning (7–10 AM)");
-    expect(sentText()).toContain("Notify me by: SMS");
-    expect(sentText()).toContain("Notes: Coffee stain on the white shirt");
-    expect(screen.queryByText("Still needed")).not.toBeInTheDocument();
-
-    await user.click(sendLink());
-    expect(screen.getByText("Your order is ready in WhatsApp")).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem(SAVED_DETAILS_KEY) ?? "{}")).toEqual({
-      location: "Ndagani, blue gate",
-      name: "Jane",
-      phone: "0712 345 678",
-    });
-
-    unmount();
     renderOrder();
-    expect(await screen.findByDisplayValue("Ndagani, blue gate")).toBeInTheDocument();
-    expect(screen.getByText(/Filled in from your last order/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Not you? Clear" }));
-    expect(screen.getByLabelText("Your name")).toHaveValue("");
-    expect(localStorage.getItem(SAVED_DETAILS_KEY)).toBeNull();
-  }, 15_000);
+    await user.click(screen.getByRole("button", { name: "Add Door mat" }));
+    await user.click(screen.getByRole("button", { name: /Book pickup/ }));
+    const sheet = screen.getByRole("dialog", { name: "Book pickup" });
+    await user.click(within(sheet).getByRole("button", { name: /Add a note/ }));
+    await user.type(within(sheet).getByRole("textbox", { name: /Note/ }), "Hostel B, room 12");
+    await user.click(within(sheet).getByRole("button", { name: "Thursday 29 October" }));
+    await user.click(within(sheet).getByRole("radio", { name: "Chuka town" }));
+    expect(sentText(sheet)).toContain("Note: Hostel B, room 12");
+  });
 });

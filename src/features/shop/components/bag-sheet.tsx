@@ -1,19 +1,17 @@
 "use client";
 
-import { ShoppingBag, Store, Truck } from "lucide-react";
+import { ArrowRight, ShoppingBag, Store, Truck } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState, type ChangeEvent, type MouseEvent, type RefObject } from "react";
+import { useState } from "react";
 
+import { AreaPicker } from "@/components/shared/area-picker";
 import { ChoiceChips } from "@/components/shared/choice-chips";
-import { FormField } from "@/components/shared/form-field";
+import { OptionalNote } from "@/components/shared/optional-note";
 import { OrderSent } from "@/components/shared/order-sent";
 import { Price } from "@/components/shared/price";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
-import { RememberedNotice } from "@/components/shared/remembered-notice";
-import { StillNeeded } from "@/components/shared/still-needed";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetBody,
@@ -23,22 +21,21 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
+import { site } from "@/config/site";
 import { useBag } from "@/features/cart/cart-provider";
 import { deliveryFor, fulfilOptions, type FulfilMethod } from "@/features/shop/lib/delivery";
 import {
   buildShopMessage,
   productForLine,
-  validateShopOrder,
-  type ShopField,
+  shopGapLabels,
+  shopGaps,
 } from "@/features/shop/lib/shop-message";
 import { ksh } from "@/lib/format";
 import { unsplash } from "@/lib/images";
-import { useContactDetails } from "@/lib/saved-details";
-
-type ContactField = Exclude<ShopField, "items">;
+import { useOrderPlace } from "@/lib/saved-details";
 
 const fulfilIcons = { delivery: Truck, pickup: Store };
+const AREA_ID = "bag-area";
 
 type Props = {
   open: boolean;
@@ -46,64 +43,21 @@ type Props = {
 };
 
 /**
- * The shop bag: lines with size and quantity, delivery or pick up (with the free-delivery
- * nudge), contact details remembered on this phone, a "Still needed" list, and the WhatsApp
- * order. Once WhatsApp has opened it says what's next and offers a copy or a call.
+ * The shop bag: lines with size and quantity, delivery (with the free-delivery nudge and the
+ * area as three buttons) or pick up in store, an optional note, and the WhatsApp order. No name
+ * or phone: the message comes from the customer's own WhatsApp. The button says what's missing.
  */
 export function BagSheet({ open, onOpenChange }: Props) {
   const { items, count, total, setQty, clear } = useBag();
   const [method, setMethod] = useState<FulfilMethod>("delivery");
-  const { details, remembered, setField, remember, forget } = useContactDetails();
-  const [attempted, setAttempted] = useState(false);
+  const { area, setArea, note, setNote, remember } = useOrderPlace(site.areas);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
-  const refs: Record<ContactField, RefObject<HTMLInputElement | null>> = {
-    location: useRef<HTMLInputElement>(null),
-    name: useRef<HTMLInputElement>(null),
-    phone: useRef<HTMLInputElement>(null),
-  };
 
-  const order = { method, ...details };
-  const problems = validateShopOrder(count, order);
-  const missing = (Object.entries(problems) as [ShopField, string][]).filter(
-    (entry): entry is [ContactField, string] => entry[0] !== "items",
-  );
-  const errors = attempted ? problems : {};
+  const order = { method, area, note };
+  const gaps = shopGaps(count, order);
   const delivery = deliveryFor(total, method);
   const message = buildShopMessage(items, order);
   const sent = sentMessage === message;
-
-  function fix(field: ContactField) {
-    const el = refs[field].current;
-    el?.scrollIntoView({ block: "center" });
-    el?.focus({ preventScroll: true });
-  }
-
-  function send(event: MouseEvent<HTMLAnchorElement>) {
-    const first = missing[0]?.[0];
-    if (first) {
-      event.preventDefault();
-      setAttempted(true);
-      fix(first);
-      return;
-    }
-    remember();
-    setSentMessage(message);
-  }
-
-  const input = (name: ContactField) => ({
-    ref: refs[name],
-    value: details[name],
-    onChange: (e: ChangeEvent<HTMLInputElement>) => setField(name, e.target.value),
-    "aria-invalid": errors[name] ? true : undefined,
-    "aria-describedby": errors[name] ? `bag-${name}-error` : undefined,
-  });
-
-  const error = (name: ContactField) =>
-    errors[name] && (
-      <p id={`bag-${name}-error`} className="text-caption font-semibold text-destructive">
-        {errors[name]}
-      </p>
-    );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -207,54 +161,16 @@ export function BagSheet({ open, onOpenChange }: Props) {
                 )}
               </div>
 
-              <div className="mt-5 grid gap-3.5">
-                {remembered && <RememberedNotice onForget={forget} />}
+              <div className="mt-4 grid gap-2">
                 {method === "delivery" && (
-                  <>
-                    <FormField label="Delivery location">
-                      <Input
-                        {...input("location")}
-                        autoComplete="street-address"
-                        placeholder="Estate, hostel or landmark…"
-                      />
-                    </FormField>
-                    {error("location")}
-                  </>
+                  <AreaPicker id={AREA_ID} value={area} onChange={setArea} />
                 )}
-                <FormField label="Your name">
-                  <Input {...input("name")} autoComplete="name" placeholder="e.g. Jane Wanjiru…" />
-                </FormField>
-                {error("name")}
-                <FormField label="Phone number">
-                  <Input
-                    {...input("phone")}
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="0712 345 678…"
-                    className="figures"
-                  />
-                </FormField>
-                {error("phone")}
-                <FormField
-                  label="Notes (optional)"
-                  hint="Another size or colour if it's gone, or a time."
-                >
-                  <Textarea
-                    value={details.notes}
-                    onChange={(e) => setField("notes", e.target.value)}
-                    rows={2}
-                    maxLength={300}
-                  />
-                </FormField>
+                <OptionalNote
+                  value={note}
+                  onChange={setNote}
+                  placeholder="Another size or colour if it's gone, or a hostel or gate"
+                />
               </div>
-
-              <StillNeeded
-                missing={missing}
-                total={method === "delivery" ? 3 : 2}
-                onFix={fix}
-                className="mt-5"
-              />
             </SheetBody>
 
             <SheetFooter className="grid gap-2">
@@ -278,16 +194,36 @@ export function BagSheet({ open, onOpenChange }: Props) {
                   </dd>
                 </div>
               </dl>
-              <WhatsAppButton
-                message={message}
-                variant="clay"
-                size="lg"
-                block
-                onClick={send}
-                className="max-xs:px-4!"
-              >
-                Send order on WhatsApp
-              </WhatsAppButton>
+              {gaps[0] ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  block
+                  onClick={() =>
+                    gaps[0] === "items"
+                      ? onOpenChange(false)
+                      : document
+                          .getElementById(AREA_ID)
+                          ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }
+                >
+                  {shopGapLabels[gaps[0]]} <ArrowRight aria-hidden />
+                </Button>
+              ) : (
+                <WhatsAppButton
+                  message={message}
+                  variant="clay"
+                  size="lg"
+                  block
+                  onClick={() => {
+                    remember();
+                    setSentMessage(message);
+                  }}
+                  className="max-xs:px-4!"
+                >
+                  Send order on WhatsApp
+                </WhatsAppButton>
+              )}
               <OrderSent sent={sent} message={message} className="p-3">
                 <p className="mt-0.5 text-caption text-muted-foreground">
                   Tap Send there. We&apos;ll confirm it&apos;s all in stock. Didn&apos;t open?

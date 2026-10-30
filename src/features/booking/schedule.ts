@@ -1,5 +1,5 @@
 /*
- * Pickup scheduling rules. Pure functions only, so the same logic can later run on the server
+ * Collection and return date rules. Pure functions only, so the same logic can later run on the server
  * when bookings become real orders.
  *
  * Dates are calendar dates in the shop's local time (Africa/Nairobi, UTC+3, no daylight saving).
@@ -17,46 +17,17 @@ const openingHours = Array.from({ length: 7 }, (_, day) => {
   return { open: parseInt(period.open, 10), close: parseInt(period.close, 10) };
 });
 
-/** How many days ahead a pickup can be booked, today included. */
-const BOOKING_DAYS = 7;
+/** How many days ahead a collection can be booked, today included. */
+export const COLLECTION_DAYS = 14;
 
-/** A window can't be booked once we're this close to its start. */
+/** Latest return: this many days after collection. */
+export const RETURN_WITHIN = 7;
+
+/** Today can be booked until this many hours before closing. */
 const LEAD_TIME_HOURS = 1;
 
-/** Latest hour we deliver back on a normal day. */
-const RETURN_BY_HOUR = 19;
-
-const pickupWindows = [
-  { id: "morning", label: "Morning", time: "7–10 AM", start: 7, end: 10 },
-  { id: "midday", label: "Midday", time: "10 AM–1 PM", start: 10, end: 13 },
-  { id: "afternoon", label: "Afternoon", time: "1–4 PM", start: 13, end: 16 },
-  { id: "evening", label: "Evening", time: "4–7 PM", start: 16, end: 19 },
-] as const;
-
-type PickupWindow = (typeof pickupWindows)[number];
-export type WindowId = PickupWindow["id"];
-
-const returnOptions = [
-  { id: "same-day", label: "Same day", days: 0 },
-  { id: "next-day", label: "Next day", days: 1 },
-  { id: "two-days", label: "2 days", days: 2 },
-] as const;
-
-export type ReturnId = (typeof returnOptions)[number]["id"];
-
-/** Pickup windows that still allow a same-day return. */
-const SAME_DAY_WINDOWS: readonly WindowId[] = ["morning", "midday"];
-
-export const DEFAULT_RETURN: ReturnId = "next-day";
-
-/** What the visitor has picked so far. Any field can be missing. */
-export type Booking = {
-  pickup: string | null;
-  window: WindowId | null;
-  return: ReturnId | null;
-};
-
-export type CompleteBooking = { pickup: string; window: WindowId; return: ReturnId };
+/** Collection and return dates (`YYYY-MM-DD`), either still missing. */
+export type BookingDates = { pickup: string | null; back: string | null };
 
 // ---------------------------------------------------------------------------------------------
 // Calendar dates
@@ -129,177 +100,62 @@ export function formatDay(iso: string, { month = false }: { month?: boolean } = 
   return month ? `${p.weekday} ${p.day} ${p.month}` : `${p.weekday} ${p.day}`;
 }
 
-/** 7 → "7 AM", 13 → "1 PM", 12 → "12 PM". */
-export function formatHour(hour: number): string {
-  const h = hour % 12 === 0 ? 12 : hour % 12;
-  return `${h} ${hour < 12 ? "AM" : "PM"}`;
-}
-
 export function hoursFor(iso: string): { open: number; close: number } {
   return openingHours[partsOf(iso).dow]!;
 }
 
 // ---------------------------------------------------------------------------------------------
-// Days and windows
+// Collection and return rules
 // ---------------------------------------------------------------------------------------------
 
-type WindowStatus = PickupWindow & { disabled: boolean; reason?: string };
-
-/** Every window for a day, with the ones that can't be booked marked and explained. */
-export function windowsFor(iso: string, now: Date): WindowStatus[] {
+/** First day a collection can be booked: today until an hour before closing, then tomorrow. */
+export function firstCollectionDay(now: Date): string {
   const today = toIsoDate(now);
-  const offset = daysBetween(today, iso);
-  const { open, close } = hoursFor(iso);
-  const hourNow = now.getHours() + now.getMinutes() / 60;
-
-  return pickupWindows.map((w) => {
-    if (Number.isNaN(offset) || offset < 0) return { ...w, disabled: true, reason: "Past" };
-    if (w.start < open || w.end > close) return { ...w, disabled: true, reason: "Closed" };
-    if (offset === 0 && hourNow > w.start - LEAD_TIME_HOURS) {
-      return { ...w, disabled: true, reason: "Too late" };
-    }
-    return { ...w, disabled: false };
-  });
+  const cutOff = hoursFor(today).close - LEAD_TIME_HOURS;
+  return now.getHours() < cutOff ? today : addDays(today, 1);
 }
 
-function isWindowAvailable(iso: string, window: WindowId, now: Date): boolean {
-  return windowsFor(iso, now).some((w) => w.id === window && !w.disabled);
-}
-
-type UpcomingDay = {
-  iso: string;
-  /** "Today", "Tomorrow" or "Fri 31". */
-  label: string;
-  /** "Today", "Tomorrow" or "Fri" — first line of a two-line chip. */
-  name: string;
-  /** "31 Oct" — second line of a two-line chip. */
-  date: string;
-  disabled: boolean;
-  reason?: string;
-};
-
-/** The next `count` calendar days from today. A day is disabled when no window is left on it. */
-export function upcomingDays(now: Date, count = BOOKING_DAYS): UpcomingDay[] {
+/** Bookable collection day: from the first open day up to COLLECTION_DAYS from today. */
+export function isCollectionDay(iso: string, now: Date): boolean {
   const today = toIsoDate(now);
-  return Array.from({ length: count }, (_, i) => {
-    const iso = addDays(today, i);
-    const p = partsOf(iso);
-    const name = i === 0 ? "Today" : i === 1 ? "Tomorrow" : p.weekday;
-    const disabled = windowsFor(iso, now).every((w) => w.disabled);
-    return {
-      iso,
-      label: i < 2 ? name : `${p.weekday} ${p.day}`,
-      name,
-      date: `${p.day} ${p.month}`,
-      disabled,
-      ...(disabled ? { reason: i === 0 ? "Too late" : "Closed" } : {}),
-    };
-  });
+  return (
+    daysBetween(firstCollectionDay(now), iso) >= 0 && daysBetween(today, iso) < COLLECTION_DAYS
+  );
 }
+
+/** Return on the collection day itself (needs a morning collection) up to a week later. */
+export function isReturnDay(iso: string, pickup: string): boolean {
+  const offset = daysBetween(pickup, iso);
+  return offset >= 0 && offset <= RETURN_WITHIN;
+}
+
+/** Same-day return is offered, but only works for a morning collection; the order says so. */
+export const isSameDay = (d: BookingDates) => d.pickup !== null && d.pickup === d.back;
 
 // ---------------------------------------------------------------------------------------------
-// Returns
+// URL: /laundry?pickup=2026-10-29&back=2026-10-30
 // ---------------------------------------------------------------------------------------------
 
-type ReturnStatus = {
-  id: ReturnId;
-  label: string;
-  /** Calendar date the order comes back. */
-  iso: string;
-  /** Hour on that day we deliver by. */
-  byHour: number;
-  /** "Back Thu 30, by 7 PM". */
-  detail: string;
-  disabled: boolean;
-  reason?: string;
-};
+type ParamSource = Pick<URLSearchParams, "get"> | null | undefined;
 
-export function sameDayAllowed(window: WindowId | null): boolean {
-  return window === null || SAME_DAY_WINDOWS.includes(window);
+/** Dates from the URL, dropping any that can no longer be booked. */
+export function parseDates(params: ParamSource, now: Date): BookingDates {
+  const pickupParam = params?.get("pickup") ?? null;
+  const pickup =
+    pickupParam && fromIsoDate(pickupParam) && isCollectionDay(pickupParam, now)
+      ? pickupParam
+      : null;
+  const backParam = params?.get("back") ?? null;
+  const back =
+    pickup && backParam && fromIsoDate(backParam) && isReturnDay(backParam, pickup)
+      ? backParam
+      : null;
+  return { pickup, back };
 }
 
-/**
- * Return options for a pickup day. Delivery is by 7 PM, or by closing time on a short day
- * (Sunday closes at 4 PM). Same day only works for morning and midday pickups; with no window
- * picked yet it stays open.
- */
-export function returnOptionsFor(pickup: string, window: WindowId | null): ReturnStatus[] {
-  return returnOptions.map((r) => {
-    const iso = addDays(pickup, r.days);
-    const byHour = Math.min(RETURN_BY_HOUR, hoursFor(iso).close);
-    const disabled = r.id === "same-day" && !sameDayAllowed(window);
-    return {
-      id: r.id,
-      label: r.label,
-      iso,
-      byHour,
-      detail: `Back ${formatDay(iso)}, by ${formatHour(byHour)}`,
-      disabled,
-      ...(disabled ? { reason: "Before 1 PM" } : {}),
-    };
-  });
-}
-
-export function returnFor(booking: CompleteBooking): ReturnStatus {
-  return returnOptionsFor(booking.pickup, booking.window).find((r) => r.id === booking.return)!;
-}
-
-export function windowById(id: WindowId): PickupWindow {
-  return pickupWindows.find((w) => w.id === id)!;
-}
-
-// ---------------------------------------------------------------------------------------------
-// URL contract: /laundry?pickup=2026-10-29&window=morning&return=next-day
-// ---------------------------------------------------------------------------------------------
-
-type ParamSource =
-  | Pick<URLSearchParams, "get">
-  | Record<string, string | string[] | undefined>
-  | null
-  | undefined;
-
-function readParam(source: ParamSource, key: string): string | null {
-  if (!source) return null;
-  if (typeof (source as URLSearchParams).get === "function") {
-    return (source as URLSearchParams).get(key);
-  }
-  const value = (source as Record<string, string | string[] | undefined>)[key];
-  return (Array.isArray(value) ? value[0] : value) ?? null;
-}
-
-const isWindowId = (v: string | null): v is WindowId => pickupWindows.some((w) => w.id === v);
-const isReturnId = (v: string | null): v is ReturnId => returnOptions.some((r) => r.id === v);
-
-/**
- * Reads a booking from search params (URLSearchParams or Next's `searchParams` object).
- * Anything malformed, in the past, beyond the booking range or not offered on that day comes
- * back as null, so the visitor is simply asked again.
- */
-export function parseBooking(source: ParamSource, now: Date = new Date()): Booking {
-  const rawPickup = readParam(source, "pickup");
-  const rawWindow = readParam(source, "window");
-  const rawReturn = readParam(source, "return");
-
-  let pickup: string | null = null;
-  if (rawPickup && fromIsoDate(rawPickup)) {
-    const offset = daysBetween(toIsoDate(now), rawPickup);
-    if (offset >= 0 && offset < BOOKING_DAYS) pickup = rawPickup;
-  }
-
-  let window: WindowId | null = isWindowId(rawWindow) ? rawWindow : null;
-  if (pickup && window && !isWindowAvailable(pickup, window, now)) window = null;
-  if (!pickup && rawPickup) window = null; // a window on an invalid day means nothing
-
-  let ret: ReturnId | null = isReturnId(rawReturn) ? rawReturn : null;
-  if (ret === "same-day" && !sameDayAllowed(window)) ret = null;
-
-  return { pickup, window, return: ret };
-}
-
-export function bookingParams(choice: CompleteBooking): URLSearchParams {
-  return new URLSearchParams({
-    pickup: choice.pickup,
-    window: choice.window,
-    return: choice.return,
-  });
+export function dateParams(d: BookingDates): [string, string][] {
+  return [
+    ...(d.pickup ? ([["pickup", d.pickup]] as [string, string][]) : []),
+    ...(d.back ? ([["back", d.back]] as [string, string][]) : []),
+  ];
 }

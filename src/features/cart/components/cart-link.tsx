@@ -17,7 +17,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useBag, useCart } from "@/features/cart/cart-provider";
-import { BAG_HASH, openBag } from "@/features/shop/lib/open-bag";
+import { cartHash, openCart, type CartKind } from "@/features/cart/open-cart";
 
 const items = (n: number) => `${n} ${n === 1 ? "item" : "items"}`;
 
@@ -49,12 +49,12 @@ export function CartLink() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // On /shop the bag opens in place; elsewhere the link loads /shop#bag, which opens it.
-  const toBag = (event: MouseEvent<HTMLAnchorElement>) => {
+  // On the cart's own page its sheet opens in place; elsewhere the link's hash opens it on arrival.
+  const go = (kind: CartKind) => (event: MouseEvent<HTMLAnchorElement>) => {
     setOpen(false);
-    if (pathname !== "/shop") return;
+    if (pathname !== (kind === "bag" ? "/shop" : "/laundry")) return;
     event.preventDefault();
-    openBag();
+    openCart(kind);
   };
 
   if (laundry.count === 0 && bag.count === 0) return null;
@@ -65,8 +65,8 @@ export function CartLink() {
     return (
       <Button asChild variant="ghost" className="size-11 p-0">
         <Link
-          href={isBag ? `/shop${BAG_HASH}` : "/laundry#cart"}
-          onClick={isBag ? toBag : undefined}
+          href={isBag ? `/shop${cartHash.bag}` : `/laundry${cartHash.laundry}`}
+          onClick={go(isBag ? "bag" : "laundry")}
           aria-label={`${isBag ? "Shop bag" : "Laundry cart"}, ${items(count)}`}
         >
           <CountIcon icon={isBag ? ShoppingBag : WashingMachine} count={count} />
@@ -98,16 +98,16 @@ export function CartLink() {
           <SheetBody className="pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             <ul className="grid gap-2">
               <OrderRow
-                href="/laundry#cart"
-                onClick={() => setOpen(false)}
+                href={`/laundry${cartHash.laundry}`}
+                onClick={go("laundry")}
                 icon={WashingMachine}
                 title="Laundry pickup"
                 count={laundry.count}
                 total={laundry.total}
               />
               <OrderRow
-                href={`/shop${BAG_HASH}`}
-                onClick={toBag}
+                href={`/shop${cartHash.bag}`}
+                onClick={go("bag")}
                 icon={ShoppingBag}
                 title="Shop bag"
                 count={bag.count}
@@ -129,7 +129,7 @@ function OrderRow({
   count,
   total,
 }: {
-  href: "/laundry#cart" | `/shop${typeof BAG_HASH}`;
+  href: `/laundry${typeof cartHash.laundry}` | `/shop${typeof cartHash.bag}`;
   onClick: (event: MouseEvent<HTMLAnchorElement>) => void;
   icon: LucideIcon;
   title: string;

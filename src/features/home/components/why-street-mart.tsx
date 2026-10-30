@@ -70,7 +70,7 @@ export function WhyStreetMart() {
           visual={<TextMessagesIllustration className={illustration} />}
           title="We tell you when it's ready"
         >
-          <p>By WhatsApp, SMS or a call. You choose when you order.</p>
+          <p>On WhatsApp when it's on the way. Rather an SMS or a call? Just say so in the chat.</p>
           <ul aria-label="Ways we can reach you" className="mt-3 flex flex-wrap gap-1.5">
             {channels.map(({ icon: Icon, label }) => (
               <li
@@ -111,10 +111,10 @@ export function WhyStreetMart() {
         <MediaCard
           key="duvets"
           visual={photo("laundryRoom")}
-          title="Duvets, mats & shoes"
+          title="Duvets, carpets & shoes"
           footer={<Perk>Priced per item</Perk>}
         >
-          <p>Deep cleaned, scrubbed and dried, not just clothes.</p>
+          <p>Duvets, mats, carpets and shoes too, not just clothes.</p>
         </MediaCard>
 
         <MediaCard

@@ -70,16 +70,21 @@ test("quick view needs a size, then the bag sends one WhatsApp order", async ({ 
   await expect(bag.getByText("SM-1002 · Size L")).toBeVisible();
   await expect(bag.getByText("Free delivery unlocked.")).toBeVisible();
 
-  await bag.getByRole("radio", { name: /Pick up in store/ }).click();
-  await expect(bag.getByLabel("Delivery location")).toHaveCount(0);
-  await bag.getByLabel("Your name").fill("Wanjiru");
-  await bag.getByLabel("Phone number").fill("0712345678");
-  await expect(bag.getByText("All set. Send it when you're ready.")).toBeVisible();
-
-  const message = await whatsappMessage(bag.getByRole("link", { name: "Send order on WhatsApp" }));
+  // Delivery needs an area: the button says so, and three taps-not-typing buttons answer it.
+  await expect(bag.getByRole("button", { name: /Choose your area/ })).toBeVisible();
+  await bag.getByRole("radio", { name: "Chuka University" }).click();
+  let message = await whatsappMessage(bag.getByRole("link", { name: "Send order on WhatsApp" }));
   expect(message).toContain("1 × Oversized hoodie (SM-1002 · Size L) — KSh 1,500");
+  expect(message).toContain("Area: Chuka University");
+  expect(message).not.toMatch(/Name:|Phone:/);
+
+  // Pick up in store needs no area at all.
+  await bag.getByRole("radio", { name: /Pick up in store/ }).click();
+  await expect(bag.getByRole("radiogroup", { name: "Your area" })).toHaveCount(0);
+  message = await whatsappMessage(bag.getByRole("link", { name: "Send order on WhatsApp" }));
   expect(message).toContain("Pick up in store");
   expect(message).toContain("Total: KSh 1,500");
+  await expect(bag.locator("input, textarea")).toHaveCount(0);
 });
 
 test("a mtumba piece adds from the card and stays at one", async ({ page }) => {

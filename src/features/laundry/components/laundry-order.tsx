@@ -1,135 +1,117 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState, type MouseEvent, type RefObject } from "react";
+import { ArrowRight } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 
+import { FloatingCartBar } from "@/components/shared/floating-cart-bar";
 import { Section } from "@/components/shared/section";
-import { bookingParams, parseBooking, type Booking } from "@/features/booking/schedule";
+import { Button } from "@/components/ui/button";
+import { dateParams, parseDates, type BookingDates } from "@/features/booking/schedule";
 import { useNow } from "@/features/booking/use-now";
 import { useCart } from "@/features/cart/cart-provider";
-import { DEFAULT_NOTIFY, type LaundryCategory, type NotifyMethod } from "@/features/laundry/data";
-import { buildPickupMessage } from "@/features/laundry/lib/pickup-message";
-import { DEFAULT_TAB, parseTab } from "@/features/laundry/lib/tabs";
-import { validateOrder, type OrderField } from "@/features/laundry/lib/validate-order";
-import { resolveWhen } from "@/features/laundry/lib/when";
-import { useContactDetails } from "@/lib/saved-details";
-import { revealById, revealElement } from "@/lib/scroll";
+import { useOpenCart } from "@/features/cart/open-cart";
+import { itemsIn, laundryCategories, type LaundryCategory } from "@/features/laundry/data";
+import { parseCategory } from "@/features/laundry/lib/tabs";
 
-import { DetailsStep, type ContactField } from "./details-step";
-import { ITEMS_HEADING_ID, LaundryItems } from "./laundry-items";
-import { OrderSummary, SUMMARY_HEADING_ID, SUMMARY_ID } from "./order-summary";
-import { StickyCartBar } from "./sticky-cart-bar";
-import { WHEN_HEADING_ID, WHEN_ID, WhenStep } from "./when-step";
+import { BookingSheet } from "./booking-sheet";
+import { LaundryCard } from "./laundry-card";
+import { LaundryRail } from "./laundry-rail";
 
-type Params = Pick<URLSearchParams, "get" | "toString"> | null;
+type Params = Pick<URLSearchParams, "get"> | null;
 
-/** Reads the booking from the URL. Must sit inside <Suspense> (useSearchParams). */
+/** Reads the category and dates from the URL. Must sit inside <Suspense> (useSearchParams). */
 export function LaundryOrderFromUrl() {
   const searchParams = useSearchParams();
   return <LaundryOrder params={searchParams} />;
 }
 
+const grid = "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5";
+
 /**
- * The whole order on one page: 1 when, 2 what, 3 where, with the order summary beside the steps
- * on desktop and after them on phones. Every choice applies as it's tapped; a complete pickup
- * time is mirrored into the URL (`?pickup=…&window=…&return=…`) so the page can be shared or
- * reloaded. `params` is null in the Suspense fallback (static prerender).
+ * Laundry, shop style: pick a category, tap the pictures to add items, then "Book pickup" opens
+ * the sheet with the dates and area. The category and dates live in the URL
+ * (`?cat=carpets&pickup=…&back=…`), so a link opens the same view. `params` is null in the
+ * Suspense fallback (static prerender), which shows everything.
  */
 export function LaundryOrder({ params }: { params: Params }) {
-  const router = useRouter();
   const nowMs = useNow();
   const now = nowMs === null ? null : new Date(nowMs);
-  const { items, count } = useCart();
+  const { count, total } = useCart();
 
-  // The customer's own choices win over the URL once they start tapping.
-  const [draft, setDraft] = useState<Partial<Booking> | null>(null);
-  const when: Partial<Booking> = draft ?? (now ? parseBooking(params, now) : {});
-  const booking = now ? resolveWhen(when, now).choice : null;
+  const [category, setCategory] = useState(() => parseCategory(params?.get("cat")));
+  // The customer's own choices win over the URL once they start picking days.
+  const [draftDates, setDraftDates] = useState<BookingDates | null>(null);
+  const dates = draftDates ?? (now ? parseDates(params, now) : { pickup: null, back: null });
+  const [sheetOpen, setSheetOpen] = useState(false);
 
-  const [tab, setTab] = useState<LaundryCategory>(() => parseTab(params?.get("tab")));
-  const { details, remembered, setField, remember, forget } = useContactDetails();
-  const [notify, setNotify] = useState<NotifyMethod>(DEFAULT_NOTIFY);
-  const [attempted, setAttempted] = useState(false);
-  const [sentMessage, setSentMessage] = useState<string | null>(null);
-  const refs: Record<ContactField, RefObject<HTMLInputElement | null>> = {
-    location: useRef<HTMLInputElement>(null),
-    name: useRef<HTMLInputElement>(null),
-    phone: useRef<HTMLInputElement>(null),
-  };
+  // The header's orders button opens the sheet here, or links to /laundry#cart from other pages.
+  useOpenCart("laundry", () => setSheetOpen(true));
 
-  const problems = validateOrder({ booking, itemCount: count, ...details });
-  const missing = Object.entries(problems) as [OrderField, string][];
-  const errors = attempted ? problems : {};
-  const message = buildPickupMessage(items, { booking, ...details, notify });
-
-  function changeWhen(next: Partial<Booking>) {
-    setDraft(next);
-    const choice = now ? resolveWhen(next, now).choice : null;
-    if (!choice) return;
-    const url = new URLSearchParams(params?.toString());
-    for (const [key, value] of bookingParams(choice)) url.set(key, value);
-    router.replace(`/laundry?${url.toString()}`, { scroll: false });
-  }
-
-  function changeTab(nextTab: LaundryCategory) {
-    setTab(nextTab);
-    // Remember the tab without a navigation; Next keeps useSearchParams in sync.
+  function writeUrl(nextCategory: LaundryCategory | null, nextDates: BookingDates) {
+    const search = new URLSearchParams(dateParams(nextDates));
+    if (nextCategory) search.set("cat", nextCategory);
     const url = new URL(window.location.href);
-    if (nextTab === DEFAULT_TAB) url.searchParams.delete("tab");
-    else url.searchParams.set("tab", nextTab);
+    url.search = search.toString();
+    url.hash = "";
     window.history.replaceState(window.history.state, "", url);
   }
 
-  function fix(field: OrderField) {
-    if (field === "when") revealById(WHEN_ID, WHEN_HEADING_ID);
-    else if (field === "items") revealById("items", ITEMS_HEADING_ID);
-    else revealElement(refs[field].current);
+  function changeCategory(next: LaundryCategory | null) {
+    setCategory(next);
+    writeUrl(next, dates);
   }
 
-  function send(event: MouseEvent<HTMLAnchorElement>) {
-    const first = missing[0]?.[0];
-    if (first) {
-      event.preventDefault();
-      setAttempted(true);
-      fix(first);
-      return;
-    }
-    // Valid: the link opens WhatsApp. Remember the contact details for next time.
-    remember();
-    setSentMessage(message);
+  function changeDates(next: BookingDates) {
+    setDraftDates(next);
+    writeUrl(category, next);
   }
+
+  const shown = category ? laundryCategories.filter((c) => c.id === category) : laundryCategories;
 
   return (
-    <Section
-      spacing="bottom"
-      containerClassName="grid grid-cols-1 gap-10 sm:gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-x-10 xl:grid-cols-[minmax(0,1fr)_24rem]"
-    >
-      <div className="grid min-w-0 grid-cols-1 content-start gap-10 sm:gap-12">
-        <WhenStep value={when} onChange={changeWhen} now={now} error={errors.when} />
-        <LaundryItems tab={tab} onTabChange={changeTab} error={errors.items} />
-        <DetailsStep
-          details={details}
-          onChange={setField}
-          notify={notify}
-          onNotifyChange={setNotify}
-          errors={errors}
-          refs={refs}
-          remembered={remembered}
-          onForget={forget}
-        />
+    <Section spacing="bottom">
+      <LaundryRail value={category} onChange={changeCategory} />
+
+      <div className="mt-6 grid gap-10">
+        {shown.map((c) => (
+          <section key={c.id} aria-labelledby={`cat-${c.id}`}>
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 id={`cat-${c.id}`} className="display text-title">
+                {c.label}
+              </h2>
+              <p className="text-caption font-medium text-muted-foreground">{c.note}</p>
+            </div>
+            <ul className={grid}>
+              {itemsIn(c.id).map((item) => (
+                <li key={item.id} className="min-w-0">
+                  <LaundryCard item={item} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
 
-      <OrderSummary
-        booking={booking}
-        missing={missing}
-        onFix={fix}
-        message={message}
-        onSend={send}
-        // A change after sending means the WhatsApp message is out of date.
-        sent={sentMessage === message}
+      <FloatingCartBar
+        show={count > 0 && !sheetOpen}
+        count={count}
+        caption="Pay on delivery"
+        total={total}
+        action={
+          <Button type="button" variant="inverse" onClick={() => setSheetOpen(true)}>
+            Book pickup <ArrowRight aria-hidden />
+          </Button>
+        }
       />
 
-      <StickyCartBar targetId={SUMMARY_ID} focusId={SUMMARY_HEADING_ID} />
+      <BookingSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        dates={dates}
+        onDatesChange={changeDates}
+        now={now}
+      />
     </Section>
   );
 }

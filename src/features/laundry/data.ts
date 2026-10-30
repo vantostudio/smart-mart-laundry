@@ -1,4 +1,4 @@
-export type LaundryCategory = "baskets" | "duvets" | "mats" | "shoes";
+export type LaundryCategory = "baskets" | "duvets" | "mats" | "carpets" | "shoes";
 
 export type LaundryItem = {
   id: string;
@@ -6,7 +6,7 @@ export type LaundryItem = {
   name: string;
   desc: string;
   price: number;
-  /** Size shown in the item's badge ("S", "6×6"); items without one show their category icon. */
+  /** Size shown on the item's card ("S", "6×6", "5×8"). */
   mark?: string;
   tag?: string;
 };
@@ -21,6 +21,7 @@ export const laundryCategories: {
   { id: "baskets", label: "Baskets", title: "Clothes by basket", note: "Washed, dried and ironed" },
   { id: "duvets", label: "Duvets", title: "Duvets", note: "Deep cleaned and dried" },
   { id: "mats", label: "Mats", title: "Mats", note: "Scrubbed and dried" },
+  { id: "carpets", label: "Carpets", title: "Carpets", note: "Deep washed and dried, by size" },
   { id: "shoes", label: "Shoes", title: "Shoes", note: "Per pair, hand cleaned" },
 ];
 
@@ -111,6 +112,31 @@ export const laundryItems: LaundryItem[] = [
     desc: "Deep cleaned on both sides.",
     price: 350,
   },
+  // Carpet prices are placeholders until the client confirms them.
+  {
+    id: "carpet-small",
+    category: "carpets",
+    name: "Small carpet",
+    desc: "Up to 4 × 6 ft, deep washed and dried.",
+    price: 400,
+    mark: "4×6",
+  },
+  {
+    id: "carpet-medium",
+    category: "carpets",
+    name: "Medium carpet",
+    desc: "About 5 × 8 ft, deep washed and dried.",
+    price: 700,
+    mark: "5×8",
+  },
+  {
+    id: "carpet-large",
+    category: "carpets",
+    name: "Large carpet",
+    desc: "About 7 × 10 ft, deep washed and dried.",
+    price: 1000,
+    mark: "7×10",
+  },
   {
     id: "shoes-white",
     category: "shoes",
@@ -139,37 +165,10 @@ export const priceGroups = laundryCategories.map((c) => ({
   items: itemsIn(c.id).map((i) => ({ label: i.name, price: i.price })),
 }));
 
-/** How the customer wants to hear that their laundry is clean and on its way back. */
-export const notifyOptions = [
-  {
-    id: "whatsapp",
-    label: "WhatsApp",
-    reassurance: "We'll message you on WhatsApp when it's clean and on its way back.",
-  },
-  {
-    id: "sms",
-    label: "SMS",
-    reassurance: "We'll text you when it's clean and on its way back.",
-  },
-  {
-    id: "call",
-    label: "Phone call",
-    reassurance: "We'll call you when it's clean and on its way back.",
-  },
-] as const;
-
-export type NotifyMethod = (typeof notifyOptions)[number]["id"];
-
-export const DEFAULT_NOTIFY: NotifyMethod = "whatsapp";
-
-export function notifyOption(id: NotifyMethod) {
-  return notifyOptions.find((o) => o.id === id)!;
-}
-
 export const turnaroundOptions = [
-  { label: "Same day", note: "Pick up before 1 PM, back by 7 PM" },
-  { label: "Next day", note: "Back by the next evening" },
-  { label: "2 days", note: "Back within two days" },
+  { label: "Same day", note: "Collected in the morning, back by evening" },
+  { label: "Next day", note: "Back the next evening" },
+  { label: "You choose", note: "Any return day within a week" },
 ] as const;
 
 export const promises = [

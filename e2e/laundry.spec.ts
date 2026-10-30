@@ -70,70 +70,74 @@ for (const vp of [
 test.describe("booking", () => {
   test.use(phone);
 
-  test("the page comes alive and day, time and return chips select", async ({ page }) => {
+  test("tap pictures, pick two days and an area, send on WhatsApp: no typing", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    page.on("console", (m) => {
-      if (m.type() === "error") errors.push(m.text());
-    });
     await page.goto("/laundry");
 
-    // The skeleton gives way to the real choices once the page hydrates.
-    const days = page.getByRole("radiogroup", { name: "Pickup day" });
-    await expect(days).toBeVisible();
+    // A category narrows the grid and lands in the URL.
+    await page.getByRole("button", { name: "Carpets", exact: true }).click();
+    await expect(page).toHaveURL(/cat=carpets/);
+    await expect(page.getByRole("heading", { name: "Baskets" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Add Medium carpet" }).click();
+    await page.getByRole("button", { name: "All", exact: true }).click();
+    await page.getByRole("button", { name: "Add Small basket" }).click();
+    await page.getByRole("button", { name: "Add one Small basket" }).click();
 
-    const tomorrow = days.getByRole("radio").nth(1);
-    await tomorrow.click();
-    await expect(tomorrow).toHaveAttribute("aria-checked", "true");
+    await page
+      .getByRole("button", { name: /Book pickup/ })
+      .last()
+      .click();
+    const sheet = page.getByRole("dialog", { name: "Book pickup" });
+    await expect(sheet.getByText("Medium carpet")).toBeVisible();
 
-    const time = page.getByRole("radiogroup", { name: "Pickup time" }).getByRole("radio").first();
-    await time.click();
-    await expect(time).toHaveAttribute("aria-checked", "true");
+    // The button says what's next until everything is picked.
+    await expect(sheet.getByRole("button", { name: /Pick a collection day/ })).toBeVisible();
+    const open = sheet.locator("button[data-day]:not([disabled])");
+    await open.nth(1).click();
+    // Collection picked: the return is suggested as the next day.
+    await expect(sheet.getByRole("radio", { name: /Return/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(sheet.locator("button[data-day][aria-pressed=true]")).toHaveCount(2);
+    await expect(page).toHaveURL(/pickup=\d{4}-\d{2}-\d{2}&back=\d{4}-\d{2}-\d{2}/);
+    await expect(sheet.getByRole("button", { name: /Choose your area/ })).toBeVisible();
 
-    const twoDays = page.getByRole("radiogroup", { name: "Back by" }).getByRole("radio", {
-      name: /2 days/,
-    });
-    await twoDays.click();
-    await expect(twoDays).toHaveAttribute("aria-checked", "true");
-    await expect(page).toHaveURL(/return=two-days/);
-
+    await sheet.getByRole("radio", { name: "Ndagani" }).click();
+    const message = await whatsappMessage(
+      sheet.getByRole("link", { name: /Send order on WhatsApp/ }),
+    );
+    expect(message).toContain("2 × Small basket — KSh 300");
+    expect(message).toContain("1 × Medium carpet — KSh 700");
+    expect(message).toMatch(/Collection: \w{3} \d+ \w{3}/);
+    expect(message).toMatch(/Return: \w{3} \d+ \w{3}/);
+    expect(message).toContain("Area: Ndagani");
+    expect(message).not.toMatch(/Name:|Phone:/);
+    // Nothing had to be typed: the sheet has no text fields until a note is asked for.
+    await expect(sheet.locator("input, textarea")).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 
-  test("the ticket counts what's done and the order carries time, notes and notify choice", async ({
-    page,
-  }) => {
+  test("a same-day return asks for a morning collection", async ({ page }) => {
     await page.goto("/laundry");
-    const ticket = page.locator("#cart");
-    await expect(ticket.getByText("0 of 5 done")).toBeVisible();
-    await expect(ticket.getByText(/Nothing added yet/)).toBeVisible();
-
-    // Tap the first open time: it applies straight away and lands in the URL.
-    await page.getByRole("radiogroup", { name: "Pickup time" }).getByRole("radio").first().click();
-    await expect(page).toHaveURL(/pickup=\d{4}-\d{2}-\d{2}&window=\w+&return=next-day/);
-    await page.getByRole("button", { name: "Add Medium basket" }).click();
-    await expect(ticket.getByText("2 of 5 done")).toBeVisible();
-    await expect(ticket.getByText("1 × Medium basket")).toBeVisible();
-    await expect(ticket.getByText("Not chosen")).toHaveCount(0);
-
-    // The checklist jumps to the field it names.
-    await ticket.getByRole("button", { name: /where to collect/ }).click();
-    await expect(page.getByLabel(/Pickup location/i)).toBeFocused();
-    await page.getByLabel(/Pickup location/i).fill("Ndagani, blue gate");
-    await page.getByLabel(/Your name/i).fill("Wanjiru");
-    await page.getByLabel(/Phone number/i).fill("0712345678");
-    await expect(ticket.getByText("All set. Send it when you're ready.")).toBeVisible();
-    await expect(page.getByText("Still needed")).toHaveCount(0);
-
-    await page.getByLabel(/Notes for us/i).fill("Coffee stain on the white shirt");
-    await page.getByRole("radio", { name: /SMS/ }).click();
-
-    const message = await whatsappMessage(
-      page.getByRole("link", { name: /Send order on WhatsApp/i }),
+    await page.getByRole("button", { name: "Add Door mat" }).click();
+    await page
+      .getByRole("button", { name: /Book pickup/ })
+      .last()
+      .click();
+    const sheet = page.getByRole("dialog", { name: "Book pickup" });
+    const open = sheet.locator("button[data-day]:not([disabled])");
+    await open.nth(1).click();
+    // Wait for the return calendar (collection and suggested return both marked), then return on
+    // the collection day itself.
+    const chosen = sheet.locator("button[data-day][aria-pressed=true]");
+    await expect(chosen).toHaveCount(2);
+    await expect(sheet.getByRole("radio", { name: /Return/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
     );
-    expect(message).toContain("1 × Medium basket");
-    expect(message).toContain("Notify me by: SMS");
-    expect(message).toContain("Notes: Coffee stain on the white shirt");
-    expect(message).toContain("Ndagani, blue gate");
+    await chosen.first().click();
+    await expect(sheet.getByText(/Same day needs a morning collection/)).toBeVisible();
   });
 });
