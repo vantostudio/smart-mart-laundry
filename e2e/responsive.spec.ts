@@ -93,6 +93,7 @@ for (const vp of viewports) {
             h1: size(document.querySelector("h1")),
             h2: size(document.querySelector(h2Selector)),
             body: size(document.body),
+            weight: Number(getComputedStyle(document.body).fontWeight),
             smallFields: [...document.querySelectorAll("input, select, textarea")]
               .filter((el) => visible(el) && size(el) < 16)
               .map((el) => el.getAttribute("name") ?? el.tagName),
@@ -104,6 +105,8 @@ for (const vp of viewports) {
         expect.soft(m.h1, "h1 size").toBe(expected[h1]);
         expect.soft(m.h2, "h2 size").toBe(expected.display);
         expect.soft(m.body, "body size").toBe(expected.body);
+        // Phones get slightly heavier text; tablet and desktop use the regular weight.
+        expect.soft(m.weight, "body weight").toBe(vp.width < 640 ? 450 : 400);
         expect.soft(m.smallFields, "form fields under 16px").toEqual([]);
         expect.soft(m.smallTargets, "tap targets under 44px").toEqual([]);
 

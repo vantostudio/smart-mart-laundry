@@ -146,12 +146,6 @@
   --font-display: var(--font-clash), var(--font-satoshi), ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
-  /* Weights, one notch above CSS defaults: Satoshi's 400 and 600 read light on phone screens */
-  --font-weight-normal: 450;
-  --font-weight-medium: 550;
-  --font-weight-semibold: 650;
-  --font-weight-bold: 750;
-
   /* Colours */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -222,6 +216,13 @@
  * overrides. Pair display steps with `display` (Clash Display); body steps use Satoshi.
  */
 @theme {
+  /* Phones get slightly heavier weights (Satoshi reads light on small, bright screens); tablet and
+     desktop return to the CSS defaults below. Bold stays 700. */
+  --font-weight-normal: 450;
+  --font-weight-medium: 540;
+  --font-weight-semibold: 640;
+  --font-weight-bold: 700;
+
   --text-display-xl: 2.375rem;
   --text-display-xl--line-height: 1;
   --text-display-xl--letter-spacing: -0.02em;
@@ -305,6 +306,9 @@
       --text-subtitle: 1.125rem;
       --text-body-lg: 1.0625rem;
       --text-body: 1rem;
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
       --spacing-gutter: 2rem;
       --spacing-section: 5.5rem;
     }

@@ -38,7 +38,7 @@ Pairing rule: a solid `bg-X` takes `text-X-foreground`; a `bg-X-soft` takes `tex
 
 ## Typography
 
-Weights sit one notch above the CSS defaults (`font-normal` 450, `font-medium` 550, `font-semibold` 650, `font-bold` 750) because Satoshi reads light on phone screens; body text is 450.
+On phones (under 640px) weights sit a little above the CSS defaults (`font-normal` 450, `font-medium` 540, `font-semibold` 640) because Satoshi reads light on small, bright screens; tablet and desktop use 400 / 500 / 600. Bold is 700 everywhere.
 
 | Family  | Utility                    | Font                | For                                    |
 | ------- | -------------------------- | ------------------- | -------------------------------------- |
