@@ -38,6 +38,8 @@ Pairing rule: a solid `bg-X` takes `text-X-foreground`; a `bg-X-soft` takes `tex
 
 ## Typography
 
+Weights sit one notch above the CSS defaults (`font-normal` 450, `font-medium` 550, `font-semibold` 650, `font-bold` 750) because Satoshi reads light on phone screens; body text is 450.
+
 | Family  | Utility                    | Font                | For                                    |
 | ------- | -------------------------- | ------------------- | -------------------------------------- |
 | Display | `font-display` / `display` | Clash Display (600) | Headings, prices, big numbers          |
@@ -62,7 +64,7 @@ the step, so headings never need `sm:`/`lg:` size overrides. `e2e/responsive.spe
 | `text-body-lg`    |    16 |     17 |      18 | Intro paragraphs             |
 | `text-body`       |    15 |     16 |      16 | Running text (default)       |
 | `text-body-sm`    |    14 |     14 |      15 | Card copy, form help         |
-| `text-caption`    |    12 |     13 |      13 | Meta, footnotes              |
+| `text-caption`    |    13 |     13 |      13 | Meta, footnotes              |
 | `text-overline`   |    12 |     12 |      12 | Backs `eyebrow`/`caps-label` |
 
 Helpers: `eyebrow` (clay uppercase label), `caps-label` (same, inherits colour), `display` (display

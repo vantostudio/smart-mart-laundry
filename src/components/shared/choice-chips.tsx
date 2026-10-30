@@ -103,7 +103,7 @@ export function ChoiceChips<T extends string>({
       {options.map((option, index) => {
         const checked = index === selectedIndex;
         const Icon = option.icon;
-        const muted = checked ? "text-primary-foreground/75" : "text-muted-foreground";
+        const muted = checked ? "text-primary-foreground/85" : "text-muted-foreground";
 
         return (
           <button
@@ -160,7 +160,7 @@ export function ChoiceChips<T extends string>({
                 <span className="grid min-w-0">
                   <span className="truncate text-body-sm font-semibold">{option.label}</span>
                   {option.sublabel && (
-                    <span className={cn("mt-0.5 truncate text-caption figures", muted)}>
+                    <span className={cn("mt-0.5 truncate text-caption font-medium figures", muted)}>
                       {option.sublabel}
                     </span>
                   )}
@@ -180,8 +180,7 @@ export function ChoiceChips<T extends string>({
                   {option.sublabel && (
                     <span
                       className={cn(
-                        "mt-0.5 text-caption whitespace-nowrap figures",
-                        variant === "date" && "font-medium",
+                        "mt-0.5 text-caption font-medium whitespace-nowrap figures",
                         muted,
                       )}
                     >

@@ -33,6 +33,7 @@
   /* Bottle green — ink, trust, "clean" */
   --bottle-500: oklch(0.5 0.08 158);
   --bottle-600: oklch(0.48 0.026 160);
+  --bottle-650: oklch(0.42 0.03 161);
   --bottle-700: oklch(0.365 0.06 162);
   --bottle-800: oklch(0.3 0.04 162);
   --bottle-900: oklch(0.25 0.035 165);
@@ -62,7 +63,8 @@
   --card: var(--cream-50);
   --card-foreground: var(--bottle-900);
   --muted: var(--cream-200);
-  --muted-foreground: var(--bottle-600);
+  /* Secondary text: ~7.5:1 on cream, so small grey labels stay readable outdoors and on budget screens */
+  --muted-foreground: var(--bottle-650);
 
   /* Brand */
   --primary: var(--bottle-700);
@@ -144,6 +146,12 @@
   --font-display: var(--font-clash), var(--font-satoshi), ui-sans-serif, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
+  /* Weights, one notch above CSS defaults: Satoshi's 400 and 600 read light on phone screens */
+  --font-weight-normal: 450;
+  --font-weight-medium: 550;
+  --font-weight-semibold: 650;
+  --font-weight-bold: 750;
+
   /* Colours */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -206,7 +214,7 @@
  *   body-lg       16     17      18      intros
  *   body          15     16      16      running text
  *   body-sm       14     14      15      card copy
- *   caption       12     13      13      notes, meta
+ *   caption       13     13      13      notes, meta
  *   gutter        20     32      40      page side padding
  *   section       64     88      120     band padding
  *
@@ -242,7 +250,7 @@
   --text-body-sm: 0.875rem;
   --text-body-sm--line-height: 1.55;
 
-  --text-caption: 0.75rem;
+  --text-caption: 0.8125rem;
   --text-caption--line-height: 1.45;
   --text-caption--letter-spacing: 0.01em;
 
@@ -297,7 +305,6 @@
       --text-subtitle: 1.125rem;
       --text-body-lg: 1.0625rem;
       --text-body: 1rem;
-      --text-caption: 0.8125rem;
       --spacing-gutter: 2rem;
       --spacing-section: 5.5rem;
     }
@@ -327,7 +334,7 @@
   }
 
   body {
-    @apply bg-background font-sans text-body text-foreground antialiased;
+    @apply bg-background font-sans text-body font-normal text-foreground antialiased;
     text-rendering: optimizeLegibility;
   }
 
