@@ -66,7 +66,7 @@ export const laundryItems: LaundryItem[] = [
     name: "Small basket",
     desc: "Fits a week of clothes for one person.",
     price: 150,
-    image: "photo-1582735689369-4fe89db7114c",
+    image: "photo-1591130901959-9723d22a59ed",
     mark: "S",
     tag: "Popular",
   },
@@ -85,7 +85,7 @@ export const laundryItems: LaundryItem[] = [
     name: "Large basket",
     desc: "Plenty of room for a family load.",
     price: 350,
-    image: "photo-1582735689369-4fe89db7114c",
+    image: "photo-1645542554266-b275c100103c",
     mark: "L",
   },
   {
@@ -94,7 +94,7 @@ export const laundryItems: LaundryItem[] = [
     name: "Extra large basket",
     desc: "Our biggest basket for heavy household loads.",
     price: 400,
-    image: "photo-1582735689369-4fe89db7114c",
+    image: "photo-1639739767611-cc582846849f",
     mark: "XL",
   },
   {
