@@ -44,3 +44,18 @@ test.describe("on a phone set to reduce motion", () => {
     await expect.poll(() => newest.textContent(), { timeout: 8_000 }).not.toBe(first);
   });
 });
+
+test("the reviews can be swiped by hand, and hold still while you do", async ({ page }) => {
+  await page.goto("/");
+  const row = page.locator(".animate-marquee").first().locator("..");
+  const track = row.locator(".animate-marquee").first();
+  // Starts one copy in, so there's room to swipe either way.
+  const start = await row.evaluate((el) => el.scrollLeft);
+  expect(start).toBeGreaterThan(0);
+
+  await row.evaluate((el) => el.scrollBy({ left: 300 }));
+  await expect.poll(() => row.evaluate((el) => el.scrollLeft)).toBeGreaterThan(start);
+  await expect(track).toHaveCSS("animation-play-state", "paused");
+  // Left alone, it drifts again.
+  await expect(track).toHaveCSS("animation-play-state", "running", { timeout: 6_000 });
+});
