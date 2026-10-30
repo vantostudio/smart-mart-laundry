@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Shirt } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -32,17 +32,19 @@ export function Hero() {
             We collect from your gate, wash, dry and iron, and bring everything back before your
             deadline.
           </p>
-          {/* Day and time are picked on /laundry; the hero keeps a single action. */}
-          <Button
-            asChild
-            variant="gradient-clay"
-            size="xl"
-            className="mt-7 rounded-full max-xs:w-full sm:mt-8"
-          >
-            <Link href="/laundry" data-hero-cta>
-              Book a pickup <ArrowRight aria-hidden />
-            </Link>
-          </Button>
+          {/* Both halves of the business up front: laundry first, the shop right beside it. */}
+          <div className="mt-7 flex flex-col gap-3 xs:flex-row sm:mt-8">
+            <Button asChild variant="gradient-clay" size="xl" className="rounded-full">
+              <Link href="/laundry" data-hero-cta>
+                Book a pickup <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="xl" className="rounded-full">
+              <Link href="/shop">
+                <Shirt aria-hidden /> Shop clothes
+              </Link>
+            </Button>
+          </div>
           <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-body-sm text-muted-foreground">
             {promises.map((p) => (
               <li key={p} className="flex items-center gap-1.5">

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { priceGroups } from "../src/features/laundry/data";
-import { device, phone, whatsappMessage } from "./helpers";
+import { addLaundryItem, device, phone, whatsappMessage } from "./helpers";
 
 /*
  * /laundry: the "Good to know" bento (every price listed, tiles never overlap, no two side-by-side
@@ -75,13 +75,20 @@ test.describe("booking", () => {
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("/laundry");
 
+    // Every item card shows a real photo that has loaded.
+    const cardPhotos = page.locator("main ul li img");
+    await expect(cardPhotos).toHaveCount(16);
+    await expect
+      .poll(() => cardPhotos.first().evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+
     // A category narrows the grid and lands in the URL.
     await page.getByRole("button", { name: "Carpets", exact: true }).click();
     await expect(page).toHaveURL(/cat=carpets/);
     await expect(page.getByRole("heading", { name: "Baskets" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Add Medium carpet" }).click();
+    await addLaundryItem(page, "Medium carpet");
     await page.getByRole("button", { name: "All", exact: true }).click();
-    await page.getByRole("button", { name: "Add Small basket" }).click();
+    await addLaundryItem(page, "Small basket");
     await page.getByRole("button", { name: "Add one Small basket" }).click();
 
     await page
@@ -121,7 +128,7 @@ test.describe("booking", () => {
 
   test("a same-day return asks for a morning collection", async ({ page }) => {
     await page.goto("/laundry");
-    await page.getByRole("button", { name: "Add Door mat" }).click();
+    await addLaundryItem(page, "Door mat");
     await page
       .getByRole("button", { name: /Book pickup/ })
       .last()

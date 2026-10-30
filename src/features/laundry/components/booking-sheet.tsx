@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, CalendarDays, Check, MapPin, Plus, Sun } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 import { AreaPicker } from "@/components/shared/area-picker";
@@ -41,10 +42,9 @@ import {
   gapLabels,
   type BookingGap,
 } from "@/features/laundry/lib/pickup-message";
-import { cn } from "@/lib/utils";
+import { unsplash } from "@/lib/images";
 import { useOrderPlace } from "@/lib/saved-details";
-
-import { categoryTint, ItemArt } from "./item-art";
+import { cn } from "@/lib/utils";
 
 const WHEN_ID = "booking-when";
 const AREA_ID = "booking-area";
@@ -58,7 +58,7 @@ type Props = {
   now: Date | null;
 };
 
-const categoryOf = new Map(laundryItems.map((i) => [i.id, i.category]));
+const imageOf = new Map(laundryItems.map((i) => [i.id, i.image]));
 
 /**
  * Laundry checkout, shop style: the items, a calendar for the collection and return days, the
@@ -113,16 +113,19 @@ export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: 
           <section aria-label="Your items">
             <ul className="grid gap-2.5">
               {items.map((line) => {
-                const category = categoryOf.get(line.id);
+                const image = imageOf.get(line.id);
                 return (
                   <li key={line.id} className="flex items-center gap-3">
-                    <span
-                      className={cn(
-                        "flex size-14 shrink-0 items-center justify-center rounded-2xl p-1",
-                        category && categoryTint[category],
+                    <span className="relative size-14 shrink-0 overflow-hidden rounded-2xl bg-muted">
+                      {image && (
+                        <Image
+                          src={unsplash(image, 160)}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
                       )}
-                    >
-                      <ItemArt id={line.id} className="w-full" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-body-sm font-semibold">{line.name}</p>

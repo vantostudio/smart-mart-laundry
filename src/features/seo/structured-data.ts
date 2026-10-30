@@ -3,7 +3,7 @@ import { HERO_IMAGE_ID } from "@/features/home/data";
 import { itemsIn, laundryCategories, laundryItems } from "@/features/laundry/data";
 import { products } from "@/features/shop/data";
 import { ksh } from "@/lib/format";
-import { ogImage } from "@/lib/images";
+import { ogImage, unsplash } from "@/lib/images";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 /*
@@ -107,7 +107,12 @@ export function laundryServiceJsonLd() {
         name: c.label,
         itemListElement: itemsIn(c.id).map((i) => ({
           "@type": "Offer",
-          itemOffered: { "@type": "Service", name: i.name, description: i.desc },
+          itemOffered: {
+            "@type": "Service",
+            name: i.name,
+            description: i.desc,
+            image: unsplash(i.image, 800),
+          },
           price: i.price,
           priceCurrency: "KES",
         })),

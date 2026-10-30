@@ -8,7 +8,6 @@ export const homeImages = {
     id: "photo-1635274605638-d44babc08a4f",
     alt: "Stacks of freshly washed, folded shirts",
   },
-  stack: { id: "photo-1640747669771-b82a6e40f534", alt: "A neat stack of folded, ironed clothes" },
   laundryRoom: {
     id: "photo-1696546761269-a8f9d2b80512",
     alt: "A laundry room with a basket of fresh linen in front of the washing machines",
@@ -25,36 +24,6 @@ export const orderUpdates = [
   { status: "Ironed and folded", detail: "Packed and ready to go" },
   { status: "On its way back", detail: "Sent to you on WhatsApp" },
 ] as const;
-
-type HowStep = {
-  title: string;
-  body: string;
-  /** Short reassurance under the copy. */
-  perk: string;
-};
-
-export const howSteps: HowStep[] = [
-  {
-    title: "Book in two minutes",
-    body: "Tap your baskets, duvets, mats, carpets or shoes, pick your days and send the order on WhatsApp.",
-    perk: "No account needed",
-  },
-  {
-    title: "We pick it up",
-    body: "A rider collects from your gate, hostel or office, anywhere in Chuka.",
-    perk: "Free pickup",
-  },
-  {
-    title: "Cleaned with care",
-    body: "Washed, dried and pressed properly. Ironing is always on us.",
-    perk: "Free ironing",
-  },
-  {
-    title: "Back before your deadline",
-    body: "We tell you on WhatsApp when it's on the way. Pay when it arrives.",
-    perk: "Cash or M-Pesa on delivery",
-  },
-];
 
 /** Answers use only facts stated elsewhere on the site (prices, turnaround, payment). */
 export const faqs = [

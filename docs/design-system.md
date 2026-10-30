@@ -146,7 +146,6 @@ and `inverse` / `outline-inverse` on brand bands.
 | `Section`, `Container` | Page band (`tone` plain / muted / brand, `spacing` default / bottom) and page column                                                                    |
 | `SectionHeading`       | h2 + intro, left aligned                                                                                                                                |
 | `PageHero`             | Inner-page hero: eyebrow, h1, intro (/about)                                                                                                            |
-| `ImageTile`            | Linked photo with scrim and caption (home shop teaser)                                                                                                  |
 | `StaggerGrid`          | Grid whose columns sit at different heights: 2 columns (right one dropped) on phones, 3 or 4 on lg                                                      |
 | `MediaCard`            | Visual + title + copy (+ footer): horizontal on phones (mirrored in a StaggerGrid), stacked from 640px                                                  |
 | `ChoiceChips`          | Radio group as chips, calendar dates or icon tiles; rail scrolls on narrow cards, grid on wide                                                          |
@@ -169,8 +168,6 @@ features moves to `src/components/shared`. Add shadcn components only when a fea
 
 If you add a utility that shares a Tailwind prefix (`text-*`, `bg-*`, `shadow-*`), register it in
 `src/lib/utils.ts` so `cn()` doesn't strip it.
-
-**Laundry item art** (`src/features/laundry/components/item-art.tsx`): hand-drawn SVGs for every laundry item on a 120×96 canvas in fill-* tokens (baskets fill up S → XL, rugs, mats, duvets, sneakers), each on its category tint (`categoryTint`). Add an entry to the `art` map for a new item.
 
 **Illustrations** (`src/components/illustrations`): unDraw art (free, no attribution) converted to
 React components by `node scripts/undraw.mjs Name=<cdn path>`, which maps unDraw's colours to fill

@@ -1,4 +1,4 @@
-import { Check, MessageCircle, MessageSquareText, Phone } from "lucide-react";
+import { ArrowRight, Check, MessageCircle, MessageSquareText, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,6 +9,7 @@ import { MediaCard } from "@/components/shared/media-card";
 import { Price } from "@/components/shared/price";
 import { Section } from "@/components/shared/section";
 import { StaggerGrid } from "@/components/shared/stagger-grid";
+import { Button } from "@/components/ui/button";
 import { homeImages } from "@/features/home/data";
 import { basketFrom } from "@/features/laundry/data";
 import { unsplash } from "@/lib/images";
@@ -23,6 +24,9 @@ const channels = [
 ];
 
 const illustration = "h-[78%] w-auto max-w-[85%]";
+
+// How booking works, in the words of the laundry page.
+const steps = ["Tap what needs washing", "Pick your days", "Send it on WhatsApp"];
 
 function Perk({ children }: { children: string }) {
   return (
@@ -44,14 +48,15 @@ const photo = (key: keyof typeof homeImages) => (
 /*
  * Six things customers get, as a staggered grid: horizontal cards that mirror one after another
  * on phones, two columns with the right one dropped on tablets, three with the middle one dropped
- * on desktop. Photos for real results, illustrations for the service around them.
+ * on desktop, then the three booking steps and a button. Photos for real results, illustrations
+ * for the service around them.
  */
 export function WhyStreetMart() {
   return (
-    <Section>
+    <Section id="services">
       <SectionIntro
         title="Everything taken care of"
-        intro="From your gate and back again. We collect, clean, iron and return your laundry, and keep you posted the whole way."
+        intro="Book in two minutes, no account needed. From your gate and back again: we collect, clean, iron and return your laundry, and keep you posted the whole way."
       />
 
       <StaggerGrid className="mt-10 sm:mt-12 lg:mt-16">
@@ -121,7 +126,7 @@ export function WhyStreetMart() {
           key="turnaround"
           visual={
             <ol aria-hidden className="grid w-[82%] gap-1 sm:gap-2">
-              {["Same day", "Next day", "2 days"].map((label, i) => (
+              {["Same day", "Next day", "Your pick"].map((label, i) => (
                 <li
                   key={label}
                   className={cn(
@@ -138,9 +143,33 @@ export function WhyStreetMart() {
           title="Back when you need it"
           footer={<Perk>You choose when booking</Perk>}
         >
-          <p>Same day, next day or two days. Morning and midday pickups can be back by evening.</p>
+          <p>
+            Same day, next day or any day that week. Morning collections can be back by evening.
+          </p>
         </MediaCard>
       </StaggerGrid>
+
+      {/* How booking works, folded in from the old "how it works" section. */}
+      <div className="mt-8 flex flex-col gap-4 rounded-3xl bg-secondary/70 p-4 sm:mt-10 sm:p-5 lg:flex-row lg:items-center lg:gap-6 lg:p-6">
+        <ol aria-label="How booking works" className="grid flex-1 gap-2 sm:grid-cols-3">
+          {steps.map((step, i) => (
+            <li
+              key={step}
+              className="flex items-center gap-3 rounded-2xl bg-card px-3 py-2.5 shadow-card"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-body-sm font-bold text-primary-foreground figures">
+                {i + 1}
+              </span>
+              <span className="text-body-sm font-semibold">{step}</span>
+            </li>
+          ))}
+        </ol>
+        <Button asChild variant="gradient-clay" size="lg" className="shrink-0 rounded-full">
+          <Link href="/laundry">
+            Book a pickup <ArrowRight aria-hidden />
+          </Link>
+        </Button>
+      </div>
     </Section>
   );
 }

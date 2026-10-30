@@ -13,6 +13,37 @@ test("hero button opens the booking page", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+test("the shop is one tap or one swipe from the top", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Shop clothes", exact: true }).click();
+  await expect(page).toHaveURL(/\/shop$/);
+
+  await page.goto("/");
+  // The rail starts within the first screen and a half on a phone, not at the end of the page.
+  const rail = page.getByRole("region", { name: "New at the shop" });
+  const top = await rail.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  expect(top).toBeLessThan(844 * 1.5);
+
+  // A card opens that item's quick view.
+  await rail.getByRole("listitem").first().getByRole("link").click();
+  await expect(page).toHaveURL(/\/shop\?item=SM-\d+/);
+  await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("how booking works sits in 'Everything taken care of'", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("Laundry doesn't have to be complicated")).toHaveCount(0);
+  const services = page.locator("#services");
+  const steps = services.getByRole("list", { name: "How booking works" }).getByRole("listitem");
+  await expect(steps).toHaveText([
+    "1Tap what needs washing",
+    "2Pick your days",
+    "3Send it on WhatsApp",
+  ]);
+  await services.getByRole("link", { name: "Book a pickup" }).click();
+  await expect(page).toHaveURL(/\/laundry$/);
+});
+
 test.describe("reviews marquee", () => {
   test("moves", async ({ page }) => {
     await page.goto("/");

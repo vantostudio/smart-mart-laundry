@@ -1,27 +1,33 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import Image from "next/image";
 
 import { Price } from "@/components/shared/price";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { useCart } from "@/features/cart/cart-provider";
 import type { LaundryItem } from "@/features/laundry/data";
+import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
-import { categoryTint, ItemArt } from "./item-art";
-
 /**
- * One laundry item as a picture card: the illustration on its category's tint with the size and
- * a round +, then the name and price. Until it's added the whole card is one "Add" button; after
- * that it shows the count and a − qty + stepper.
+ * One laundry item as a picture card: its photo with the size and a round +, then the name and
+ * price. Until it's added the whole card is one "Add" button; after that it shows the count and
+ * a − qty + stepper.
  */
 export function LaundryCard({ item }: { item: LaundryItem }) {
   const { items, add, setQty } = useCart();
   const qty = items.find((i) => i.id === item.id)?.qty ?? 0;
 
   const picture = (
-    <div className={cn("relative px-3 pt-4 pb-2", categoryTint[item.category])}>
-      <ItemArt id={item.id} className="mx-auto max-w-44" />
+    <div className="relative aspect-4/3 bg-muted">
+      <Image
+        src={unsplash(item.image, 500)}
+        alt=""
+        fill
+        sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 24vw, (min-width: 640px) 31vw, 46vw"
+        className="object-cover"
+      />
       {item.mark && (
         <span className="absolute top-2.5 left-2.5 rounded-full bg-card px-2.5 py-0.5 text-caption font-bold figures shadow-card">
           {item.mark}

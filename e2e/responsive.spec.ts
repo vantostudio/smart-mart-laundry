@@ -10,7 +10,7 @@ import { device } from "./helpers";
 
 // h2: the first section heading on the page (/laundry's category titles are deliberately smaller).
 const pages = [
-  { path: "/", h1: "display-xl", h2: "main h2" },
+  { path: "/", h1: "display-xl", h2: "#services h2" },
   { path: "/laundry", h1: "display-lg", h2: "#prices h2" },
   { path: "/shop", h1: "display-lg", h2: "main h2:not(.sr-only)" },
   { path: "/about", h1: "display-lg", h2: "main h2" },
