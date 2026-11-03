@@ -3,7 +3,8 @@ import { defineConfig } from "@playwright/test";
 /*
  * Browser checks for layout, booking and the shop (`pnpm e2e`). Runs against a server that's
  * already up — `next build && next start -p 3210`, or set E2E_BASE_URL (e.g. a dev server).
- * Uses the installed Microsoft Edge, so no Playwright browser download is needed.
+ * Uses the installed Microsoft Edge, so no Playwright browser download is needed; set
+ * E2E_CHANNEL=chrome to drive Google Chrome instead.
  */
 export default defineConfig({
   testDir: "e2e",
@@ -16,6 +17,6 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3210",
-    channel: "msedge",
+    channel: process.env.E2E_CHANNEL ?? "msedge",
   },
 });
