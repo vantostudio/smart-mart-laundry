@@ -45,10 +45,19 @@ test("an empty search offers to find it on WhatsApp", async ({ page }) => {
 
 test("filters sheet narrows by size and price", async ({ page }) => {
   await page.goto("/shop?cat=shoes");
-  // A tap before hydration doesn't open the sheet, so tap until it shows.
+  // A tap before hydration doesn't open the sheet, so tap until it shows. Before tapping again,
+  // give a late-opening sheet a moment: the button toggles, so a second tap would close it.
   const sheet = page.getByRole("dialog", { name: "Filters" });
+  let tapped = false;
   await expect(async () => {
-    if (!(await sheet.isVisible())) await page.getByRole("button", { name: /Filters/ }).click();
+    const open =
+      tapped &&
+      (await sheet.waitFor({ timeout: 1_000 }).then(
+        () => true,
+        () => false,
+      ));
+    if (!open) await page.getByRole("button", { name: /Filters/ }).click();
+    tapped = true;
     await expect(sheet).toBeVisible({ timeout: 1_000 });
   }).toPass();
   await page.getByRole("button", { name: "42", exact: true }).click();
