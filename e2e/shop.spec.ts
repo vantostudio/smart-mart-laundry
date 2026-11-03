@@ -19,7 +19,7 @@ test("search, aisle and condition narrow the catalogue and land in the URL", asy
   await expect(async () => {
     await page.getByLabel("Search the shop").fill("denim");
     await expect(page).toHaveURL(/q=denim/, { timeout: 1_000 });
-  }).toPass();
+  }).toPass({ timeout: 15_000 });
   const cards = page.locator("#catalogue article");
   await expect(cards.first()).toBeVisible();
   // The grid catches up a moment after typing (deferred), so wait for it.
@@ -46,7 +46,8 @@ test("an empty search offers to find it on WhatsApp", async ({ page }) => {
 test("filters sheet narrows by size and price", async ({ page }) => {
   await page.goto("/shop?cat=shoes");
   // A tap before hydration doesn't open the sheet, so tap until it shows. Before tapping again,
-  // give a late-opening sheet a moment: the button toggles, so a second tap would close it.
+  // give a late-opening sheet a moment: once it's open, its overlay covers Filters, so the tap
+  // can't land and would keep retrying.
   const sheet = page.getByRole("dialog", { name: "Filters" });
   let tapped = false;
   await expect(async () => {
@@ -59,7 +60,7 @@ test("filters sheet narrows by size and price", async ({ page }) => {
     if (!open) await page.getByRole("button", { name: /Filters/ }).click();
     tapped = true;
     await expect(sheet).toBeVisible({ timeout: 1_000 });
-  }).toPass();
+  }).toPass({ timeout: 15_000 });
   await page.getByRole("button", { name: "42", exact: true }).click();
   await page.getByRole("button", { name: "Over KSh 2,000" }).click();
   await page.getByRole("button", { name: /^Show \d+ items?$/ }).click();
@@ -113,7 +114,7 @@ test("a mtumba piece adds from the card and stays at one", async ({ page }) => {
     await expect(
       page.getByRole("button", { name: "501 jeans is in your bag, add another size" }),
     ).toBeVisible({ timeout: 1_000 });
-  }).toPass();
+  }).toPass({ timeout: 15_000 });
   // Added straight away (one size), so the bar shows the delivery nudge.
   await expect(page.getByText("KSh 600 to free delivery")).toBeVisible();
 
