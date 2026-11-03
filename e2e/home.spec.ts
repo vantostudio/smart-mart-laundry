@@ -80,7 +80,8 @@ test("the reviews can be swiped by hand, and hold still while you do", async ({ 
   await page.goto("/");
   const row = page.locator(".animate-marquee").first().locator("..");
   const track = row.locator(".animate-marquee").first();
-  // Starts one copy in, so there's room to swipe either way.
+  // Starts one copy in, so there's room to swipe either way (set once hydrated, so wait for it).
+  await expect.poll(() => row.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
   const start = await row.evaluate((el) => el.scrollLeft);
   expect(start).toBeGreaterThan(0);
 

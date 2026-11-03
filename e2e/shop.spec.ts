@@ -15,8 +15,11 @@ test("search, aisle and condition narrow the catalogue and land in the URL", asy
   await page.goto("/shop");
   await expect(count(page)).toHaveText(/^\d{2} items$/);
 
-  await page.getByLabel("Search the shop").fill("denim");
-  await expect(page).toHaveURL(/q=denim/);
+  // Typing before hydration is wiped by the controlled input, so type again until it lands.
+  await expect(async () => {
+    await page.getByLabel("Search the shop").fill("denim");
+    await expect(page).toHaveURL(/q=denim/, { timeout: 1_000 });
+  }).toPass();
   const cards = page.locator("#catalogue article");
   await expect(cards.first()).toBeVisible();
   // The grid catches up a moment after typing (deferred), so wait for it.
@@ -42,7 +45,12 @@ test("an empty search offers to find it on WhatsApp", async ({ page }) => {
 
 test("filters sheet narrows by size and price", async ({ page }) => {
   await page.goto("/shop?cat=shoes");
-  await page.getByRole("button", { name: /Filters/ }).click();
+  // A tap before hydration doesn't open the sheet, so tap until it shows.
+  const sheet = page.getByRole("dialog", { name: "Filters" });
+  await expect(async () => {
+    if (!(await sheet.isVisible())) await page.getByRole("button", { name: /Filters/ }).click();
+    await expect(sheet).toBeVisible({ timeout: 1_000 });
+  }).toPass();
   await page.getByRole("button", { name: "42", exact: true }).click();
   await page.getByRole("button", { name: "Over KSh 2,000" }).click();
   await page.getByRole("button", { name: /^Show \d+ items?$/ }).click();
@@ -89,7 +97,14 @@ test("quick view needs a size, then the bag sends one WhatsApp order", async ({ 
 
 test("a mtumba piece adds from the card and stays at one", async ({ page }) => {
   await page.goto("/shop?q=sm-1204");
-  await page.getByRole("button", { name: "Add 501 jeans" }).click();
+  // A tap before hydration is lost; tap only while "Add" shows, so it can't add twice.
+  await expect(async () => {
+    const add = page.getByRole("button", { name: "Add 501 jeans" });
+    if (await add.isVisible()) await add.click();
+    await expect(
+      page.getByRole("button", { name: "501 jeans is in your bag, add another size" }),
+    ).toBeVisible({ timeout: 1_000 });
+  }).toPass();
   // Added straight away (one size), so the bar shows the delivery nudge.
   await expect(page.getByText("KSh 600 to free delivery")).toBeVisible();
 
