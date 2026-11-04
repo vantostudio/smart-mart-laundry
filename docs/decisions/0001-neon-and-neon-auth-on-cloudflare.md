@@ -117,9 +117,8 @@ Under `pnpm cf:preview`, the same `.next` build was compared with `next start`:
 - `/`, `/laundry`, `/shop`, `/about`, `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`
   and a 404 page gave the same status, content type and byte-identical bodies.
 - `/egikomba` gave `308` to `/shop` on both servers.
-- The Playwright suite gave 62 passed, 1 flaky and 1 failed. The flaky one was the laundry
-  booking spec: a tap on "Mats" was lost, like the known hydration flakes, and the retry passed. The failure is the favicon
-  content type (see "Static assets" below).
+- The Playwright suite gave 63 passed and 1 failed. The failure is the favicon content type
+  (see "Static assets" below).
 
 Feature support:
 
