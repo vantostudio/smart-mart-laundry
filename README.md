@@ -102,4 +102,13 @@ it answers `503` with `AUTH_UNAVAILABLE`. It needs `NEON_AUTH_BASE_URL` (from `n
 every admin action calls `requireAdminForAction()`, from `src/features/admin/lib/auth.ts`; there is
 no middleware.
 
+`/admin/sign-in` has one "Continue with Google" button (Google is the only provider). Google sends
+the browser back to the sign-in page, which exchanges Neon Auth's `neon_auth_session_verifier` for
+the session cookies through `/api/auth` and then loads `/admin`. "Sign out" in the `/admin` header
+signs out through Neon Auth and goes back to sign-in. Every `/admin` response carries
+`X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'`,
+`Referrer-Policy: same-origin` and `Cache-Control: private, no-store` (`next.config.ts`); admin
+pages are `noindex`, and `robots.txt` disallows `/admin` and `/api/`. Admin copy lives in
+`src/features/admin/messages.ts`.
+
 Plans: [`roadmap.md`](roadmap.md).
