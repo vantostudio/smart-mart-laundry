@@ -1,8 +1,8 @@
 # Roadmap — Street Mart Kenya
 
 Design goals: modern, minimal and clean; warm cream + bottle green + terracotta palette; Clash Display
-headings and Satoshi content; static data only; payment on delivery; a lean structure ready for a
-backend.
+headings and Satoshi content; the public site stays static data; payment on delivery; a small
+staff-only admin backend on Neon and Cloudflare is being added.
 
 ## Done
 
@@ -18,8 +18,9 @@ backend.
 
 ## Next
 
+- [ ] Admin sign-in for staff (Neon Auth, Google)
 - [ ] Real shop stock (replace the sample `products` in `src/features/shop/data.ts`), photos of actual pieces, marking sold mtumba
 
 ## Later
 
-- [ ] Backend: real orders, shop stock, order tracking, M-Pesa
+- [ ] Backend for customers: real orders, order tracking, M-Pesa
