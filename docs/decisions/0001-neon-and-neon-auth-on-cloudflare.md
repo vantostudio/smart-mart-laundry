@@ -85,9 +85,9 @@ photos (drift item 3 in the plan).
 
 ## Consequences
 
-- Likely **Workers Paid (USD 5 a month)**: OpenNext bundles of a Next 16 app usually exceed the
-  Free plan's 3 MiB compressed size cap, and SSR exceeds its 10 ms CPU cap. Slice `hosting`
-  measures the bundle and confirms this.
+- **Workers Paid (USD 5 a month)** is needed. The Worker fits the Free plan's size cap (2.12 MiB
+  gzip of 3 MiB), but every page request runs the Next server inside the Worker, which doesn't
+  fit the Free plan's 10 ms CPU cap. See "Hosting findings".
 - Neon runs in one region, so each query is a round trip from the Cloudflare edge to that region.
   That is fine for one query per admin request. Prefer an EU region such as Frankfurt if it can
   still be chosen.
@@ -104,9 +104,94 @@ photos (drift item 3 in the plan).
 - A partner asks for SSO.
 - Real orders depend on the backend: add Sentry.
 
+## Hosting findings (slice `hosting`, 2026-11-04)
+
+Versions: `@opennextjs/cloudflare` 1.20.15 (with `@opennextjs/aws` 4.1.14) and `wrangler` 4.156.2
+(workerd 1.20261102.1). The adapter is pinned exactly to 1.20.15: 1.20.16 needs `next >=16.4.5`,
+and the repo pins `next` 16.4.3. 1.20.12 to 1.20.15 accept `next >=16.4.1`. Docs read:
+<https://opennext.js.org/cloudflare> and its pages on getting started, caching, images, the CLI,
+env vars and dev and deploy.
+
+Under `pnpm cf:preview`, the same `.next` build was compared with `next start`:
+
+- `/`, `/laundry`, `/shop`, `/about`, `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`
+  and a 404 page gave the same status, content type and byte-identical bodies.
+- `/egikomba` gave `308` to `/shop` on both servers.
+- The Playwright suite gave 62 passed, 1 flaky and 1 failed. The flaky one was the laundry
+  booking spec: a tap on "Mats" was lost, like the known hydration flakes, and the retry passed. The failure is the favicon
+  content type (see "Static assets" below).
+
+Feature support:
+
+- **`cacheComponents`: Supported with caveat.** The docs' feature list marks Partial
+  Prerendering and Composable Caching (`'use cache'`) as supported. The caveat is in the installed
+  `dist/api/overrides/incremental-cache/static-assets-incremental-cache.js`, which throws
+  "Composable cache is not supported in static assets incremental cache". The repo has no
+  `"use cache"` today. Adding one needs the R2 cache. Seen under `cf:preview`: all four pages
+  are prerendered shells, and the HTML matches `next start` byte for byte.
+- **`partialPrefetching`: Supported with caveat.** The docs don't name it. It is a client router
+  and prerender feature, and the adapter has no special handling for it. Seen under `cf:preview`:
+  the page responses carry the same `Vary: rsc, next-router-state-tree, next-router-prefetch,
+  next-router-segment-prefetch` header as `next start`, and the navigation specs pass.
+- **`typedRoutes`: Supported.** It only exists at build time (`next typegen` and the type check
+  inside `next build`), so nothing of it reaches the Worker. Seen: `pnpm cf:build` ran the type
+  check and passed.
+- **Custom image loader: Supported with caveat.** The docs (`/cloudflare/howtos/image`) say
+  image optimization needs "either … an image binding or … a custom loader". With our loader,
+  images go straight to `images.unsplash.com` and no `IMAGES` binding is needed. Seen: the `/shop`
+  specs load the Unsplash images. The caveat: the Worker still answers `/_next/image` itself
+  (`.open-next/worker.js`). It serves local files unoptimized and returns `400` for remote URLs,
+  because `remotePatterns` is empty. `next start` returns `404` there. Nothing links to it.
+- **Server actions: Supported with caveat.** The docs list App Router and SSR on the Node.js
+  runtime and don't call out server actions. The repo has none, so nothing was seen under
+  `cf:preview`. On the Origin and Host check, Next's
+  `node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/serverActions.md`
+  says Next compares `Origin` with `x-forwarded-host` or `host`, and that no
+  `serverActions.allowedOrigins` entry is needed when the proxy forwards the public host. The
+  installed `@opennextjs/aws` `dist/core/requestHandler.js` copies `x-forwarded-host` into `host`
+  before Next sees the request, so the two can't disagree. On a custom domain, the Worker's
+  `host` is `streetmart.africa`. The live check stays with slice `admin-shell`.
+
+Static assets:
+
+- Workers Static Assets sends `favicon.ico` as `image/vnd.microsoft.icon`, where `next start`
+  sends `image/x-icon` (same bytes). That fails `e2e/seo.spec.ts` "logo icons, manifest, sitemap
+  and robots are served" on all three attempts.
+- Serving it from the Worker instead (`assets.run_worker_first`) is not a fix: the Worker
+  corrupts the binary body (bytes above 0x7f become U+FFFD).
+- A `public/_headers` file with `/favicon.ico` and `Content-Type: image/x-icon` fixes it,
+  checked by hand in the generated assets. This slice may not change `public/`, so it waits for
+  a decision.
+- The adapter docs also suggest `/_next/static/*` with
+  `Cache-Control: public,max-age=31536000,immutable` in that file. Without it, Static Assets
+  sends `max-age=0, must-revalidate`, which costs a revalidation request but serves no stale code.
+- Static JS goes out as `text/javascript` instead of `application/javascript`. It is the same
+  file, and browsers treat both types the same.
+
+Other choices:
+
+- **Incremental cache.** It is the read-only static-assets cache
+  (`open-next.config.ts`), with no tag cache and no queue (the adapter's `dummy` defaults) and no
+  R2 or KV. Cache interception stays off, because the caching docs say it doesn't work with PPR.
+  The trigger for R2 is on-demand revalidation.
+- **Dev hook.** `initOpenNextCloudflareForDev()` is not added and `next.config.ts` is unchanged.
+  The docs (get started step 12, and `/cloudflare/howtos/dev-deploy`) say the hook lets `next dev`
+  reach bindings through `getCloudflareContext`. The repo has no bindings and doesn't call that
+  function. `cf:build` and `cf:preview` work without it.
+- **Worker size.** `wrangler deploy --dry-run` reports `Total Upload: 8932.08 KiB / gzip:
+  2172.44 KiB`, the same for `--env preview`. That is 2.12 MiB compressed: under the Free
+  limit (3 MiB) with 0.88 MiB to spare, and well under the Paid limit (10 MiB).
+- **Workers Paid needed: yes**, because of CPU, not size.
+  - Every page request runs the Worker: the prerendered HTML sits in `cdn-cgi/_next_cache`, which
+    only the Worker can read, and the Next server streams it out.
+  - Warm requests for the four pages and the sitemap took 10 to 34 ms wall time in local workerd.
+    A cold isolate's first request took seconds.
+  - workerd doesn't report CPU time locally, so nothing shows these requests staying under the
+    Free plan's 10 ms of CPU. At that wall time they are likely to go over it often, and on Free
+    a request over the cap fails.
+  - Confirm with the CPU time in Workers Logs after the first preview deploy.
+
 ## Open, filled in by later slices
 
-- OpenNext support for `cacheComponents`, `typedRoutes`, the custom image loader and server
-  actions, and the measured Worker bundle size (slice `hosting`).
 - Whether Neon Auth rate-limits sign-in (slice `auth-core`).
 - The exact Neon Auth package and variable names (after `neon deploy`).

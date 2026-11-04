@@ -29,6 +29,33 @@ pnpm e2e
 E2E_BASE_URL=http://localhost:3000 pnpm e2e
 ```
 
+## Run on Cloudflare (Workers via OpenNext)
+
+The site runs as a Cloudflare Worker built by OpenNext (`@opennextjs/cloudflare`), configured in
+`wrangler.jsonc` and `open-next.config.ts`. Keep using `pnpm dev` while working; these check the
+Worker build.
+
+```sh
+pnpm cf:build       # runs `next build`, then bundles the Worker into .open-next/ (no login)
+pnpm cf:preview     # serves the last cf:build in local workerd on http://localhost:8787
+E2E_BASE_URL=http://localhost:8787 pnpm e2e   # browser checks against the preview
+```
+
+Deploying needs `pnpm exec wrangler login` first:
+
+```sh
+pnpm cf:deploy                  # the `street-mart` Worker (production)
+pnpm cf:deploy --env preview    # the `street-mart-preview` Worker, on its own workers.dev URL
+pnpm exec wrangler rollback     # back to the previous deployed version
+```
+
+Build without `.env*` files that hold values (only `.env.example`): OpenNext can carry `.env`
+values into the Worker bundle. Secrets go in `wrangler secret put <NAME>` (add `--env preview`
+for the preview Worker), and in `.dev.vars` for local preview.
+
+`streetmart.africa` is attached to the `street-mart` Worker as a custom domain in the Cloudflare
+dashboard when the live deploy is switched over; `wrangler.jsonc` has no routes.
+
 ## Where things live
 
 - `src/app/(site)` — routes: `/`, `/laundry`, `/shop`, `/about`
@@ -39,14 +66,14 @@ E2E_BASE_URL=http://localhost:3000 pnpm e2e
 
 ## Admin, database and hosting
 
-The site is moving to Cloudflare Workers via OpenNext (`@opennextjs/cloudflare`) in slice
-`hosting`; the repo has no Wrangler or OpenNext config yet. A private `/admin` area for staff is
-on its way: Neon Postgres for data and Neon Auth (Google sign-in only) for staff, with our own
-allowlist deciding who gets in. Why these:
+The site is moving to Cloudflare Workers via OpenNext (`@opennextjs/cloudflare`); how to build,
+preview and deploy it is in [Run on Cloudflare](#run-on-cloudflare-workers-via-opennext). A
+private `/admin` area for staff is on its way: Neon Postgres for data and Neon Auth (Google
+sign-in only) for staff, with our own allowlist deciding who gets in. Why these:
 [`docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md`](docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md).
 
-Provisioning, done once by a person. The `cf:*` and `db:*` scripts don't exist yet; the slices
-named below add them.
+Provisioning, done once by a person. The `db:*` scripts don't exist yet; the slices named below
+add them.
 
 1. Neon:
    `pnpm dlx neon@latest init -y --org-id <neon-org-id> --project-id <neon-project-id> --branch production --services postgres,auth`
@@ -71,7 +98,6 @@ named below add them.
    `wrangler tail` showing `sign_in` as the end-to-end proof.
 
 Secrets live only in Wrangler. `.env.local` and `.dev.vars` are never committed; `.env.example`
-lists the names. `.dev.vars` isn't gitignored until slice `hosting` adds it, so nobody should
-create one before then.
+lists the names. `.dev.vars` is gitignored.
 
 Plans: [`roadmap.md`](roadmap.md).
