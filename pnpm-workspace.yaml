@@ -1,5 +1,6 @@
 allowBuilds:
   sharp: true
+  esbuild: false
   unrs-resolver: false
 minimumReleaseAgeExclude:
   - lucide-react@1.63.0

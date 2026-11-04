@@ -45,8 +45,8 @@ on its way: Neon Postgres for data and Neon Auth (Google sign-in only) for staff
 allowlist deciding who gets in. Why these:
 [`docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md`](docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md).
 
-Provisioning, done once by a person. The `cf:*` and `db:*` scripts don't exist yet; the slices
-named below add them.
+Provisioning, done once by a person. The `db:*` scripts exist; the `cf:*` scripts come with slice
+`hosting`.
 
 1. Neon:
    `pnpm dlx neon@latest init -y --org-id <neon-org-id> --project-id <neon-project-id> --branch production --services postgres,auth`
@@ -69,6 +69,24 @@ named below add them.
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
 6. After slice `admin-shell`: sign in on the preview Worker, then production. Keep the output of
    `wrangler tail` showing `sign_in` as the end-to-end proof.
+
+### Database
+
+Schema in `src/lib/db/schema.ts`, SQL migrations in `drizzle/`, config in `drizzle.config.ts`.
+These run by hand from a dev machine, never on install, build or deploy. `db:migrate` and
+`db:seed-owner` use `DATABASE_URL_UNPOOLED` (the direct URL), else `DATABASE_URL`, from the
+environment or `.env.local`.
+
+- `pnpm db:generate` after a schema change writes the next migration; review its SQL in the PR.
+- `pnpm db:migrate` applies pending migrations. Run it on the Neon `dev` branch first, then
+  `production`.
+- `pnpm db:seed-owner <email>` adds an owner to the admin allowlist (does nothing if already
+  there).
+- Rollback: `psql "$DATABASE_URL_UNPOOLED" -f drizzle/rollback/<tag>.sql`, then re-seed the owner.
+  Neon point-in-time restore is the backstop.
+
+`GET /api/health` answers `{"ok":true}` with `Cache-Control: no-store` and never touches the
+database, so uptime pings don't wake Neon.
 
 Secrets live only in Wrangler. `.env.local` and `.dev.vars` are never committed; `.env.example`
 lists the names. `.dev.vars` isn't gitignored until slice `hosting` adds it, so nobody should
