@@ -5,13 +5,14 @@ import type { Route } from "next";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 
+import { actionRefusalMessages } from "@/features/admin/messages";
 import { getDb, type Db } from "@/lib/db";
 import { adminUser, type AdminRole } from "@/lib/db/schema";
 import { AppError, toErrorShape, type AppErrorCode, type AppErrorShape } from "@/lib/errors";
 import { log } from "@/lib/log";
 import { getRequestId } from "@/lib/request-id";
 
-import { authUnavailableMessage, readSession, type SessionUser } from "./neon-auth";
+import { readSession, type SessionUser } from "./neon-auth";
 
 /*
  * The admin access check. Every admin page calls `requireAdmin()` and every admin action calls
@@ -114,16 +115,11 @@ async function check(opts?: { role?: "owner" }): Promise<Check> {
 /** For admin pages: the admin, or a redirect to the sign-in page with the reason. */
 export async function requireAdmin(opts?: { role?: "owner" }): Promise<AdminContext> {
   const result = await check(opts);
-  // The sign-in page arrives with slice `admin-shell`.
   if (!result.ok) redirect(`/admin/sign-in?reason=${result.code}` as Route);
   return result.admin;
 }
 
-const refusalMessages: Record<Refusal, string> = {
-  UNAUTHENTICATED: "Please sign in to continue.",
-  FORBIDDEN: "You don't have access to this.",
-  AUTH_UNAVAILABLE: authUnavailableMessage,
-};
+const refusalMessages: Record<Refusal, string> = actionRefusalMessages;
 
 /** For admin actions: the same decision as `requireAdmin`, returned as a result, never a redirect. */
 export async function requireAdminForAction(opts?: {

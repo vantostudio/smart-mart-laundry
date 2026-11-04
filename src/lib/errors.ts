@@ -1,7 +1,7 @@
 /*
  * The one error model for server code. Codes live here and nowhere else. An `AppError` message is
  * safe for people to read: never values, SQL, driver text or a stack. Person-facing copy per code
- * comes later in `src/features/admin/messages.ts`. Safe for client code, which imports the types.
+ * lives in `src/features/admin/messages.ts`. Safe for client code, which imports the types.
  */
 
 export const appErrorCodes = [
