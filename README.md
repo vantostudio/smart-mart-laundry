@@ -62,9 +62,10 @@ Provisioning, done once by a person. The `db:*` scripts exist; the `cf:*` script
    `http://localhost:8787`.
 4. Cloudflare (after slice `hosting`): `wrangler login`, then `wrangler secret put <NAME>` for each
    secret in production (Neon `production` branch values) and
-   `wrangler secret put <NAME> --env preview` (`dev` branch values). Copy the dev values into
-   `.dev.vars` for local preview. Switch the live deploy to `pnpm cf:deploy`, or to Workers Builds
-   on the repo with the same command.
+   `wrangler secret put <NAME> --env preview` (`dev` branch values). `NEON_AUTH_COOKIE_SECRET` is
+   one we generate, not Neon: `openssl rand -base64 32`, a different value per environment. Copy
+   the dev values into `.dev.vars` for local preview. Switch the live deploy to `pnpm cf:deploy`,
+   or to Workers Builds on the repo with the same command.
 5. After slice `db`: from a dev machine with the direct Neon URL, run `pnpm db:migrate` against
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
 6. After slice `admin-shell`: sign in on the preview Worker, then production. Keep the output of
@@ -91,5 +92,14 @@ database, so uptime pings don't wake Neon.
 Secrets live only in Wrangler. `.env.local` and `.dev.vars` are never committed; `.env.example`
 lists the names. `.dev.vars` isn't gitignored until slice `hosting` adds it, so nobody should
 create one before then.
+
+### Auth
+
+Staff sign in with Google through Neon Auth. `/api/auth/*` is the Neon Auth proxy; without its env
+it answers `503` with `AUTH_UNAVAILABLE`. It needs `NEON_AUTH_BASE_URL` (from `neon deploy`) and
+`NEON_AUTH_COOKIE_SECRET` (ours, at least 32 characters). Access is a verified Google email on the
+`admin_user` allowlist, with the role from that row. Every admin page calls `requireAdmin()` and
+every admin action calls `requireAdminForAction()`, from `src/features/admin/lib/auth.ts`; there is
+no middleware.
 
 Plans: [`roadmap.md`](roadmap.md).
