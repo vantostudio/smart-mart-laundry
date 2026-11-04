@@ -8,6 +8,13 @@
       "when": 1793788431039,
       "tag": "0000_admin_users",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793803269270,
+      "tag": "0001_drop_audit_log",
+      "breakpoints": true
     }
   ]
 }

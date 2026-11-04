@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vite-plus/test";
 
-import { adminEvent, adminUser } from "./schema";
+import { adminUser } from "./schema";
 import { applyRollback, createTestDb, migrationsFolder } from "./test-db";
 
 let t: Awaited<ReturnType<typeof createTestDb>>;
@@ -17,7 +17,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await t.client.exec("truncate admin_event, admin_user restart identity");
+  await t.client.exec("truncate admin_user");
 });
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -53,7 +53,7 @@ describe("admin_user", () => {
     expect(row.role).toBe("admin");
     expect(row.id).toMatch(uuid);
     expect(row.createdAt).toBeInstanceOf(Date);
-    expect(row).toMatchObject({ name: null, authUserId: null, disabledAt: null, createdBy: null });
+    expect(row.name).toBeNull();
   });
 
   it("rejects a duplicate email", async () => {
@@ -71,83 +71,36 @@ describe("admin_user", () => {
     );
     expect(await violated(boss)).toBe("admin_user_role_check");
   });
-
-  it("rejects a duplicate auth_user_id", async () => {
-    await addAdmin({ email: "a@example.com", authUserId: "auth-1" });
-    expect(await violated(addAdmin({ email: "b@example.com", authUserId: "auth-1" }))).toBe(
-      "admin_user_auth_user_id_unique",
-    );
-  });
-
-  it("links created_by to another admin", async () => {
-    const owner = await addAdmin({ role: "owner" });
-    const added = await addAdmin({ email: "b@example.com", createdBy: owner.id });
-    expect(added.createdBy).toBe(owner.id);
-  });
-});
-
-describe("admin_event", () => {
-  it("fills in id, at and an empty detail", async () => {
-    const [row] = await t.db
-      .insert(adminEvent)
-      .values({ action: "sign_in", requestId: "req-1" })
-      .returning();
-    expect(typeof row?.id).toBe("number");
-    expect(row?.at).toBeInstanceOf(Date);
-    expect(row?.detail).toEqual({});
-  });
-
-  it("rejects an unknown action", async () => {
-    const hacked = t.client.query(
-      `insert into admin_event (action, request_id) values ('hacked', 'req-1')`,
-    );
-    expect(await violated(hacked)).toBe("admin_event_action_check");
-  });
-
-  it("rejects an unknown actor", async () => {
-    const unknownActor = t.db.insert(adminEvent).values({
-      action: "sign_in",
-      requestId: "req-1",
-      actorAdminId: "00000000-0000-4000-8000-000000000000",
-    });
-    expect(await violated(unknownActor)).toBe("admin_event_actor_admin_id_admin_user_id_fk");
-  });
-
-  it("has the index on at desc", async () => {
-    const { rows } = await t.client.query<{ indexdef: string }>(
-      `select indexdef from pg_indexes where indexname = 'admin_event_at_idx'`,
-    );
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.indexdef).toMatch(/\(at DESC/);
-  });
 });
 
 describe("migration", () => {
-  it("puts both tables in public", async () => {
-    const { rows } = await t.client.query<{ table_schema: string; table_name: string }>(
-      `select table_schema, table_name from information_schema.tables
-       where table_name in ('admin_user', 'admin_event') order by table_name`,
+  it("leaves only admin_user in public", async () => {
+    const { rows } = await t.client.query<{ table_name: string }>(
+      `select table_name from information_schema.tables where table_schema = 'public'`,
     );
-    expect(rows).toEqual([
-      { table_schema: "public", table_name: "admin_event" },
-      { table_schema: "public", table_name: "admin_user" },
-    ]);
+    expect(rows).toEqual([{ table_name: "admin_user" }]);
   });
 
-  it("rolls back and applies again", async () => {
-    const owner = await addAdmin({ role: "owner" });
-    await t.db
-      .insert(adminEvent)
-      .values({ action: "sign_in", requestId: "r", actorAdminId: owner.id });
+  it("gives admin_user exactly its five columns", async () => {
+    const { rows } = await t.client.query<{ column_name: string }>(
+      `select column_name from information_schema.columns
+       where table_schema = 'public' and table_name = 'admin_user' order by ordinal_position`,
+    );
+    expect(rows.map((r) => r.column_name)).toEqual(["id", "email", "name", "role", "created_at"]);
+  });
 
-    await applyRollback(t.client);
+  it("rolls back both migrations and applies them again", async () => {
+    await addAdmin({ role: "owner" });
+
+    await applyRollback(t.client, "0001_drop_audit_log");
+    expect(await tableExists("admin_event")).toBe(true);
+    await applyRollback(t.client, "0000_admin_users");
     expect(await tableExists("admin_user")).toBe(false);
     expect(await tableExists("admin_event")).toBe(false);
 
     await migrate(drizzle({ client: t.client }), { migrationsFolder });
     expect(await tableExists("admin_user")).toBe(true);
-    expect(await tableExists("admin_event")).toBe(true);
+    expect(await tableExists("admin_event")).toBe(false);
     expect(await t.db.select().from(adminUser)).toEqual([]);
-    expect(await t.db.select().from(adminEvent)).toEqual([]);
   });
 });

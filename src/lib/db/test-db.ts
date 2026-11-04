@@ -25,9 +25,7 @@ export async function createTestDb(): Promise<{
   return { db, client, close: () => client.close() };
 }
 
-/** Runs `drizzle/rollback/0000_admin_users.sql`, as a person would with `psql -f`. */
-export async function applyRollback(client: PGlite): Promise<void> {
-  await client.exec(
-    await readFile(join(migrationsFolder, "rollback/0000_admin_users.sql"), "utf8"),
-  );
+/** Runs `drizzle/rollback/<migration>.sql`, as a person would with `psql -f`. */
+export async function applyRollback(client: PGlite, migration: string): Promise<void> {
+  await client.exec(await readFile(join(migrationsFolder, `rollback/${migration}.sql`), "utf8"));
 }

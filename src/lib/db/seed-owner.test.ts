@@ -18,7 +18,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await t.client.exec("truncate admin_event, admin_user restart identity");
+  await t.client.exec("truncate admin_user");
 });
 
 describe("seedOwner", () => {
