@@ -1,0 +1,80 @@
+{
+  "base_branch": "main",
+  "concurrency": 2,
+  "max_rounds": 3,
+  "budget_usd_per_job": 30,
+  "checks_timeout_s": 1800,
+  "worktrees": "../{repo}.factory-worktrees",
+  "ports": {
+    "base": 5100,
+    "step": 10
+  },
+  "land": {
+    "auto": {
+      "max_risk": "low",
+      "blocked_surfaces": [
+        "security"
+      ]
+    }
+  },
+  "models": {
+    "surveyor": "opus",
+    "planner": "opus",
+    "intake": "opus",
+    "spec-writer": "opus",
+    "builder": "opus",
+    "approver": "opus",
+    "review": {
+      "low": {
+        "code": "haiku"
+      },
+      "medium": {
+        "code": "sonnet"
+      },
+      "high": {
+        "code": "opus"
+      }
+    },
+    "surfaces": {
+      "ui": {
+        "ux": "sonnet",
+        "ui": "sonnet"
+      },
+      "security": {
+        "security": "opus"
+      }
+    }
+  },
+  "protected_paths": [
+    ".factory/**",
+    "src/**/*.test.tsx",
+    "e2e/**",
+    "src/**/*.test.ts",
+    "src/test/**",
+    "playwright.config.ts",
+    "vite.config.ts"
+  ],
+  "prices_usd_per_mtok": {
+    "claude-opus-5-5": {
+      "input": 4,
+      "output": 20,
+      "cache_write_5m": 5,
+      "cache_write_1h": 8,
+      "cache_read": 0.2
+    },
+    "claude-sonnet-5-5": {
+      "input": 2,
+      "output": 10,
+      "cache_write_5m": 2.5,
+      "cache_write_1h": 4,
+      "cache_read": 0.2
+    },
+    "claude-haiku-5-5": {
+      "input": 0.1,
+      "output": 0.5,
+      "cache_write_5m": 0.125,
+      "cache_write_1h": 0.2,
+      "cache_read": 0.01
+    }
+  }
+}
