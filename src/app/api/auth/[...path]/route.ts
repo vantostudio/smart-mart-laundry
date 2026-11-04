@@ -20,7 +20,7 @@ async function proxy(method: "GET" | "POST", request: Request, ctx: Context): Pr
     return await getNeonAuth().handler()[method](request, ctx);
   } catch (err) {
     const requestId = requestIdFrom(request.headers);
-    if (err instanceof AppError) {
+    if (err instanceof AppError && err.code === "AUTH_UNAVAILABLE") {
       log.warn("auth_unavailable", { requestId });
       return errorResponse(
         { code: "AUTH_UNAVAILABLE", message: authUnavailableMessage, requestId },
