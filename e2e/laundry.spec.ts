@@ -83,7 +83,12 @@ test.describe("booking", () => {
       .toBeGreaterThan(0);
 
     // A category narrows the grid and lands in the URL.
-    await page.getByRole("button", { name: "Mats", exact: true }).click();
+    // A tap before hydration is lost; retap only while unselected, as a second tap toggles it off.
+    const mats = page.getByRole("button", { name: "Mats", exact: true });
+    await expect(async () => {
+      if ((await mats.getAttribute("aria-pressed")) !== "true") await mats.click();
+      await expect(page).toHaveURL(/cat=mats/, { timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
     await expect(page).toHaveURL(/cat=mats/);
     await expect(page.getByRole("heading", { name: "Baskets" })).toHaveCount(0);
     await addLaundryItem(page, "Floor mat");
