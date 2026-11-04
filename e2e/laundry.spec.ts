@@ -83,7 +83,7 @@ test.describe("booking", () => {
       .toBeGreaterThan(0);
 
     // A category narrows the grid and lands in the URL.
-    // A tap before hydration is lost; tap again only while unselected, as a second tap toggles it off.
+    // A tap before hydration is lost; retap only while unselected, as a second tap toggles it off.
     const mats = page.getByRole("button", { name: "Mats", exact: true });
     await expect(async () => {
       if ((await mats.getAttribute("aria-pressed")) !== "true") await mats.click();
