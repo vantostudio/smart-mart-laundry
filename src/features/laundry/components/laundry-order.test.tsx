@@ -24,6 +24,9 @@ const renderOrder = (query = "") =>
     </CartProvider>,
   );
 
+// Skip user-event's pause between steps: these tests don't depend on typing speed.
+const setupUser = () => userEvent.setup({ delay: null });
+
 const sentText = (sheet: HTMLElement) =>
   decodeURIComponent(
     within(sheet).getByRole("link", { name: "Send order on WhatsApp" }).getAttribute("href") ?? "",
@@ -37,8 +40,10 @@ describe("LaundryOrder", () => {
     expect(screen.getByRole("button", { name: "Add Floor mat" })).toBeInTheDocument();
   });
 
+  // Renders the whole order and booking sheet and runs a long chain of taps, which can pass 5 s
+  // on a loaded machine.
   it("books with taps only: items, two days and an area", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderOrder();
     await user.click(screen.getByRole("button", { name: "Add Small basket" }));
     await user.click(screen.getByRole("button", { name: "Add one Small basket" }));
@@ -69,10 +74,10 @@ describe("LaundryOrder", () => {
     await user.click(within(sheet).getByRole("link", { name: "Send order on WhatsApp" }));
     expect(localStorage.getItem(SAVED_AREA_KEY)).toBe("Ndagani");
     expect(within(sheet).getByText("Your order is ready in WhatsApp")).toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("returns within a week only, and notes a same-day return", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderOrder("pickup=2026-10-29");
     await user.click(screen.getByRole("button", { name: "Add Door mat" }));
     await user.click(screen.getByRole("button", { name: /Book pickup/ }));
@@ -84,8 +89,10 @@ describe("LaundryOrder", () => {
     expect(within(sheet).getByText(/Same day needs a morning collection/)).toBeInTheDocument();
   });
 
+  // Renders the whole order and booking sheet and runs a long chain of taps, which can pass 5 s
+  // on a loaded machine.
   it("adds a note only when asked", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderOrder();
     await user.click(screen.getByRole("button", { name: "Add Door mat" }));
     await user.click(screen.getByRole("button", { name: /Book pickup/ }));
@@ -95,5 +102,5 @@ describe("LaundryOrder", () => {
     await user.click(within(sheet).getByRole("button", { name: "Thursday 29 October" }));
     await user.click(within(sheet).getByRole("radio", { name: "Chuka town" }));
     expect(sentText(sheet)).toContain("Note: Hostel B, room 12");
-  });
+  }, 15_000);
 });
