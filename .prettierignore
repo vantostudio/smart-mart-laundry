@@ -1,0 +1,3 @@
+# Factory state and profile (.factory/project.md, config.json, checks.sh): written by the factory
+# tool and protected from branches, so the format check leaves them alone.
+/.factory/
