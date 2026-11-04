@@ -53,6 +53,9 @@ Build without `.env*` files that hold values (only `.env.example`): OpenNext can
 values into the Worker bundle. Secrets go in `wrangler secret put <NAME>` (add `--env preview`
 for the preview Worker), and in `.dev.vars` for local preview.
 
+Static files are served by Workers Static Assets without running the Worker, so their headers
+(the favicon's content type, long caching for `_next/static`) are set in `public/_headers`.
+
 `streetmart.africa` is attached to the `street-mart` Worker as a custom domain in the Cloudflare
 dashboard when the live deploy is switched over; `wrangler.jsonc` has no routes.
 

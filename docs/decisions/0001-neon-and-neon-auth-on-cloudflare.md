@@ -117,8 +117,8 @@ Under `pnpm cf:preview`, the same `.next` build was compared with `next start`:
 - `/`, `/laundry`, `/shop`, `/about`, `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`
   and a 404 page gave the same status, content type and byte-identical bodies.
 - `/egikomba` gave `308` to `/shop` on both servers.
-- The Playwright suite gave 63 passed and 1 failed. The failure is the favicon content type
-  (see "Static assets" below).
+- The Playwright suite passed (64 passed), once `public/_headers` was added (see "Static
+  assets" below).
 
 Feature support:
 
@@ -153,17 +153,19 @@ Feature support:
 
 Static assets:
 
-- Workers Static Assets sends `favicon.ico` as `image/vnd.microsoft.icon`, where `next start`
-  sends `image/x-icon` (same bytes). That fails `e2e/seo.spec.ts` "logo icons, manifest, sitemap
-  and robots are served" on all three attempts.
-- Serving it from the Worker instead (`assets.run_worker_first`) is not a fix: the Worker
-  corrupts the binary body (bytes above 0x7f become U+FFFD).
-- A `public/_headers` file with `/favicon.ico` and `Content-Type: image/x-icon` fixes it,
-  checked by hand in the generated assets. This slice may not change `public/`, so it waits for
-  a decision.
-- The adapter docs also suggest `/_next/static/*` with
-  `Cache-Control: public,max-age=31536000,immutable` in that file. Without it, Static Assets
-  sends `max-age=0, must-revalidate`, which costs a revalidation request but serves no stale code.
+- Workers Static Assets serves files without running the Worker, so `next.config.ts` headers
+  don't apply to them. Their headers come from `public/_headers`, which OpenNext copies into
+  `.open-next/assets/`. It sets two things:
+  - `/favicon.ico`: `Content-Type: image/x-icon`. Static Assets would otherwise send
+    `image/vnd.microsoft.icon` (same bytes), where `next start` sends `image/x-icon`, and
+    `e2e/seo.spec.ts` "logo icons, manifest, sitemap and robots are served" checks for it.
+  - `/_next/static/*`: `Cache-Control: public,max-age=31536000,immutable`, as the adapter's
+    caching docs recommend. This matches what `next start` sends. Without it, Static Assets sends
+    `max-age=0, must-revalidate`.
+- Serving the favicon from the Worker instead (`assets.run_worker_first`) is not a fix: the
+  Worker corrupts the binary body (bytes above 0x7f become U+FFFD).
+- Side effect on `next start`: it serves the file itself at `/_headers` (two lines of public
+  header rules, nothing secret). The Worker doesn't serve it (404).
 - Static JS goes out as `text/javascript` instead of `application/javascript`. It is the same
   file, and browsers treat both types the same.
 
