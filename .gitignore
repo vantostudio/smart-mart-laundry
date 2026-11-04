@@ -26,3 +26,6 @@ next-env.d.ts
 
 # playwright output and ui audit screenshots
 /.audit
+
+# factory job state
+/.factory/jobs/
