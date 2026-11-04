@@ -30,3 +30,6 @@ next-env.d.ts
 # factory job state
 /.factory/jobs/
 .neon
+
+# Claude Code personal settings
+/.claude/settings.local.json
