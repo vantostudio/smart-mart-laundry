@@ -32,9 +32,9 @@ export type SessionUser = { email: string; emailVerified: boolean; name: string 
 
 /*
  * Next refuses cookie writes during a Server Component render and throws this. With refresh off,
- * Neon Auth's `get-session` only sets cookies to clear a session it no longer accepts (expired,
- * revoked, a stale cache cookie). Each Next runtime bundles its own copy of the error class, so
- * match its message.
+ * Neon Auth's `get-session` sets cookies mostly to clear a session it no longer accepts (expired,
+ * revoked, a stale cache cookie), but a Better Auth cookie-cache refresh can set them for a valid
+ * session too. Each Next runtime bundles its own copy of the error class, so match its message.
  */
 function isReadOnlyCookiesError(err: unknown): boolean {
   return (
@@ -61,8 +61,11 @@ export async function readSession(): Promise<SessionUser | null> {
     result = await auth.getSession({ query: { disableRefresh: "true" } });
   } catch (err) {
     unstable_rethrow(err);
-    // Signed out: the upstream tried to clear this session's cookies.
-    if (isReadOnlyCookiesError(err)) return null;
+    // Read as signed out (deny by default), and logged so a valid session refused this way shows.
+    if (isReadOnlyCookiesError(err)) {
+      log.info("auth_session_cleared", { requestId: await getRequestId() });
+      return null;
+    }
     throw await unavailable(null);
   }
 

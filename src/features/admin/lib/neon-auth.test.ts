@@ -23,12 +23,14 @@ function setEnv(values: { url?: string; secret?: string }) {
 }
 
 let warn: MockInstance<typeof console.warn>;
+let info: MockInstance<typeof console.log>;
 
 beforeEach(() => {
   for (const name of names) delete process.env[name];
   mocks.createNeonAuth.mockReset().mockImplementation(() => ({ getSession: mocks.getSession }));
   mocks.getSession.mockReset();
   warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  info = vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -174,5 +176,8 @@ describe("readSession", () => {
     );
     await expect(readSession()).resolves.toBeNull();
     expect(warn).not.toHaveBeenCalled();
+    expect(info.mock.calls.map((call) => JSON.parse(String(call[0])))).toEqual([
+      { level: "info", msg: "auth_session_cleared", requestId: "req-3" },
+    ]);
   });
 });

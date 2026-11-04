@@ -135,9 +135,12 @@ photos (drift item 3 in the plan).
   an expired or revoked session, and when it expires a stale cache cookie. `readSession()` passes
   `query: { disableRefresh: "true" }`, which the SDK forwards as a query parameter, so a server
   read never refreshes. Refreshes happen through the browser client's `get-session` calls to our
-  handler, which may set cookies. The clearing writes can still come; Next then throws its
-  read-only cookies error, and `readSession()` reads that as signed out (deny by default), so an
-  expired session sends people to sign in rather than reporting an outage. Server actions and
+  handler, which may set cookies. The clearing writes can still come, and so can a Better Auth
+  cookie-cache refresh (`cookieRefreshCache`, which runs before `disableRefresh` is looked at) if
+  Neon Auth enables it. Next then throws its read-only cookies error, and `readSession()` reads
+  that as signed out (deny by default) and logs one `auth_session_cleared` line with the request
+  id, so an expired session sends people to sign in rather than reporting an outage, and a valid
+  session refused this way shows in the logs. Server actions and
   route handlers may write cookies, so there the SDK clears them normally.
 - **CSRF:** the SDK forwards the request's Origin to Neon Auth, where Better Auth checks it
   against the Neon Auth trusted domains. Next server actions compare Origin with Host or
