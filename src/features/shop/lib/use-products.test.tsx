@@ -55,6 +55,13 @@ describe("useProducts", () => {
     expect(String(fetchMock.mock.calls[0]?.[0])).toBe("/api/products?page=1&limit=12");
   });
 
+  it("never lets the browser reuse an old answer", async () => {
+    fetchMock.mockResolvedValue(json(page([])));
+    render();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(fetchMock.mock.calls[0]?.[1]?.cache).toBe("no-cache");
+  });
+
   it("sends the filters under the API's names", async () => {
     fetchMock.mockResolvedValue(json(page([])));
     render({ ...emptyFilters, q: "denim", cat: "men", cond: "new", size: "M", sort: "price-asc" });

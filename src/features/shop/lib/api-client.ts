@@ -10,7 +10,9 @@ export type Result<T> = { ok: true; data: T } | { ok: false; problem: LoadProble
 
 async function read<T>(url: string, signal: AbortSignal): Promise<Result<T>> {
   try {
-    const response = await fetch(url, { signal });
+    // The CDN holds these for moments. A browser would reuse them for a minute more, and keep
+    // showing something that just sold, so it always asks.
+    const response = await fetch(url, { signal, cache: "no-cache" });
     if (response.status === 404) return { ok: false, problem: "not-found" };
     if (!response.ok) return { ok: false, problem: "unavailable" };
     return { ok: true, data: (await response.json()) as T };
