@@ -1,8 +1,10 @@
 import { formatTime, type OpeningHours } from "@/lib/opening-hours";
 
 /*
- * What staff can change in the admin. Public pages start from these defaults and swap in the saved
- * values once `/api/settings` answers, so a failed request never breaks a page. Safe for client code.
+ * What staff can change in the admin. The saved values live in the database and reach every page
+ * from the site layout (`getLiveShopSettings`). These defaults are only the fallback for when
+ * there is no database (builds, checks) or it is down, so a failure never breaks a page. Safe for
+ * client code.
  */
 
 export type ShopSettings = {

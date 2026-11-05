@@ -16,7 +16,6 @@ const { getDb } = await import("@/lib/db");
 const { log } = await import("@/lib/log");
 const collection = await import("./route");
 const single = await import("./[code]/route");
-const settings = await import("../settings/route");
 
 let t: Awaited<ReturnType<typeof createTestDb>>;
 
@@ -94,14 +93,5 @@ describe("GET /api/products/[code]", () => {
       expect(res.headers.get("Cache-Control")).toBe("no-store");
     }
     expect(log.error).not.toHaveBeenCalled();
-  });
-});
-
-describe("GET /api/settings", () => {
-  it("answers with the saved values, cacheably", async () => {
-    const res = await settings.GET(get("http://shop.test/api/settings"), undefined);
-    expect(res.status).toBe(200);
-    expect(res.headers.get("Cache-Control")).toContain("public");
-    expect(await res.json()).toMatchObject({ deliveryFee: 100, phone: "254113154708" });
   });
 });

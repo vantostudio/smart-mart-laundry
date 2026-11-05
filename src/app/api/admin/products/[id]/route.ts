@@ -1,7 +1,10 @@
+import { revalidateTag } from "next/cache";
+
 import { apiMessages } from "@/features/admin/messages";
 import { deleteProduct, getProduct, updateProduct } from "@/features/products/lib/products";
 import { productId, updateProductInput } from "@/features/products/schema";
 import { adminRoute, parseBody } from "@/lib/api";
+import { cacheTags } from "@/lib/cache-tags";
 import { getDb } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 
@@ -23,10 +26,13 @@ export const GET = adminRoute<Context>(async ({ context }) =>
 export const PATCH = adminRoute<Context>(async ({ request, context }) => {
   const id = await idFrom(context);
   const patch = await parseBody(request, updateProductInput);
-  return Response.json(await updateProduct(getDb(), id, patch));
+  const updated = await updateProduct(getDb(), id, patch);
+  revalidateTag(cacheTags.products, { expire: 0 });
+  return Response.json(updated);
 });
 
 export const DELETE = adminRoute<Context>(async ({ context }) => {
   await deleteProduct(getDb(), await idFrom(context));
+  revalidateTag(cacheTags.products, { expire: 0 });
   return new Response(null, { status: 204 });
 });

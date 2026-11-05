@@ -181,3 +181,17 @@ export async function getPublicProduct(
   if (!row) throw notFound();
   return toPublicProduct(row, photoUrl);
 }
+
+/** The most addresses one sitemap file may hold. */
+const SITEMAP_LIMIT = 50_000;
+
+/** The codes of everything in stock, newest first, for the sitemap. */
+export async function listInStockCodes(db: Db): Promise<string[]> {
+  const rows = await db
+    .select({ code: product.code })
+    .from(product)
+    .where(gt(product.stock, 0))
+    .orderBy(desc(product.createdAt), desc(product.id))
+    .limit(SITEMAP_LIMIT);
+  return rows.map((r) => r.code);
+}

@@ -1,5 +1,3 @@
-import { defaultShopSettings, openingHoursOf } from "./shop-settings";
-
 export const site = {
   name: "Street Mart Kenya",
   description:
@@ -18,12 +16,6 @@ export const site = {
   /** Google Maps search for the shop, for "Directions" links. */
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Chuka+General+Chuka+Kenya",
   timeZone: "Africa/Nairobi",
-  /**
-   * The defaults: staff can change these in the admin. Pages read the live values with
-   * `useShopSettings`; only search data (JSON-LD) stays on these, because it's built once.
-   */
-  openingHours: openingHoursOf(defaultShopSettings),
-  whatsapp: defaultShopSettings.phone,
   hoursNote: "Pickups can be booked online at any time.",
 };
 

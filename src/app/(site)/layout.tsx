@@ -4,11 +4,13 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { BagProvider, CartProvider } from "@/features/cart/cart-provider";
 import { JsonLd } from "@/features/seo/json-ld";
 import { businessJsonLd } from "@/features/seo/structured-data";
+import { getLiveShopSettings } from "@/features/settings/lib/live-settings";
 import { ShopSettingsProvider } from "@/features/settings/shop-settings-provider";
 
-export default function SiteLayout({ children }: LayoutProps<"/">) {
+export default async function SiteLayout({ children }: LayoutProps<"/">) {
+  const settings = await getLiveShopSettings();
   return (
-    <ShopSettingsProvider>
+    <ShopSettingsProvider settings={settings}>
       <CartProvider>
         <BagProvider>
           <div className="flex min-h-screen flex-col">
@@ -24,7 +26,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
             </main>
             <SiteFooter />
             <MobileActionBar />
-            <JsonLd data={businessJsonLd()} />
+            <JsonLd data={businessJsonLd(settings)} />
           </div>
         </BagProvider>
       </CartProvider>

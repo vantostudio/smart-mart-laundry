@@ -8,7 +8,7 @@
  * slips to the wrong day.
  */
 
-import { site } from "@/config/site";
+import { defaultShopSettings, openingHoursOf } from "@/config/shop-settings";
 import type { OpeningHours, Weekday } from "@/lib/opening-hours";
 
 /** Opening hours as whole hours (24 h clock), indexed by Date#getDay. */
@@ -21,7 +21,7 @@ export function openingWeek(hours: OpeningHours) {
 
 type OpeningWeek = ReturnType<typeof openingWeek>;
 
-const usualWeek = openingWeek(site.openingHours);
+const usualWeek = openingWeek(openingHoursOf(defaultShopSettings));
 
 /** How many days ahead a collection can be booked, today included. */
 export const COLLECTION_DAYS = 14;

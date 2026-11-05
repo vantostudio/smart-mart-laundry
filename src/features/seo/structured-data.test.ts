@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { defaultShopSettings, openingHoursOf } from "@/config/shop-settings";
 import { site } from "@/config/site";
 import { laundryItems } from "@/features/laundry/data";
+import type { PublicProduct } from "@/features/products/public";
 
-import { businessJsonLd, laundryServiceJsonLd, openingHoursSpecification } from "./structured-data";
+import {
+  businessJsonLd,
+  laundryServiceJsonLd,
+  openingHoursSpecification,
+  productJsonLd,
+} from "./structured-data";
 
 describe("businessJsonLd", () => {
-  const [business, website] = businessJsonLd()["@graph"];
+  const [business, website] = businessJsonLd(defaultShopSettings)["@graph"];
 
   it("describes a laundry and clothing store in Chuka", () => {
     expect(business?.["@type"]).toEqual(["DryCleaningOrLaundry", "ClothingStore"]);
@@ -34,9 +41,21 @@ describe("businessJsonLd", () => {
   });
 });
 
+describe("businessJsonLd with saved settings", () => {
+  const saved = { ...defaultShopSettings, phone: "254700000001", weekOpen: 8, weekClose: 18 };
+  const [business] = businessJsonLd(saved)["@graph"];
+
+  it("uses the live phone and opening hours, not the code defaults", () => {
+    expect(business).toMatchObject({
+      telephone: "+254700000001",
+      openingHoursSpecification: [{ opens: "08:00", closes: "18:00" }, { opens: "09:00" }],
+    });
+  });
+});
+
 describe("openingHoursSpecification", () => {
   it("turns the opening hours into schema.org days and times", () => {
-    expect(openingHoursSpecification(site.openingHours)).toContainEqual({
+    expect(openingHoursSpecification(openingHoursOf(defaultShopSettings))).toContainEqual({
       "@type": "OpeningHoursSpecification",
       dayOfWeek: ["https://schema.org/Sunday"],
       opens: "09:00",
@@ -51,5 +70,54 @@ describe("laundryServiceJsonLd", () => {
     const offers = catalogue.flatMap((c) => c.itemListElement);
     expect(offers).toHaveLength(laundryItems.length);
     expect(offers[0]).toMatchObject({ price: 150, priceCurrency: "KES" });
+  });
+});
+
+describe("productJsonLd", () => {
+  const dress: PublicProduct = {
+    code: "SM-1003",
+    name: "Linen dress",
+    category: "ladies",
+    condition: "mtumba",
+    price: 800,
+    sizes: ["M"],
+    stock: 2,
+    photos: ["https://photos.test/products/a.jpg", "https://photos.test/products/b.jpg"],
+    note: "Barely worn.",
+  };
+
+  it("describes the piece with its price, availability and photos", () => {
+    expect(productJsonLd(dress)).toMatchObject({
+      "@type": "Product",
+      name: "Linen dress",
+      sku: "SM-1003",
+      url: `${site.url}/shop/SM-1003`,
+      image: dress.photos,
+      offers: {
+        "@type": "Offer",
+        price: 800,
+        priceCurrency: "KES",
+        availability: "https://schema.org/InStock",
+        url: `${site.url}/shop/SM-1003`,
+      },
+    });
+  });
+
+  it("maps mtumba to used and new to new", () => {
+    expect(productJsonLd(dress).offers.itemCondition).toBe("https://schema.org/UsedCondition");
+    expect(productJsonLd({ ...dress, condition: "new" }).offers.itemCondition).toBe(
+      "https://schema.org/NewCondition",
+    );
+  });
+
+  it("says out of stock at zero, and leaves out image when there are no photos", () => {
+    const gone = productJsonLd({ ...dress, stock: 0, photos: [] });
+    expect(gone.offers.availability).toBe("https://schema.org/OutOfStock");
+    expect(gone).not.toHaveProperty("image");
+  });
+
+  it("never carries an id, a date or a storage key", () => {
+    const json = JSON.stringify(productJsonLd({ ...dress, photos: [] }));
+    expect(json).not.toMatch(/createdAt|"id"|images/);
   });
 });

@@ -100,11 +100,13 @@ Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&c
 
 ### Public API
 
-No sign-in, GET only, cached by a CDN for up to 90 seconds: `/api/products` (`?page=&limit=&q=&category=&condition=&size=&price=&sort=`, gives `{ items, page, limit, total, counts }`), `/api/products/<code>` and `/api/settings`. Only in-stock products appear, and they carry photo URLs but no ids or storage keys. The shop, the home rail and every phone number and opening time load from these in the browser, so the site needs `DATABASE_URL` and the `AWS_*` values wherever it runs.
+No sign-in, GET only, cached by a CDN for up to 90 seconds: `/api/products` (`?page=&limit=&q=&category=&condition=&size=&price=&sort=`, gives `{ items, page, limit, total, counts }`), and `/api/products/<code>`. Only in-stock products appear, and they carry photo URLs but no ids or storage keys. The shop list, its quick view and the home rail load from these in the browser.
+
+Two things read the database on the server instead, through cached functions (see [`docs/decisions/0002-server-cached-public-reads.md`](docs/decisions/0002-server-cached-public-reads.md)): the shop settings (phone, hours, delivery), read once in the site layout so the HTML and search data already hold the real values, and the product page `/shop/<code>` with the sitemap. A product page answers 404 when the piece is sold out or deleted. Saving settings or a product expires these caches at once; the site needs `DATABASE_URL` and the `AWS_*` values wherever it runs, but with no database it still builds and renders, using the defaults in `src/config/shop-settings.ts`.
 
 ### Settings
 
-`/admin/settings`: everyone sets their own name. Owners also change delivery, phone and hours (one row in `shop_settings`) and add or remove staff. Search data keeps the values in `src/config/shop-settings.ts`, so update those too after changing the phone or hours.
+`/admin/settings`: everyone sets their own name. Owners also change delivery, phone and hours (one row in `shop_settings`) and add or remove staff. A save shows on the site at once, in the page, the footer and the search data alike; `src/config/shop-settings.ts` is only the fallback if the database is unreachable.
 
 Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's on `dev` and production. Put Cloudflare in front of the photos before real traffic, because Neon has no CDN.
 

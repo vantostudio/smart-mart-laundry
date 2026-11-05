@@ -6,6 +6,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/request-id", () => ({ getRequestId: async () => "req-1" }));
 vi.mock("@/features/admin/lib/auth", () => ({ requireAdminForAction: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDb: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 const { requireAdminForAction } = await import("@/features/admin/lib/auth");
 const { getDb } = await import("@/lib/db");

@@ -39,10 +39,18 @@ export function ProductCard({ product: p, inBag, onOpen, onQuickAdd, priority }:
 
   return (
     <article className="group relative flex min-w-0 flex-col">
-      {/* The whole card opens the quick view; the content below sits on top but lets taps through. */}
-      <button
-        type="button"
-        onClick={onOpen}
+      {/*
+        The whole card opens the quick view; the content below sits on top but lets taps through. It
+        is a real link to the product's page, which crawlers follow and "open in new tab" uses; a
+        plain click opens the quick view instead.
+      */}
+      <a
+        href={`/shop/${encodeURIComponent(p.code)}`}
+        onClick={(event) => {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+          event.preventDefault();
+          onOpen();
+        }}
         aria-label={p.name}
         className="absolute inset-0 rounded-3xl focus-visible:ring-4 focus-visible:ring-ring/35 focus-visible:outline-none"
       />
