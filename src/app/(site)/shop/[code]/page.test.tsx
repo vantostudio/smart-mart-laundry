@@ -19,6 +19,7 @@ const dress: PublicProduct = {
   sizes: [],
   stock: 1,
   photos: ["https://photos.test/products/a.jpg"],
+  thumbnail: "https://photos.test/products/a-thumb",
   note: null,
 };
 

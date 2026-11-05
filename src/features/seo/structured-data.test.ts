@@ -83,6 +83,7 @@ describe("productJsonLd", () => {
     sizes: ["M"],
     stock: 2,
     photos: ["https://photos.test/products/a.jpg", "https://photos.test/products/b.jpg"],
+    thumbnail: "https://photos.test/products/a-thumb",
     note: "Barely worn.",
   };
 
