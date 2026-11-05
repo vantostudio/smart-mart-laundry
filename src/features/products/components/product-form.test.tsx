@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Product } from "../lib/products";
-import { parseSizes, ProductForm } from "./product-form";
+import { ProductForm } from "./product-form";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn<(href: string) => void>(),
@@ -54,19 +54,13 @@ beforeEach(() => {
   mocks.shrinkImage.mockResolvedValue(new Blob(["x"]));
 });
 
-describe("parseSizes", () => {
-  it("splits, trims, and drops blanks and repeats", () => {
-    expect(parseSizes(" S, M,, M ,L ")).toEqual(["S", "M", "L"]);
-    expect(parseSizes("  ")).toEqual([]);
-  });
-});
-
 describe("ProductForm", () => {
   it("adds a product and goes back to the list", async () => {
     const user = userEvent.setup();
     render(<ProductForm />);
     await fillRequired(user);
-    await user.type(screen.getByLabelText("Sizes"), "40, 41");
+    await user.click(screen.getByRole("button", { name: "41" }));
+    await user.click(screen.getByRole("button", { name: "40" }));
     await user.click(save());
 
     expect(mocks.saveProduct).toHaveBeenCalledWith(undefined, {
@@ -86,7 +80,8 @@ describe("ProductForm", () => {
   it("starts from the product when editing, and saves to it", async () => {
     const user = userEvent.setup();
     render(<ProductForm product={product} photos={photos} />);
-    expect(screen.getByLabelText("Sizes")).toHaveValue("S, M");
+    expect(screen.getByRole("button", { name: "M", pressed: true })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "L", pressed: false })).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText("Price (KSh)"));
     await user.type(screen.getByLabelText("Price (KSh)"), "650");
@@ -96,6 +91,50 @@ describe("ProductForm", () => {
       "p1",
       expect.objectContaining({ price: 650, images: ["products/a.webp"], note: "Small mark" }),
     );
+  });
+
+  it("offers no sizes until there's a category, and nowhere to type one", async () => {
+    render(<ProductForm />);
+    expect(screen.getByText("Choose a category first to see its sizes.")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Sizes")).not.toBeInTheDocument();
+  });
+
+  it("offers the sizes of the category", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm />);
+    await user.click(screen.getByRole("radio", { name: "Shoes" }));
+    expect(screen.getByRole("button", { name: "42" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "M" })).not.toBeInTheDocument();
+  });
+
+  it("keeps sizes the new category also has", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(screen.getByRole("radio", { name: "Men's wear" }));
+    await user.click(save());
+    expect(mocks.saveProduct).toHaveBeenCalledWith(
+      "p1",
+      expect.objectContaining({ category: "men", sizes: ["S", "M"] }),
+    );
+  });
+
+  it("drops sizes the new category doesn't have", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(screen.getByRole("radio", { name: "Shoes" }));
+    await user.click(save());
+    expect(mocks.saveProduct).toHaveBeenCalledWith(
+      "p1",
+      expect.objectContaining({ category: "shoes", sizes: [] }),
+    );
+  });
+
+  it("can untick a size", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(screen.getByRole("button", { name: "S" }));
+    await user.click(save());
+    expect(mocks.saveProduct).toHaveBeenCalledWith("p1", expect.objectContaining({ sizes: ["M"] }));
   });
 
   it("asks for a category and condition without calling the API", async () => {

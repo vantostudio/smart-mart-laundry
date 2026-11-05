@@ -70,7 +70,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
         {productMessages.photosHint}
       </p>
       {photos.length > 0 && (
-        <ul className="mt-3 grid grid-cols-3 gap-3 md:grid-cols-6">
+        <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-3">
           {photos.map((photo, index) => (
             <li
               key={photo.key}
@@ -80,7 +80,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
                 src={photo.url}
                 alt={productMessages.photoAlt(index + 1)}
                 fill
-                sizes="(min-width: 768px) 8rem, 33vw"
+                sizes="(min-width: 640px) 8rem, 33vw"
                 unoptimized
                 className="object-cover"
               />
@@ -89,15 +89,17 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
                   {productMessages.cover}
                 </Badge>
               )}
-              <Button
+              {/* A 44px target around a small mark, so it doesn't hide a phone-sized tile. */}
+              <button
                 type="button"
-                variant="secondary"
                 aria-label={productMessages.removePhoto(index + 1)}
-                className="absolute top-0 right-0 size-11 rounded-full p-0"
+                className="group/remove absolute top-0 right-0 flex size-11 items-center justify-center outline-none"
                 onClick={() => remove(photo.key)}
               >
-                <X aria-hidden />
-              </Button>
+                <span className="flex size-7 items-center justify-center rounded-full bg-card text-foreground shadow-card group-focus-visible/remove:ring-4 group-focus-visible/remove:ring-ring/35">
+                  <X aria-hidden className="size-4" />
+                </span>
+              </button>
             </li>
           ))}
         </ul>

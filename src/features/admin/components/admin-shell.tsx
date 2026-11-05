@@ -9,7 +9,7 @@ export function AdminShell({ admin, children }: { admin: AdminContext; children:
   return (
     <>
       <AdminHeader admin={admin} />
-      <div className="container-page py-section">{children}</div>
+      <div className="container-page py-6 sm:py-8">{children}</div>
     </>
   );
 }
@@ -26,7 +26,7 @@ export function AdminShellSkeleton() {
             <div className="h-11 w-28 rounded-full bg-secondary" />
           </div>
         </div>
-        <div className="container-page py-section">
+        <div className="container-page py-6 sm:py-8">
           <div className="h-10 w-40 rounded-full bg-secondary" />
           <div className="mt-6 h-32 rounded-3xl bg-secondary" />
         </div>

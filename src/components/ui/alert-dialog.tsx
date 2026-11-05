@@ -21,7 +21,7 @@ function AlertDialogContent({
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-(--z-overlay) w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2",
+          "fixed top-1/2 left-1/2 z-(--z-overlay) max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto",
           "rounded-3xl bg-background p-6 text-foreground shadow-ticket outline-none",
           className,
         )}

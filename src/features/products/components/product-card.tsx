@@ -18,9 +18,16 @@ export function ProductCard({ product, photoUrl }: { product: Product; photoUrl:
         href={editProductHref(product.id)}
         className="flex h-full gap-4 rounded-3xl bg-card p-3 shadow-card transition-shadow hover:shadow-lift focus-visible:ring-4 focus-visible:ring-clay/20 focus-visible:outline-none"
       >
-        <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-secondary">
+        <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-secondary sm:size-24">
           {photoUrl ? (
-            <Image src={photoUrl} alt="" fill sizes="6rem" unoptimized className="object-cover" />
+            <Image
+              src={photoUrl}
+              alt=""
+              fill
+              sizes="(min-width: 640px) 6rem, 5rem"
+              unoptimized
+              className="object-cover"
+            />
           ) : (
             <div className="flex size-full items-center justify-center text-muted-foreground">
               <ImageOff aria-hidden className="size-6" />
@@ -29,7 +36,7 @@ export function ProductCard({ product, photoUrl }: { product: Product; photoUrl:
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-title font-semibold">{product.name}</h2>
+          <h2 className="line-clamp-2 text-title font-semibold wrap-anywhere">{product.name}</h2>
           <p className="text-caption text-muted-foreground">{product.code}</p>
           <Price amount={product.price} size="sm" className="mt-1 block" />
           <div className="mt-2 flex flex-wrap gap-1.5">

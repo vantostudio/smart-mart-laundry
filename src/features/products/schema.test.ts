@@ -22,6 +22,9 @@ describe("createProductInput", () => {
     ["negative stock", { stock: -1 }],
     ["an empty name", { name: "   " }],
     ["a NUL byte", { name: "a\0b" }],
+    ["a size in the wrong case", { sizes: ["m"] }],
+    ["a size typed by hand", { sizes: ["Medium"] }],
+    ["a shoe size on clothes", { sizes: ["42"] }],
     ["too many photos", { images: Array.from({ length: 7 }, () => photo) }],
     ["a link for a photo", { images: ["https://evil.test/a.webp"] }],
     ["a key outside products", { images: ["other/00000000-0000-4000-8000-000000000000.webp"] }],
@@ -39,6 +42,11 @@ describe("photos", () => {
 describe("updateProductInput", () => {
   it("takes one field, and null clears the note", () => {
     expect(updateProductInput.parse({ note: null })).toEqual({ note: null });
+  });
+
+  it("takes sizes alone, and checks them against a category sent with them", () => {
+    expect(updateProductInput.parse({ sizes: ["42"] })).toEqual({ sizes: ["42"] });
+    expect(updateProductInput.safeParse({ category: "men", sizes: ["42"] }).success).toBe(false);
   });
 
   it("refuses an empty change and a change to the code", () => {

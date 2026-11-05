@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { ToggleChip } from "@/components/shared/toggle-chip";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -26,32 +27,6 @@ type Props = {
   resultCount: number;
 };
 
-function Toggle({
-  selected,
-  onClick,
-  children,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={cn(
-        "min-h-11 min-w-11 rounded-full px-4 text-body-sm font-semibold transition-colors",
-        selected
-          ? "bg-primary text-primary-foreground"
-          : "bg-card text-foreground ring-1 ring-border hover:ring-primary/40",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
 /** Size and price, applied as you tap; tap a selected chip again to clear it. */
 export function FiltersSheet({ open, onOpenChange, filters, onChange, sizes, resultCount }: Props) {
   return (
@@ -66,13 +41,13 @@ export function FiltersSheet({ open, onOpenChange, filters, onChange, sizes, res
             <legend className="text-body-sm font-semibold">Size</legend>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {sizes.map((s) => (
-                <Toggle
+                <ToggleChip
                   key={s}
                   selected={filters.size === s}
                   onClick={() => onChange({ size: filters.size === s ? null : s })}
                 >
                   {s}
-                </Toggle>
+                </ToggleChip>
               ))}
             </div>
           </fieldset>
@@ -80,13 +55,13 @@ export function FiltersSheet({ open, onOpenChange, filters, onChange, sizes, res
             <legend className="text-body-sm font-semibold">Price</legend>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {priceBands.map((b) => (
-                <Toggle
+                <ToggleChip
                   key={b.id}
                   selected={filters.price === b.id}
                   onClick={() => onChange({ price: filters.price === b.id ? null : b.id })}
                 >
                   {b.label}
-                </Toggle>
+                </ToggleChip>
               ))}
             </div>
           </fieldset>

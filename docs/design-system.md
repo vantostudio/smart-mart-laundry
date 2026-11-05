@@ -151,6 +151,7 @@ The `google` Button variant is the one exception to our palette: Sign in with Go
 | `StaggerGrid`          | Grid whose columns sit at different heights: 2 columns (right one dropped) on phones, 3 or 4 on lg                                                      |
 | `MediaCard`            | Visual + title + copy (+ footer): horizontal on phones (mirrored in a StaggerGrid), stacked from 640px                                                  |
 | `ChoiceChips`          | Radio group as chips, calendar dates or icon tiles; rail scrolls on narrow cards, grid on wide                                                          |
+| `ToggleChip`           | A pill that stays pressed, for picking several or none                                                                                                  |
 | `Price`                | KSh amount in the display face with tabular figures                                                                                                     |
 | `QuantityStepper`      | − qty + control with a 44px hit area, optional `max` (one-off mtumba pieces)                                                                            |
 | `OrderSent`            | "Your order is ready in WhatsApp" with Copy order / Call us, after a send                                                                               |

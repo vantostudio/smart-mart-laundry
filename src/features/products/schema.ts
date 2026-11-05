@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-import { productCategories, productConditions } from "@/lib/db/schema";
+import { productCategories, productConditions, type ProductCategory } from "@/lib/db/schema";
 
 import { MAX_PHOTOS } from "./limits";
+import { isKnownSize, sizesFor } from "./sizes";
 
 /* What the products API accepts. Strict: unknown fields, `id` and `code` included, are refused. */
 
@@ -34,19 +35,29 @@ const fields = z.object({
   /** Whole KSh. */
   price: amount,
   stock: amount,
-  sizes: z.array(text(30)).max(30),
+  sizes: z.array(z.string().refine(isKnownSize)).max(40),
   images: z.array(photoKey).max(MAX_PHOTOS),
   note: text(1000).nullable(),
 });
 
+/** When both are sent, the sizes must be ones that category has. */
+function sizesFitCategory(input: { category?: ProductCategory; sizes?: string[] }): boolean {
+  const { category, sizes } = input;
+  return !category || !sizes || sizes.every((size) => sizesFor(category).includes(size));
+}
+
+const wrongSizes = { path: ["sizes"] };
+
 export const createProductInput = fields
   .partial({ sizes: true, images: true, note: true })
-  .strict();
+  .strict()
+  .refine(sizesFitCategory, wrongSizes);
 
 export const updateProductInput = fields
   .partial()
   .strict()
-  .refine((patch) => Object.keys(patch).length > 0);
+  .refine((patch) => Object.keys(patch).length > 0)
+  .refine(sizesFitCategory, wrongSizes);
 
 export const listProductsInput = z
   .object({

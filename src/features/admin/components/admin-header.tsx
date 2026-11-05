@@ -16,8 +16,8 @@ export function AdminHeader({ admin }: { admin: AdminContext }) {
     <header className="border-b border-border bg-card">
       <div className="container-page flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
         <Wordmark />
-        <div className="order-last flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-2 md:order-none md:ml-auto md:w-auto">
-          <p className="mr-auto min-w-0 text-body-sm md:mr-2">
+        <div className="order-last flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-2 lg:order-none lg:ml-auto lg:w-auto">
+          <p className="mr-auto min-w-0 text-body-sm lg:mr-2">
             <span className="font-semibold break-all">{admin.name ?? admin.email}</span>
             <span className="text-muted-foreground"> · {roleLabels[admin.role]}</span>
           </p>

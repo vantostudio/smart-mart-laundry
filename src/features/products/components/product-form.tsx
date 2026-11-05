@@ -20,19 +20,12 @@ import {
 } from "../lib/api-client";
 import { productsHref } from "../lib/links";
 import type { Product } from "../lib/products";
+import { keepSizes } from "../sizes";
 import { PhotoPicker } from "./photo-picker";
 import { ProblemText } from "./problem-text";
+import { SizePicker } from "./size-picker";
 
 const FIELDS = ["name", "condition", "category", "price", "stock", "sizes", "images", "note"];
-
-/** "S, M,, m " becomes ["S", "M", "m"]. */
-export function parseSizes(text: string): string[] {
-  const sizes = text
-    .split(",")
-    .map((size) => size.trim())
-    .filter(Boolean);
-  return [...new Set(sizes)];
-}
 
 function Field({
   name,
@@ -82,7 +75,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
   const [condition, setCondition] = useState<ProductCondition | null>(product?.condition ?? null);
   const [price, setPrice] = useState(product ? String(product.price) : "");
   const [stock, setStock] = useState(product ? String(product.stock) : "");
-  const [sizes, setSizes] = useState(product?.sizes.join(", ") ?? "");
+  const [sizes, setSizes] = useState(product?.sizes ?? []);
   const [note, setNote] = useState(product?.note ?? "");
   const [photos, setPhotos] = useState(initialPhotos);
   const [uploading, setUploading] = useState(false);
@@ -114,7 +107,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
       condition,
       price: Number(price),
       stock: Number(stock),
-      sizes: parseSizes(sizes),
+      sizes,
       images: photos.map((photo) => photo.key),
       note: note.trim() || null,
     };
@@ -130,136 +123,150 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
     setFailure(problemFrom(result.error));
   }
 
+  function chooseCategory(next: ProductCategory) {
+    setCategory(next);
+    setSizes((current) => keepSizes(current, next));
+  }
+
   return (
     <form
       ref={form}
       onSubmit={submit}
-      className="mt-6 space-y-6 rounded-3xl bg-card p-6 shadow-card"
+      className="mt-6 space-y-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-6 lg:space-y-0"
     >
-      <Field
-        name="name"
-        label={productMessages.name}
-        htmlFor={`${id}-name`}
-        error={errorFor("name")}
-      >
-        <Input
-          id={`${id}-name`}
-          value={name}
-          required
-          maxLength={200}
-          aria-invalid={errorFor("name") !== undefined}
-          aria-describedby={`${id}-name-help`}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </Field>
-
-      <Field name="condition" label={productMessages.condition} error={errorFor("condition")}>
-        <ChoiceChips
-          label={productMessages.condition}
-          options={optionsOf(conditionLabels)}
-          value={condition}
-          onChange={setCondition}
-          aria-invalid={errorFor("condition") !== undefined}
-        />
-      </Field>
-
-      <Field name="category" label={productMessages.category} error={errorFor("category")}>
-        <ChoiceChips
-          label={productMessages.category}
-          options={optionsOf(categoryLabels)}
-          value={category}
-          onChange={setCategory}
-          aria-invalid={errorFor("category") !== undefined}
-        />
-      </Field>
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-6 rounded-3xl bg-card p-4 shadow-card sm:p-6">
         <Field
-          name="price"
-          label={productMessages.price}
-          htmlFor={`${id}-price`}
-          error={errorFor("price")}
+          name="name"
+          label={productMessages.name}
+          htmlFor={`${id}-name`}
+          error={errorFor("name")}
         >
           <Input
-            id={`${id}-price`}
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1}
-            value={price}
+            id={`${id}-name`}
+            value={name}
             required
-            aria-invalid={errorFor("price") !== undefined}
-            aria-describedby={`${id}-price-help`}
-            onChange={(event) => setPrice(event.target.value)}
+            maxLength={200}
+            aria-invalid={errorFor("name") !== undefined}
+            aria-describedby={`${id}-name-help`}
+            onChange={(event) => setName(event.target.value)}
           />
         </Field>
+
+        <Field name="condition" label={productMessages.condition} error={errorFor("condition")}>
+          <ChoiceChips
+            label={productMessages.condition}
+            options={optionsOf(conditionLabels)}
+            value={condition}
+            onChange={setCondition}
+            aria-invalid={errorFor("condition") !== undefined}
+          />
+        </Field>
+
+        <Field name="category" label={productMessages.category} error={errorFor("category")}>
+          <ChoiceChips
+            label={productMessages.category}
+            options={optionsOf(categoryLabels)}
+            value={category}
+            onChange={chooseCategory}
+            className="sm:grid-cols-4"
+            aria-invalid={errorFor("category") !== undefined}
+          />
+        </Field>
+
         <Field
-          name="stock"
-          label={productMessages.stock}
-          htmlFor={`${id}-stock`}
-          error={errorFor("stock")}
+          name="sizes"
+          label={productMessages.sizes}
+          hint={category ? productMessages.sizesHint : undefined}
+          error={errorFor("sizes")}
         >
-          <Input
-            id={`${id}-stock`}
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1}
-            value={stock}
-            required
-            aria-invalid={errorFor("stock") !== undefined}
-            aria-describedby={`${id}-stock-help`}
-            onChange={(event) => setStock(event.target.value)}
-          />
+          <SizePicker category={category} sizes={sizes} onChange={setSizes} />
         </Field>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            name="price"
+            label={productMessages.price}
+            htmlFor={`${id}-price`}
+            error={errorFor("price")}
+          >
+            <Input
+              id={`${id}-price`}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={price}
+              required
+              aria-invalid={errorFor("price") !== undefined}
+              aria-describedby={`${id}-price-help`}
+              onChange={(event) => setPrice(event.target.value)}
+            />
+          </Field>
+          <Field
+            name="stock"
+            label={productMessages.stock}
+            htmlFor={`${id}-stock`}
+            error={errorFor("stock")}
+          >
+            <Input
+              id={`${id}-stock`}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={stock}
+              required
+              aria-invalid={errorFor("stock") !== undefined}
+              aria-describedby={`${id}-stock-help`}
+              onChange={(event) => setStock(event.target.value)}
+            />
+          </Field>
+        </div>
       </div>
 
-      <Field
-        name="sizes"
-        label={productMessages.sizes}
-        htmlFor={`${id}-sizes`}
-        hint={productMessages.sizesHint}
-        error={errorFor("sizes")}
-      >
-        <Input
-          id={`${id}-sizes`}
-          value={sizes}
-          aria-invalid={errorFor("sizes") !== undefined}
-          aria-describedby={`${id}-sizes-help`}
-          onChange={(event) => setSizes(event.target.value)}
-        />
-      </Field>
+      <div className="space-y-6">
+        <div className="space-y-6 rounded-3xl bg-card p-4 shadow-card sm:p-6">
+          <PhotoPicker
+            photos={photos}
+            onChange={setPhotos}
+            onBusyChange={setUploading}
+            problem={failure?.field === "images" ? failure : undefined}
+          />
 
-      <PhotoPicker
-        photos={photos}
-        onChange={setPhotos}
-        onBusyChange={setUploading}
-        problem={failure?.field === "images" ? failure : undefined}
-      />
+          <Field
+            name="note"
+            label={productMessages.note}
+            htmlFor={`${id}-note`}
+            hint={productMessages.noteHint}
+            error={errorFor("note")}
+          >
+            <Textarea
+              id={`${id}-note`}
+              value={note}
+              maxLength={1000}
+              rows={3}
+              aria-invalid={errorFor("note") !== undefined}
+              aria-describedby={`${id}-note-help`}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </Field>
+        </div>
 
-      <Field
-        name="note"
-        label={productMessages.note}
-        htmlFor={`${id}-note`}
-        hint={productMessages.noteHint}
-        error={errorFor("note")}
-      >
-        <Textarea
-          id={`${id}-note`}
-          value={note}
-          maxLength={1000}
-          rows={3}
-          aria-invalid={errorFor("note") !== undefined}
-          aria-describedby={`${id}-note-help`}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </Field>
+        {general && <ProblemText problem={general} />}
 
-      {general && <ProblemText problem={general} />}
-
-      <Button type="submit" variant="clay" size="lg" block disabled={saving || uploading}>
-        {saving ? productMessages.saving : productMessages.save}
-      </Button>
+        <div className="sticky bottom-3 z-10 lg:static">
+          <Button
+            type="submit"
+            variant="clay"
+            size="lg"
+            block
+            disabled={saving || uploading}
+            className="shadow-lift lg:shadow-none"
+          >
+            {saving ? productMessages.saving : productMessages.save}
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }
