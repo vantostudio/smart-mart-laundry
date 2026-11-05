@@ -42,6 +42,8 @@ export async function putObject(
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
     region: env.AWS_REGION,
     service: "s3",
+    // Its default of 10 retries would hold a staff member's upload for most of a minute.
+    retries: 2,
   });
   const response = await client.fetch(objectUrl(key), {
     method: "PUT",

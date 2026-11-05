@@ -33,3 +33,7 @@ next-env.d.ts
 
 # Claude Code personal settings
 /.claude/settings.local.json
+
+# Wrangler secrets for local runs
+.dev.vars*
+!.dev.vars.example
