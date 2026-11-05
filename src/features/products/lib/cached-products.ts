@@ -22,18 +22,24 @@ const READ_TIMEOUT_MS = 4000;
 
 /**
  * One in-stock product, or `null` when there is none (sold out, deleted or never existed). `null` is
- * a real answer and is cached. A database or storage failure throws instead, which Next doesn't
- * cache, so an outage can never turn into a cached "not found".
+ * a real answer, kept only briefly so guessed codes can't pile up in the cache. A database or
+ * storage failure throws instead, which Next doesn't cache, so an outage can never turn into a
+ * cached "not found".
  */
 export async function getCachedPublicProduct(code: string): Promise<PublicProduct | null> {
   "use cache";
   cacheTag(cacheTags.products);
-  cacheLife("minutes");
   try {
-    return await withTimeout(getPublicProduct(getDb(), code, productImageUrl), READ_TIMEOUT_MS);
+    const found = await withTimeout(
+      getPublicProduct(getDb(), code, productImageUrl),
+      READ_TIMEOUT_MS,
+    );
+    cacheLife("minutes");
+    return found;
   } catch (error) {
-    if (error instanceof AppError && error.code === "NOT_FOUND") return null;
-    throw error;
+    if (!(error instanceof AppError && error.code === "NOT_FOUND")) throw error;
+    cacheLife({ stale: 30, revalidate: 30, expire: 300 });
+    return null;
   }
 }
 

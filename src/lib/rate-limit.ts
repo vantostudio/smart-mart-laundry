@@ -90,16 +90,19 @@ export function setRateLimitStore(next: RateLimitStore) {
 const MAX_ID_LENGTH = 64;
 
 /**
- * Who is asking: Cloudflare's `cf-connecting-ip`, else the first `x-forwarded-for` entry, else
- * `x-real-ip`, else one shared `unknown` bucket. Only `cf-connecting-ip` can be trusted (Cloudflare
- * sets it); the others can be forged when nothing sits in front of the app. Never log the result.
+ * Who is asking: Cloudflare's `cf-connecting-ip`, which Cloudflare sets and a client can't forge.
+ * Outside production the first `x-forwarded-for` entry or `x-real-ip` will also do. In production
+ * those are ignored, because a client could dodge limits or use up someone else's by sending them.
+ * With none of these, everyone shares one `unknown` bucket. Never log the result.
  */
 export function clientIdFrom(headers: Headers): string {
-  const candidates = [
-    headers.get("cf-connecting-ip"),
-    headers.get("x-forwarded-for")?.split(",")[0],
-    headers.get("x-real-ip"),
-  ];
+  const candidates = [headers.get("cf-connecting-ip")];
+  if (process.env.NODE_ENV !== "production") {
+    candidates.push(
+      headers.get("x-forwarded-for")?.split(",")[0] ?? null,
+      headers.get("x-real-ip"),
+    );
+  }
   for (const candidate of candidates) {
     const id = candidate?.trim().slice(0, MAX_ID_LENGTH);
     if (id) return `ip:${id}`;

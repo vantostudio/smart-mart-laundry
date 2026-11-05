@@ -35,7 +35,10 @@ export function ProductPage({ product: p }: { product: PublicProduct }) {
       </Button>
 
       <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
-        <ul aria-label="Photos" className="grid min-w-0 grid-cols-2 gap-3 lg:self-start">
+        <ul
+          aria-label={shopMessages.product.photos}
+          className="grid min-w-0 grid-cols-2 gap-3 lg:self-start"
+        >
           {(p.photos.length > 0 ? p.photos : [null]).map((photo, i) => (
             <li
               key={photo ?? "none"}
@@ -65,11 +68,11 @@ export function ProductPage({ product: p }: { product: PublicProduct }) {
           <div aria-live="polite" className="mt-6">
             <AddToBag product={p} choice={choice}>
               <Button asChild variant="secondary" size="lg">
-                <Link href="/shop">Keep shopping</Link>
+                <Link href="/shop">{shopMessages.product.keepShopping}</Link>
               </Button>
               <Button asChild variant="primary" size="lg">
                 <Link href="/shop#bag">
-                  <ShoppingBag aria-hidden /> View bag
+                  <ShoppingBag aria-hidden /> {shopMessages.product.viewBag}
                 </Link>
               </Button>
             </AddToBag>

@@ -17,17 +17,18 @@ Three things read the database on the server, each through a `use cache` functio
 `cacheTag`, `cacheLife` and a writer that calls `revalidateTag(tag, { expire: 0 })`. Everything
 else on public pages stays client-loaded from `/api/products` and `/api/products/[code]`.
 
-| Read           | Where                                    | Tag        | Backstop life     | Expired by                                    |
-| -------------- | ---------------------------------------- | ---------- | ----------------- | --------------------------------------------- |
-| Shop settings  | `getLiveShopSettings`, site layout       | `settings` | `hours` (1 h)     | `PATCH /api/admin/settings`                   |
-| One product    | `getCachedPublicProduct`, `/shop/[code]` | `products` | `minutes` (1 min) | create, edit, delete in `/api/admin/products` |
-| In-stock codes | `getCachedSitemapCodes`, `sitemap.ts`    | `products` | `hours`           | same                                          |
+| Read           | Where                                    | Tag        | Backstop life | Expired by                                    |
+| -------------- | ---------------------------------------- | ---------- | ------------- | --------------------------------------------- |
+| Shop settings  | `getLiveShopSettings`, site layout       | `settings` | `hours`       | `PATCH /api/admin/settings`                   |
+| One product    | `getCachedPublicProduct`, `/shop/[code]` | `products` | `minutes`     | create, edit, delete in `/api/admin/products` |
+| In-stock codes | `getCachedSitemapCodes`, `sitemap.ts`    | `products` | `hours`       | same                                          |
 
 - **How long a change takes:** the save request expires the tag before it answers, so the next
   request to the site renders fresh (a blocking read, one query). Anything already open in a
   browser keeps its old copy until the next page load; the client router's cache holds a
   navigated page for up to 5 minutes (`stale`). Without a working tag store the backstop applies:
-  up to 1 hour for settings and 1 minute for a product page.
+  settings refresh after 1 hour and a product page after 1 minute, and an old copy can still be
+  served once while that happens. A page for a code with no product is kept for 30 seconds.
 - **Failure is never cached long:**
   - Settings: no env or a failed query (4 s timeout) gives `defaultShopSettings`, kept for 30
     seconds (`revalidate: 30`), so the live values return when the database does. This is also

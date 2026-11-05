@@ -13,9 +13,11 @@ import { useBag } from "@/features/cart/cart-provider";
 import type { PublicProduct } from "@/features/products/public";
 import { useShopSettings } from "@/features/settings/shop-settings-provider";
 import { bagLine, bagLineId } from "@/features/shop/lib/shop-message";
-import { ksh } from "@/lib/format";
+import { shopMessages } from "@/features/shop/messages";
 
 /* What the quick view and the product page share, so the two can't drift apart. */
+
+const m = shopMessages.product;
 
 /** The size, quantity and bag state of one product. */
 export function useProductChoice(p: PublicProduct) {
@@ -65,16 +67,12 @@ export function ProductSummary({ product: p }: { product: PublicProduct }) {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <Price amount={p.price} size="lg" />
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant={mtumba ? "soft" : "secondary"}>{mtumba ? "Mtumba" : "Brand new"}</Badge>
+          <Badge variant={mtumba ? "soft" : "secondary"}>{mtumba ? m.mtumba : m.brandNew}</Badge>
           <Badge variant="code">{p.code}</Badge>
         </div>
       </div>
       {p.note && <p className="mt-2 text-body-sm wrap-anywhere text-muted-foreground">{p.note}</p>}
-      {p.stock === 1 && (
-        <p className="mt-1 text-caption text-muted-foreground">
-          One piece only. We confirm it&apos;s still here when you order.
-        </p>
-      )}
+      {p.stock === 1 && <p className="mt-1 text-caption text-muted-foreground">{m.onePiece}</p>}
     </>
   );
 }
@@ -92,10 +90,10 @@ export function ProductOptions({
       {p.sizes.length > 0 && (
         <div id="size-picker" className="mt-5 grid gap-2">
           <p className="text-body-sm font-semibold">
-            {p.sizes.length === 1 ? "Size" : "Choose a size"}
+            {p.sizes.length === 1 ? m.size : m.chooseSize}
           </p>
           <ChoiceChips
-            label="Size"
+            label={m.size}
             columns={p.sizes.length >= 4 ? 4 : (Math.max(2, p.sizes.length) as 2 | 3)}
             options={p.sizes.map((s) => ({ value: s, label: s }))}
             value={choice.size}
@@ -105,7 +103,7 @@ export function ProductOptions({
           />
           {choice.error && (
             <p id="size-error" className="text-caption font-semibold text-destructive">
-              Choose a size first.
+              {m.chooseSizeFirst}
             </p>
           )}
         </div>
@@ -113,7 +111,7 @@ export function ProductOptions({
 
       {p.stock > 1 && (
         <div className="mt-5 flex items-center justify-between gap-3">
-          <p className="text-body-sm font-semibold">Quantity</p>
+          <p className="text-body-sm font-semibold">{m.quantity}</p>
           <QuantityStepper
             label={p.name}
             value={choice.qty}
@@ -134,21 +132,21 @@ export function ProductHelp({ product: p, size }: { product: PublicProduct; size
       <ul className="mt-5 grid gap-2 rounded-2xl bg-secondary/70 p-3.5 text-caption text-muted-foreground">
         <li className="flex items-start gap-2">
           <Truck aria-hidden className="mt-px size-4 shrink-0 text-clay" />
-          Delivered anywhere in Chuka, free over {ksh(deliveryFreeFrom)}. Pay on delivery.
+          {m.delivery(deliveryFreeFrom)}
         </li>
         <li className="flex items-start gap-2">
           <Store aria-hidden className="mt-px size-4 shrink-0 text-clay" />
-          Or pick it up and try it on at Chuka General.
+          {m.pickup}
         </li>
       </ul>
 
       <WhatsAppButton
-        message={`Hi Street Mart, is the ${p.name} (${p.code})${size ? ` in size ${size}` : ""} still available?`}
+        message={m.askMessage(p, size)}
         variant="ghost"
         size="md"
         className="mt-3 -ml-3"
       >
-        Ask about this item
+        {m.ask}
       </WhatsAppButton>
     </>
   );
@@ -169,7 +167,7 @@ export function AddToBag({
       <div className="grid gap-2">
         <p className="flex items-center gap-2 text-body-sm font-semibold text-success">
           <CheckCircle2 aria-hidden className="size-4 shrink-0" />
-          Added to your bag
+          {m.added}
         </p>
         <div className="grid grid-cols-2 gap-2">{children}</div>
       </div>
@@ -185,7 +183,7 @@ export function AddToBag({
       className="disabled:opacity-60"
     >
       <ShoppingBag aria-hidden />
-      {choice.soldOutForYou ? "Already in your bag" : `Add to bag · ${ksh(p.price * choice.qty)}`}
+      {choice.soldOutForYou ? m.alreadyInBag : m.addToBag(p.price * choice.qty)}
     </Button>
   );
 }

@@ -55,6 +55,13 @@ describe("memory store", () => {
 describe("clientIdFrom", () => {
   const id = (headers: Record<string, string>) => clientIdFrom(new Headers(headers));
 
+  it("ignores headers a client can forge in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    expect(id({ "x-forwarded-for": "2.2.2.2", "x-real-ip": "4.4.4.4" })).toBe("ip:unknown");
+    expect(id({ "cf-connecting-ip": "1.1.1.1", "x-forwarded-for": "2.2.2.2" })).toBe("ip:1.1.1.1");
+    vi.unstubAllEnvs();
+  });
+
   it("prefers cf-connecting-ip, then the first x-forwarded-for, then x-real-ip", () => {
     expect(
       id({

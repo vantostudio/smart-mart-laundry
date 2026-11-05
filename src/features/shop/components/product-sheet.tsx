@@ -143,7 +143,7 @@ function ProductDetails({
 
       <SheetBody className="pb-5">
         <ul
-          aria-label="Photos"
+          aria-label={shopMessages.product.photos}
           className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 sm:-mx-6 sm:scroll-px-6 sm:px-6"
         >
           {(p.photos.length > 0 ? p.photos : [null]).map((photo, i) => (
@@ -173,10 +173,10 @@ function ProductDetails({
         <div aria-live="polite">
           <AddToBag product={p} choice={choice}>
             <Button type="button" variant="secondary" size="lg" onClick={onClose}>
-              Keep shopping
+              {shopMessages.product.keepShopping}
             </Button>
             <Button type="button" variant="primary" size="lg" onClick={onViewBag}>
-              <ShoppingBag aria-hidden /> View bag
+              <ShoppingBag aria-hidden /> {shopMessages.product.viewBag}
             </Button>
           </AddToBag>
         </div>

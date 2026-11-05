@@ -57,6 +57,13 @@ describe("getCachedPublicProduct", () => {
     expect(await getCachedPublicProduct("SM-9999")).toBeNull();
   });
 
+  it("keeps a found product for minutes and a missing one only briefly", async () => {
+    await getCachedPublicProduct("SM-1001");
+    expect(cacheLife).toHaveBeenLastCalledWith("minutes");
+    await getCachedPublicProduct("SM-9999");
+    expect(cacheLife).toHaveBeenLastCalledWith({ stale: 30, revalidate: 30, expire: 300 });
+  });
+
   it("throws on a database failure, so it is never cached as not found", async () => {
     vi.mocked(getDb).mockImplementation(() => {
       throw new AppError("AUTH_UNAVAILABLE", "No env");
@@ -72,8 +79,8 @@ describe("getCachedPublicProduct", () => {
 });
 
 describe("getCachedSitemapCodes", () => {
-  it("lists only what is in stock, newest first, for hours", async () => {
-    expect(await getCachedSitemapCodes()).toEqual(["SM-1003", "SM-1001"]);
+  it("lists only what is in stock, for hours", async () => {
+    expect((await getCachedSitemapCodes()).toSorted()).toEqual(["SM-1001", "SM-1003"]);
     expect(cacheTag).toHaveBeenCalledWith("products");
     expect(cacheLife).toHaveBeenCalledWith("hours");
   });

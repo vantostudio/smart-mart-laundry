@@ -70,7 +70,7 @@ Provisioning, done once by a person. The `db:*` scripts exist; the `cf:*` script
    (`src/lib/rate-limit.ts`), so every instance has its own count. That is a basic guard only. At
    this step add a Cloudflare Rate Limiting binding named `API_RATE_LIMIT` in `wrangler.jsonc`
    (`ratelimits`), implement `RateLimitStore` over it and pass it to `setRateLimitStore`; no route
-   changes. Also add a Cloudflare WAF rate-limiting rule on `/api/*` in front of the Worker.
+   changes. Also add a Cloudflare WAF rate-limiting rule on `/api/*` and `/shop/*` in front of the Worker. `/shop/<code>` pages read the database without going through the limiter.
 5. After slice `db`: from a dev machine with the direct Neon URL, run `pnpm db:migrate` against
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
 6. After slice `admin-shell`: sign in on the preview Worker, then production. Landing on `/admin`

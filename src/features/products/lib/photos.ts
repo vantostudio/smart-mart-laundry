@@ -7,8 +7,12 @@ import type { Db } from "@/lib/db/types";
 import { log } from "@/lib/log";
 import { getRequestId } from "@/lib/request-id";
 import { deleteObject } from "@/lib/storage";
+import { withTimeout } from "@/lib/timeout";
 
 import { thumbnailKey } from "./image-keys";
+
+/** A stalled bucket must not hold up a save. */
+const STORAGE_TIMEOUT_MS = 4000;
 
 /**
  * Removes photos, and their thumbnails, that a product no longer uses. Call it after the database
@@ -25,8 +29,11 @@ export async function removePhotos(db: Db, keys: string[]): Promise<void> {
       .where(arrayOverlaps(product.images, keys));
     const inUse = new Set(rows.flatMap((row) => row.images));
     const unused = keys.filter((key) => !inUse.has(key));
-    const results = await Promise.allSettled(
-      unused.flatMap((key) => [deleteObject(key), deleteObject(thumbnailKey(key))]),
+    const results = await withTimeout(
+      Promise.allSettled(
+        unused.flatMap((key) => [deleteObject(key), deleteObject(thumbnailKey(key))]),
+      ),
+      STORAGE_TIMEOUT_MS,
     );
     for (const result of results) {
       if (result.status === "rejected") {
@@ -35,7 +42,7 @@ export async function removePhotos(db: Db, keys: string[]): Promise<void> {
       }
     }
   } catch (err) {
-    // The check couldn't run, so nothing is deleted: keeping a file is the safe side.
+    // The check couldn't run or storage stalled. Keeping a file is the safe side.
     log.warn("photo_delete_failed", {
       requestId,
       error: err instanceof Error ? err.name : "Error",
