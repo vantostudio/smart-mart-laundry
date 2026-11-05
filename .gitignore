@@ -31,8 +31,12 @@ next-env.d.ts
 /.factory/jobs/
 .neon
 
-# Claude Code personal settings
+# Claude Code personal settings and agent copies
 /.claude/settings.local.json
+/.claude/worktrees/
+
+# Factory plans hold Neon ids
+/.factory/plans/
 
 # Wrangler secrets for local runs
 .dev.vars*
