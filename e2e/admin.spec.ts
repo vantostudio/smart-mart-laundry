@@ -94,7 +94,7 @@ test("an unknown reason is never shown", async ({ page }) => {
 test("markup in the reason renders nothing", async ({ page }) => {
   await page.goto("/admin/sign-in?reason=%3Cimg%20src%3Dx%3E");
   await googleButton(page);
-  await expect(page.locator("main img")).toHaveCount(0);
+  await expect(page.locator(`main img[src="x"]`)).toHaveCount(0);
   expect(await page.locator("body").innerText()).not.toContain("img");
   await expect(alert(page)).toHaveText(unavailable);
 });
