@@ -39,6 +39,7 @@ const buttonVariants = cva(
           "border border-primary-foreground/30 text-primary-foreground hover:border-primary-foreground/60 hover:bg-primary-foreground/10",
         soft: "bg-clay-soft text-accent-foreground hover:bg-clay hover:text-clay-foreground",
         ghost: "text-foreground hover:bg-secondary",
+        destructive: "bg-destructive text-primary-foreground hover:bg-destructive/90",
         google:
           "border border-google-stroke bg-google font-medium text-google-foreground hover:bg-google-hover",
       },

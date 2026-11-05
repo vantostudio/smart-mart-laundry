@@ -96,7 +96,9 @@ create one before then.
 
 ### Products API
 
-Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&condition=`, newest first, gives `{ items, page, limit, total }`) and `POST`, then `GET`, `PATCH` and `DELETE` on `/api/admin/products/<id>`. Writes must come from the site's own pages. The shop still shows the samples in `src/features/shop/data.ts`.
+Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&condition=`, newest first, gives `{ items, page, limit, total }`) and `POST`, then `GET`, `PATCH` and `DELETE` on `/api/admin/products/<id>`. Writes must come from the site's own pages. `POST /api/admin/products/images` stores a photo and answers its key. Staff use all of this at `/admin/products`. The shop still shows the samples in `src/features/shop/data.ts`.
+
+Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's only on `dev` so far: run it on production when you deploy, and put Cloudflare in front of the photos before the public shop reads them, because Neon has no CDN.
 
 ### Auth
 

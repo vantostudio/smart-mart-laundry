@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-import { AdminShell, AdminShellSkeleton } from "@/features/admin/components/admin-shell";
-
-export const metadata: Metadata = { title: "Admin" };
-
+/* Products is the admin home for now. The page there checks access. */
 export default function Page() {
-  return (
-    <Suspense fallback={<AdminShellSkeleton />}>
-      <AdminShell />
-    </Suspense>
-  );
+  redirect("/admin/products");
 }

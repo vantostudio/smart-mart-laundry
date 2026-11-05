@@ -1,0 +1,213 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
+
+import type { Product } from "../lib/products";
+import { parseSizes, ProductForm } from "./product-form";
+
+const mocks = vi.hoisted(() => ({
+  push: vi.fn<(href: string) => void>(),
+  refresh: vi.fn<() => void>(),
+  saveProduct: vi.fn<(id: string | undefined, draft: unknown) => Promise<unknown>>(),
+  uploadPhoto: vi.fn<(photo: Blob) => Promise<unknown>>(),
+  shrinkImage: vi.fn<(file: File) => Promise<Blob>>(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
+}));
+vi.mock("../lib/shrink-image", () => ({ shrinkImage: mocks.shrinkImage }));
+vi.mock("../lib/api-client", async (original) => ({
+  ...(await original<typeof import("../lib/api-client")>()),
+  saveProduct: mocks.saveProduct,
+  uploadPhoto: mocks.uploadPhoto,
+}));
+
+const product: Product = {
+  id: "p1",
+  code: "SM-1001",
+  name: "Linen dress",
+  category: "ladies",
+  condition: "mtumba",
+  price: 800,
+  sizes: ["S", "M"],
+  stock: 2,
+  images: ["products/a.webp"],
+  note: "Small mark",
+  createdAt: "2026-11-05T00:00:00.000Z",
+};
+const photos = [{ key: "products/a.webp", url: "https://photos.test/a.webp" }];
+
+const save = () => screen.getByRole("button", { name: "Save product" });
+
+async function fillRequired(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText("Name"), "Sneakers");
+  await user.click(screen.getByRole("radio", { name: "New" }));
+  await user.click(screen.getByRole("radio", { name: "Shoes" }));
+  await user.type(screen.getByLabelText("Price (KSh)"), "3200");
+  await user.type(screen.getByLabelText("Stock"), "4");
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.saveProduct.mockResolvedValue({ ok: true, data: product });
+  mocks.shrinkImage.mockResolvedValue(new Blob(["x"]));
+});
+
+describe("parseSizes", () => {
+  it("splits, trims, and drops blanks and repeats", () => {
+    expect(parseSizes(" S, M,, M ,L ")).toEqual(["S", "M", "L"]);
+    expect(parseSizes("  ")).toEqual([]);
+  });
+});
+
+describe("ProductForm", () => {
+  it("adds a product and goes back to the list", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm />);
+    await fillRequired(user);
+    await user.type(screen.getByLabelText("Sizes"), "40, 41");
+    await user.click(save());
+
+    expect(mocks.saveProduct).toHaveBeenCalledWith(undefined, {
+      name: "Sneakers",
+      category: "shoes",
+      condition: "new",
+      price: 3200,
+      stock: 4,
+      sizes: ["40", "41"],
+      images: [],
+      note: null,
+    });
+    expect(mocks.push).toHaveBeenCalledWith("/admin/products");
+    expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("starts from the product when editing, and saves to it", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    expect(screen.getByLabelText("Sizes")).toHaveValue("S, M");
+
+    await user.clear(screen.getByLabelText("Price (KSh)"));
+    await user.type(screen.getByLabelText("Price (KSh)"), "650");
+    await user.click(save());
+
+    expect(mocks.saveProduct).toHaveBeenCalledWith(
+      "p1",
+      expect.objectContaining({ price: 650, images: ["products/a.webp"], note: "Small mark" }),
+    );
+  });
+
+  it("asks for a category and condition without calling the API", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm />);
+    await user.type(screen.getByLabelText("Name"), "Sneakers");
+    await user.type(screen.getByLabelText("Price (KSh)"), "1");
+    await user.type(screen.getByLabelText("Stock"), "1");
+    await user.click(save());
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Choose a category.");
+    expect(mocks.saveProduct).not.toHaveBeenCalled();
+  });
+
+  it("shows the API's error on the field it names, and can try again", async () => {
+    mocks.saveProduct.mockResolvedValue({
+      ok: false,
+      error: { code: "VALIDATION", message: "Check this", field: "price", requestId: "r" },
+    });
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(save());
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Check this");
+    expect(screen.getByLabelText("Price (KSh)")).toHaveAttribute("aria-invalid", "true");
+    expect(mocks.push).not.toHaveBeenCalled();
+    expect(save()).toBeEnabled();
+  });
+
+  it("shows a failure with no field, with the code to quote", async () => {
+    mocks.saveProduct.mockResolvedValue({
+      ok: false,
+      error: { code: "INTERNAL", message: "Internal error", requestId: "abc" },
+    });
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(save());
+    expect(await screen.findByRole("alert")).toHaveTextContent("abc");
+  });
+
+  it("uploads picked photos and saves their keys", async () => {
+    mocks.uploadPhoto.mockResolvedValue({
+      ok: true,
+      data: { key: "products/b.webp", url: "https://photos.test/b.webp" },
+    });
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.upload(
+      screen.getByLabelText("Add photos"),
+      new File(["x"], "b.jpg", { type: "image/jpeg" }),
+    );
+
+    expect(await screen.findByAltText("Photo 2")).toBeInTheDocument();
+    await user.click(save());
+    expect(mocks.saveProduct).toHaveBeenCalledWith(
+      "p1",
+      expect.objectContaining({ images: ["products/a.webp", "products/b.webp"] }),
+    );
+  });
+
+  it("can't save while a photo is uploading", async () => {
+    let finish: (value: unknown) => void = () => {};
+    mocks.uploadPhoto.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.upload(
+      screen.getByLabelText("Add photos"),
+      new File(["x"], "b.jpg", { type: "image/jpeg" }),
+    );
+
+    await waitFor(() => expect(save()).toBeDisabled());
+    expect(screen.getByText("Adding photo 1 of 1…")).toBeInTheDocument();
+    finish({ ok: true, data: { key: "products/b.webp", url: "https://photos.test/b.webp" } });
+    await waitFor(() => expect(save()).toBeEnabled());
+  });
+
+  it("says when a photo can't be read, and keeps the rest", async () => {
+    mocks.shrinkImage.mockRejectedValue(new Error("HEIC"));
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.upload(
+      screen.getByLabelText("Add photos"),
+      new File(["x"], "b.heic", { type: "image/jpeg" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("couldn't be read");
+    expect(screen.getByAltText("Photo 1")).toBeInTheDocument();
+    expect(mocks.uploadPhoto).not.toHaveBeenCalled();
+  });
+
+  it("removes a photo from what gets saved", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(screen.getByRole("button", { name: "Remove photo 1" }));
+    await user.click(save());
+    expect(mocks.saveProduct).toHaveBeenCalledWith("p1", expect.objectContaining({ images: [] }));
+  });
+
+  it("takes only as many photos as there's room for", async () => {
+    mocks.uploadPhoto.mockImplementation(async () => ({
+      ok: true,
+      data: { key: `products/${crypto.randomUUID()}.webp`, url: "https://photos.test/n.webp" },
+    }));
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    const files = Array.from(
+      { length: 7 },
+      (_, i) => new File(["x"], `${i}.jpg`, { type: "image/jpeg" }),
+    );
+    await user.upload(screen.getByLabelText("Add photos"), files);
+
+    await waitFor(() => expect(mocks.uploadPhoto).toHaveBeenCalledTimes(5));
+    expect(await screen.findByRole("alert")).toHaveTextContent("up to 6 photos");
+  });
+});

@@ -15,19 +15,23 @@ const { POST } = await import("./route");
 const webp = new TextEncoder().encode("RIFF....WEBPVP8 ");
 const sameSite = { origin: "http://shop.test", host: "shop.test" };
 
-function upload(body: BodyInit | undefined, headers: Record<string, string> = sameSite) {
-  return new Request("http://shop.test/api/admin/products/images", {
+/** Under jsdom a `Request` can't parse multipart, so the route gets the parsed field directly. */
+function upload(file: unknown, headers: Record<string, string> = sameSite) {
+  const request = new Request("http://shop.test/api/admin/products/images", {
     method: "POST",
     headers,
-    ...(body === undefined ? {} : { body }),
   });
+  request.formData = async () => {
+    if (file === undefined) throw new TypeError("Not a form");
+    return { get: () => file } as unknown as FormData;
+  };
+  return request;
 }
 
-function formWith(bytes: Uint8Array<ArrayBuffer>, name = "photo.webp", type = "image/webp") {
-  const form = new FormData();
-  form.set("file", new File([bytes], name, { type }));
-  return form;
-}
+const photo = (bytes: Uint8Array) => ({
+  size: bytes.length,
+  arrayBuffer: async () => bytes.slice().buffer,
+});
 
 beforeEach(() => {
   vi.mocked(putObject).mockReset();
@@ -40,8 +44,8 @@ beforeEach(() => {
 });
 
 describe("POST /api/admin/products/images", () => {
-  it("stores a photo under a key it chooses and answers the key and URL", async () => {
-    const res = await POST(upload(formWith(webp, "../../evil.webp")), undefined);
+  it("stores a photo under a key it chooses, and answers the key and URL", async () => {
+    const res = await POST(upload(photo(webp)), undefined);
     expect(res.status).toBe(201);
     const { key, url } = await res.json();
     expect(key).toMatch(/^products\/[0-9a-f-]{36}\.webp$/);
@@ -51,7 +55,7 @@ describe("POST /api/admin/products/images", () => {
 
   it("goes by the bytes, not what the file claims to be", async () => {
     const page = new TextEncoder().encode("<script>alert(1)</script>");
-    const res = await POST(upload(formWith(page, "photo.webp")), undefined);
+    const res = await POST(upload(photo(page)), undefined);
     expect(res.status).toBe(400);
     expect((await res.json()).error.code).toBe("VALIDATION");
     expect(putObject).not.toHaveBeenCalled();
@@ -60,13 +64,14 @@ describe("POST /api/admin/products/images", () => {
   it("refuses a photo over 2MB", async () => {
     const big = new Uint8Array(2 * 1024 * 1024 + 1);
     big.set(webp);
-    expect((await POST(upload(formWith(big)), undefined)).status).toBe(400);
+    expect((await POST(upload(photo(big)), undefined)).status).toBe(400);
     expect(putObject).not.toHaveBeenCalled();
   });
 
   it("refuses a request with no file", async () => {
-    expect((await POST(upload(new FormData()), undefined)).status).toBe(400);
-    expect((await POST(upload("not a form"), undefined)).status).toBe(400);
+    expect((await POST(upload(null), undefined)).status).toBe(400);
+    expect((await POST(upload("text"), undefined)).status).toBe(400);
+    expect((await POST(upload(undefined), undefined)).status).toBe(400);
   });
 
   it("refuses a signed-out caller and stores nothing", async () => {
@@ -74,13 +79,13 @@ describe("POST /api/admin/products/images", () => {
       ok: false,
       error: { code: "UNAUTHENTICATED", message: "Please sign in.", requestId: "req-1" },
     });
-    expect((await POST(upload(formWith(webp)), undefined)).status).toBe(401);
+    expect((await POST(upload(photo(webp)), undefined)).status).toBe(401);
     expect(putObject).not.toHaveBeenCalled();
   });
 
   it("refuses another site", async () => {
     const headers = { origin: "http://evil.test", host: "shop.test" };
-    expect((await POST(upload(formWith(webp), headers), undefined)).status).toBe(403);
+    expect((await POST(upload(photo(webp), headers), undefined)).status).toBe(403);
     expect(putObject).not.toHaveBeenCalled();
   });
 
@@ -89,7 +94,7 @@ describe("POST /api/admin/products/images", () => {
     vi.mocked(putObject).mockRejectedValue(
       Object.assign(new Error("secret-value"), { name: "StorageError", code: "503" }),
     );
-    const res = await POST(upload(formWith(webp)), undefined);
+    const res = await POST(upload(photo(webp)), undefined);
     expect(res.status).toBe(500);
     expect(await res.text()).not.toContain("secret-value");
     expect(String(error.mock.calls[0]?.[0])).toContain("StorageError");

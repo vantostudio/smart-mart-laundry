@@ -31,6 +31,14 @@ beforeEach(() => {
 });
 
 describe("AdminHeader", () => {
+  it("links every admin to Products", () => {
+    render(<AdminHeader admin={admin} />);
+    expect(screen.getByRole("link", { name: "Products" })).toHaveAttribute(
+      "href",
+      "/admin/products",
+    );
+  });
+
   it("shows an owner their name, role and the Team link", () => {
     render(<AdminHeader admin={owner} />);
     expect(screen.getByText("Mo Kamau")).toBeInTheDocument();

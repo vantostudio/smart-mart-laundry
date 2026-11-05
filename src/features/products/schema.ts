@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { productCategories, productConditions } from "@/lib/db/schema";
 
+import { MAX_PHOTOS } from "./limits";
+
 /* What the products API accepts. Strict: unknown fields, `id` and `code` included, are refused. */
 
 /** Postgres `integer`. */
@@ -10,7 +12,6 @@ const MAX_INT = 2_147_483_647;
 const MAX_PAGE = 1_000_000;
 
 export const MAX_LIMIT = 100;
-export const MAX_PHOTOS = 6;
 
 /** Postgres text can't hold a NUL byte. */
 const text = (max: number) =>

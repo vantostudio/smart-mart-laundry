@@ -1,19 +1,15 @@
-import { requireAdmin } from "@/features/admin/lib/auth";
+import type { ReactNode } from "react";
+
+import type { AdminContext } from "@/features/admin/lib/auth";
 
 import { AdminHeader } from "./admin-header";
 
-/** The signed-in admin area. `requireAdmin()` sends anyone else to sign-in with the reason. */
-export async function AdminShell() {
-  const admin = await requireAdmin();
+/** The frame of every signed-in page. The page itself calls `requireAdmin()` first. */
+export function AdminShell({ admin, children }: { admin: AdminContext; children: ReactNode }) {
   return (
     <>
       <AdminHeader admin={admin} />
-      <div className="container-page py-section">
-        <h1 className="display text-display">Admin</h1>
-        <section className="mt-6 rounded-3xl bg-card p-6 text-body text-muted-foreground shadow-card">
-          Stock and orders will appear here
-        </section>
-      </div>
+      <div className="container-page py-section">{children}</div>
     </>
   );
 }
