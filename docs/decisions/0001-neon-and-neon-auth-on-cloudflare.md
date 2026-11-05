@@ -158,3 +158,6 @@ photos (drift item 3 in the plan).
 
 - OpenNext support for `cacheComponents`, `typedRoutes`, the custom image loader and server
   actions, and the measured Worker bundle size (slice `hosting`).
+- The OpenNext Origin/Host check: confirm under `cf:preview` that `x-forwarded-host` and `host`
+  agree, so Next's server-action Origin check and Neon Auth's trusted-origin check pass behind
+  Cloudflare. Owed when slice `hosting` (job 003) lands; `admin-shell` adds no server actions.

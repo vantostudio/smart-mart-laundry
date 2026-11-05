@@ -1,7 +1,7 @@
 /*
  * The one error model for server code. Codes live here and nowhere else. An `AppError` message is
  * safe for people to read: never values, SQL, driver text or a stack. Person-facing copy per code
- * comes later in `src/features/admin/messages.ts`. Safe for client code, which imports the types.
+ * lives in `src/features/admin/messages.ts`. Safe for client code, which imports the types.
  */
 
 export const appErrorCodes = [
@@ -38,6 +38,9 @@ export class AppError extends Error {
   }
 }
 
+/** What people get for anything unexpected. */
+export const internalErrorMessage = "Internal error";
+
 /**
  * The shape sent to a client. Pure: callers log unexpected errors at their boundary. Anything that
  * isn't an `AppError` becomes `INTERNAL`, with no text from the original error.
@@ -51,5 +54,5 @@ export function toErrorShape(err: unknown, requestId: string): AppErrorShape {
       requestId,
     };
   }
-  return { code: "INTERNAL", message: "Internal error", requestId };
+  return { code: "INTERNAL", message: internalErrorMessage, requestId };
 }

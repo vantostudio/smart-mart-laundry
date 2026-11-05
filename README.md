@@ -68,8 +68,9 @@ Provisioning, done once by a person. The `db:*` scripts exist; the `cf:*` script
    or to Workers Builds on the repo with the same command.
 5. After slice `db`: from a dev machine with the direct Neon URL, run `pnpm db:migrate` against
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
-6. After slice `admin-shell`: sign in on the preview Worker, then production. Keep the output of
-   `wrangler tail` showing `sign_in` as the end-to-end proof.
+6. After slice `admin-shell`: sign in on the preview Worker, then production. Landing on `/admin`
+   with your name and role in the header is the end-to-end proof. Sign-ins aren't logged, so
+   `wrangler tail` shows no line for them.
 
 ### Database
 
@@ -101,5 +102,14 @@ it answers `503` with `AUTH_UNAVAILABLE`. It needs `NEON_AUTH_BASE_URL` (from `n
 `admin_user` allowlist, with the role from that row. Every admin page calls `requireAdmin()` and
 every admin action calls `requireAdminForAction()`, from `src/features/admin/lib/auth.ts`; there is
 no middleware.
+
+`/admin/sign-in` has one "Continue with Google" button (Google is the only provider). Google sends
+the browser back to the sign-in page, which exchanges Neon Auth's `neon_auth_session_verifier` for
+the session cookies through `/api/auth` and then loads `/admin`. "Sign out" in the `/admin` header
+signs out through Neon Auth and goes back to sign-in. Every `/admin` response carries
+`X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'`,
+`Referrer-Policy: same-origin` and `Cache-Control: private, no-store` (`next.config.ts`); admin
+pages are `noindex`, and `robots.txt` disallows `/admin` and `/api/`. Admin copy lives in
+`src/features/admin/messages.ts`.
 
 Plans: [`roadmap.md`](roadmap.md).

@@ -5,13 +5,20 @@ import type { Route } from "next";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 
+import { actionRefusalMessages } from "@/features/admin/messages";
 import { getDb, type Db } from "@/lib/db";
 import { adminUser, type AdminRole } from "@/lib/db/schema";
-import { AppError, toErrorShape, type AppErrorCode, type AppErrorShape } from "@/lib/errors";
+import {
+  AppError,
+  internalErrorMessage,
+  toErrorShape,
+  type AppErrorCode,
+  type AppErrorShape,
+} from "@/lib/errors";
 import { log } from "@/lib/log";
 import { getRequestId } from "@/lib/request-id";
 
-import { authUnavailableMessage, readSession, type SessionUser } from "./neon-auth";
+import { readSession, type SessionUser } from "./neon-auth";
 
 /*
  * The admin access check. Every admin page calls `requireAdmin()` and every admin action calls
@@ -42,6 +49,40 @@ function deny(requestId: string, reason: DenialReason, email: string): AdminDeci
   return { status: "forbidden" };
 }
 
+/** Only what is safe to log from a failed query: the driver error's name and code. */
+function driverFailure(err: unknown): { errorName: string; errorCode: string | null } {
+  const driver = err instanceof Error && err.cause instanceof Error ? err.cause : err;
+  const { name, code } = (driver ?? {}) as { name?: unknown; code?: unknown };
+  return {
+    errorName: typeof name === "string" ? name : "unknown",
+    errorCode: typeof code === "string" ? code : null,
+  };
+}
+
+/**
+ * The allowlist row for an email. Drizzle's query error puts the params, so the email, in its
+ * message and on itself, and Next logs whatever is rethrown: keep it from going any further.
+ */
+async function findAdminRow(db: Db, email: string, requestId: string) {
+  try {
+    const [row] = await db
+      .select({
+        id: adminUser.id,
+        email: adminUser.email,
+        name: adminUser.name,
+        role: adminUser.role,
+      })
+      .from(adminUser)
+      .where(eq(adminUser.email, email))
+      .limit(1);
+    return row;
+  } catch (err) {
+    unstable_rethrow(err);
+    log.error("admin_lookup_failed", { requestId, ...driverFailure(err) });
+    throw new AppError("INTERNAL", internalErrorMessage);
+  }
+}
+
 /** The decision for one session. Reads at most one `admin_user` row; errors propagate. */
 export async function resolveAdmin(deps: {
   readSession: () => Promise<SessionUser | null>;
@@ -54,17 +95,7 @@ export async function resolveAdmin(deps: {
     return deny(deps.requestId, "unverified_email", session.email);
 
   const email = session.email.trim().toLowerCase();
-  const [row] = await deps
-    .db()
-    .select({
-      id: adminUser.id,
-      email: adminUser.email,
-      name: adminUser.name,
-      role: adminUser.role,
-    })
-    .from(adminUser)
-    .where(eq(adminUser.email, email))
-    .limit(1);
+  const row = await findAdminRow(deps.db(), email, deps.requestId);
   if (!row) return deny(deps.requestId, "not_on_allowlist", email);
   return {
     status: "admin",
@@ -79,7 +110,8 @@ const getAdminDecision = cache(async () =>
 
 /**
  * The signed-in admin, or `null`. Throws `AUTH_UNAVAILABLE` when auth or the database isn't
- * configured or reachable, so an outage never reads as "please sign in".
+ * configured or auth can't be reached, and `INTERNAL` when the allowlist lookup fails, so an outage
+ * never reads as "please sign in".
  */
 export const getAdmin = cache(async (): Promise<AdminContext | null> => {
   const decision = await getAdminDecision();
@@ -114,16 +146,11 @@ async function check(opts?: { role?: "owner" }): Promise<Check> {
 /** For admin pages: the admin, or a redirect to the sign-in page with the reason. */
 export async function requireAdmin(opts?: { role?: "owner" }): Promise<AdminContext> {
   const result = await check(opts);
-  // The sign-in page arrives with slice `admin-shell`.
   if (!result.ok) redirect(`/admin/sign-in?reason=${result.code}` as Route);
   return result.admin;
 }
 
-const refusalMessages: Record<Refusal, string> = {
-  UNAUTHENTICATED: "Please sign in to continue.",
-  FORBIDDEN: "You don't have access to this.",
-  AUTH_UNAVAILABLE: authUnavailableMessage,
-};
+const refusalMessages: Record<Refusal, string> = actionRefusalMessages;
 
 /** For admin actions: the same decision as `requireAdmin`, returned as a result, never a redirect. */
 export async function requireAdminForAction(opts?: {

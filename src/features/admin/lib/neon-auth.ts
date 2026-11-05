@@ -5,6 +5,7 @@ import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 
 import { authEnv } from "@/config/env";
+import { errorMessages } from "@/features/admin/messages";
 import { AppError } from "@/lib/errors";
 import { log } from "@/lib/log";
 import { getRequestId } from "@/lib/request-id";
@@ -14,9 +15,8 @@ import { getRequestId } from "@/lib/request-id";
  * so it is built on first use in a request from `authEnv()`, never at import.
  */
 
-/** What people see when sign-in can't work. Final copy comes with `admin-shell`'s messages. */
-export const authUnavailableMessage =
-  "Sign-in isn't available right now. Please try again in a few minutes.";
+/** What people see when sign-in can't work; the copy lives in `messages.ts`. */
+export const authUnavailableMessage = errorMessages.AUTH_UNAVAILABLE;
 
 /** One Neon Auth instance per request. */
 export const getNeonAuth = cache((): NeonAuth => {
