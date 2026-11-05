@@ -115,10 +115,7 @@ export function publicRoute<Context>(
 }
 
 /** Parsed input, or `VALIDATION` naming the field. Zod's own messages can echo what was sent. */
-export function parseInput<Schema extends z.ZodType>(
-  schema: Schema,
-  input: unknown,
-): z.output<Schema> {
+function parseInput<Schema extends z.ZodType>(schema: Schema, input: unknown): z.output<Schema> {
   const parsed = schema.safeParse(input);
   if (parsed.success) return parsed.data;
   const field = parsed.error.issues[0]?.path.join(".");

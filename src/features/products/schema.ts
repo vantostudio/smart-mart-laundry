@@ -13,7 +13,7 @@ const MAX_INT = 2_147_483_647;
 /** Beyond this the offset is meaningless, and it stays a safe number. */
 const MAX_PAGE = 1_000_000;
 
-export const MAX_LIMIT = 100;
+const MAX_LIMIT = 100;
 /** The shop asks for 12 at a time; this stops anyone pulling the whole catalogue in one request. */
 const MAX_PUBLIC_LIMIT = 48;
 

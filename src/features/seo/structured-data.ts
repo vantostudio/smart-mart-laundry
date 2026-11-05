@@ -25,7 +25,7 @@ export function openingHoursSpecification(hours: OpeningHours) {
 }
 
 /** The university as a university, the rest as places in Chuka. */
-export function areaServed() {
+function areaServed() {
   const town = {
     "@type": "City",
     name: site.location.town,

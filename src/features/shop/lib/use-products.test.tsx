@@ -183,6 +183,31 @@ describe("useProducts", () => {
   });
 });
 
+describe("useProducts, leaving and coming back", () => {
+  it("isn't stuck loading after a next page was cancelled", async () => {
+    fetchMock.mockImplementation((url, init) => {
+      if (String(url).includes("page=2")) {
+        return new Promise((_, reject) =>
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError"))),
+        );
+      }
+      return Promise.resolve(json(page(["A"], 3)));
+    });
+    const { result, rerender } = render();
+    await waitFor(() => expect(result.current.items).toHaveLength(1));
+
+    act(() => void result.current.loadMore());
+    expect(result.current.loadingMore).toBe(true);
+
+    rerender({ filters: { ...emptyFilters, cat: "men" } });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    rerender({ filters: emptyFilters });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.loadingMore).toBe(false);
+  });
+});
+
 describe("useProduct", () => {
   it("uses a listed product without asking the API", () => {
     const { result } = renderHook(() => useProduct("A", item("A")));

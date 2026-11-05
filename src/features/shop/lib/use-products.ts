@@ -88,8 +88,9 @@ export function useProducts(filters: Filters) {
       productsUrl({ ...filters, q }, loaded.page + 1, PAGE_SIZE),
       request.signal,
     );
+    // Cleared even when cancelled: going back to these filters mustn't find it still loading.
+    setLoadingMoreFor((loading) => (loading === key ? null : loading));
     if (request.signal.aborted) return;
-    setLoadingMoreFor(null);
     setLoaded((current) => {
       if (current?.key !== key) return current;
       if (!result.ok) return { ...current, moreProblem: result.problem };

@@ -5,7 +5,7 @@ import { useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export type ChoiceChipOption<T extends string> = {
+type ChoiceChipOption<T extends string> = {
   value: T;
   /** Main line, e.g. "Morning", or the date number "29" in the `date` variant. */
   label: ReactNode;

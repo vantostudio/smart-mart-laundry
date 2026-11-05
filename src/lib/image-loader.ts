@@ -1,9 +1,9 @@
 import type { ImageLoaderProps } from "next/image";
 
 /**
- * next/image loader. Every photo comes from Unsplash's CDN, which resizes and converts on request
+ * next/image loader. Page photos come from Unsplash's CDN, which resizes and converts on request
  * (imgix), so ask it for the exact width, quality and best format directly instead of having the
- * Next server download the original and resize it.
+ * Next server download the original and resize it. Anything else passes through unchanged.
  */
 export default function imageLoader({ src, width, quality }: ImageLoaderProps): string {
   if (!src.startsWith("https://images.unsplash.com/")) return src;

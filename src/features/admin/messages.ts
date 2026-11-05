@@ -176,7 +176,7 @@ export const signInReasons = [
   "SIGN_IN_CANCELLED",
 ] as const;
 
-export type SignInReason = (typeof signInReasons)[number];
+type SignInReason = (typeof signInReasons)[number];
 
 const reasonMessages: Record<SignInReason, string> = {
   UNAUTHENTICATED: errorMessages.UNAUTHENTICATED,
