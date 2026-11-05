@@ -69,8 +69,8 @@ Provisioning, done once by a person. The `db:*` scripts exist; the `cf:*` script
 5. After slice `db`: from a dev machine with the direct Neon URL, run `pnpm db:migrate` against
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
 6. After slice `admin-shell`: sign in on the preview Worker, then production. Landing on `/admin`
-   with your name and role in the header is the end-to-end proof. Sign-ins aren't logged, so
-   `wrangler tail` shows no line for them.
+   with your name and role in the header is the end-to-end proof. Successful sign-ins aren't
+   logged, so `wrangler tail` shows no line for them. Refused ones appear as `sign_in_denied`.
 
 ### Database
 
