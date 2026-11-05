@@ -170,18 +170,27 @@ export function publicRoute<Context>(
   };
 }
 
+/** Plain words for a refused field, from the route that knows what the field needs. */
+type FieldMessage = (field: string) => string | undefined;
+
 /** Parsed input, or `VALIDATION` naming the field. Zod's own messages can echo what was sent. */
-function parseInput<Schema extends z.ZodType>(schema: Schema, input: unknown): z.output<Schema> {
+function parseInput<Schema extends z.ZodType>(
+  schema: Schema,
+  input: unknown,
+  messageFor?: FieldMessage,
+): z.output<Schema> {
   const parsed = schema.safeParse(input);
   if (parsed.success) return parsed.data;
   const field = parsed.error.issues[0]?.path.join(".");
-  throw new AppError("VALIDATION", apiMessages.invalidInput, field ? { field } : undefined);
+  const message = (field && messageFor?.(field)) || apiMessages.invalidInput;
+  throw new AppError("VALIDATION", message, field ? { field } : undefined);
 }
 
 /** The JSON body, parsed. */
 export async function parseBody<Schema extends z.ZodType>(
   request: Request,
   schema: Schema,
+  messageFor?: FieldMessage,
 ): Promise<z.output<Schema>> {
   let body: unknown;
   try {
@@ -189,7 +198,7 @@ export async function parseBody<Schema extends z.ZodType>(
   } catch {
     throw new AppError("VALIDATION", apiMessages.invalidJson);
   }
-  return parseInput(schema, body);
+  return parseInput(schema, body, messageFor);
 }
 
 /** The query string, parsed. */

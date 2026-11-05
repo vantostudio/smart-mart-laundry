@@ -36,6 +36,13 @@
       "when": 1793894938337,
       "tag": "0004_shop_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793912935230,
+      "tag": "0005_laundry_items",
+      "breakpoints": true
     }
   ]
 }

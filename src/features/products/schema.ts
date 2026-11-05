@@ -18,7 +18,7 @@ const MAX_LIMIT = 100;
 const MAX_PUBLIC_LIMIT = 48;
 
 /** Postgres text can't hold a NUL byte. */
-const text = (max: number) =>
+export const text = (max: number) =>
   z
     .string()
     .trim()
@@ -27,7 +27,7 @@ const text = (max: number) =>
     .regex(/^[^\0]*$/);
 
 /** Only keys our upload made, never a link: `productImageUrl` builds the URL. */
-const photoKey = z.string().regex(/^products\/[0-9a-f-]{36}\.(webp|jpg|png)$/);
+export const photoKey = z.string().regex(/^products\/[0-9a-f-]{36}\.(webp|jpg|png)$/);
 
 const amount = z.number().int().min(0).max(MAX_INT);
 

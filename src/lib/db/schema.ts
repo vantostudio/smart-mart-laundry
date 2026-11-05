@@ -128,3 +128,32 @@ export const shopSettings = pgTable(
     ),
   ],
 );
+
+export const laundryCategoryIds = ["baskets", "duvets", "mats", "shoes"] as const;
+export type LaundryCategory = (typeof laundryCategoryIds)[number];
+
+/**
+ * What the laundry page lists. `price` is whole KSh. `image` is an Unsplash photo id or a storage key
+ * from our upload, and `mark` is the size shown on the card ("S", "6×6"). `position` keeps the order
+ * on the page: new items go last. The migration adds today's items; staff manage them from there.
+ */
+export const laundryItem = pgTable(
+  "laundry_item",
+  {
+    id: text("id").primaryKey(),
+    category: text("category", { enum: laundryCategoryIds }).notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    price: integer("price").notNull(),
+    image: text("image").notNull(),
+    mark: text("mark"),
+    position: integer("position").notNull(),
+  },
+  (t) => [
+    check("laundry_item_category_check", sql`${t.category} in (${literals(laundryCategoryIds)})`),
+    check("laundry_item_price_check", sql`${t.price} > 0`),
+    index("laundry_item_order_idx").on(t.position),
+  ],
+);
+
+export type LaundryItemRow = typeof laundryItem.$inferSelect;

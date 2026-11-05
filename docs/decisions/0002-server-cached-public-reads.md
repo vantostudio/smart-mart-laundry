@@ -17,11 +17,12 @@ Three things read the database on the server, each through a `use cache` functio
 `cacheTag`, `cacheLife` and a writer that calls `revalidateTag(tag, { expire: 0 })`. Everything
 else on public pages stays client-loaded from `/api/products` and `/api/products/[code]`.
 
-| Read           | Where                                    | Tag        | Backstop life | Expired by                                    |
-| -------------- | ---------------------------------------- | ---------- | ------------- | --------------------------------------------- |
-| Shop settings  | `getLiveShopSettings`, site layout       | `settings` | `hours`       | `PATCH /api/admin/settings`                   |
-| One product    | `getCachedPublicProduct`, `/shop/[code]` | `products` | `minutes`     | create, edit, delete in `/api/admin/products` |
-| In-stock codes | `getCachedSitemapCodes`, `sitemap.ts`    | `products` | `hours`       | same                                          |
+| Read           | Where                                          | Tag        | Backstop life | Expired by                                                               |
+| -------------- | ---------------------------------------------- | ---------- | ------------- | ------------------------------------------------------------------------ |
+| Shop settings  | `getLiveShopSettings`, site layout             | `settings` | `hours`       | `PATCH /api/admin/settings`                                              |
+| Laundry items  | `getLiveLaundryItems`, site layout, `/laundry` | `laundry`  | `hours`       | Every save at `/api/admin/laundry-prices` and `/api/admin/laundry-items` |
+| One product    | `getCachedPublicProduct`, `/shop/[code]`       | `products` | `minutes`     | create, edit, delete in `/api/admin/products`                            |
+| In-stock codes | `getCachedSitemapCodes`, `sitemap.ts`          | `products` | `hours`       | same                                                                     |
 
 - **How long a change takes:** the save request expires the tag before it answers, so the next
   request to the site renders fresh (a blocking read, one query). Anything already open in a

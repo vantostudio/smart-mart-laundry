@@ -3,7 +3,12 @@ import Link from "next/link";
 import { Wordmark } from "@/components/shared/wordmark";
 import { Button } from "@/components/ui/button";
 import type { AdminContext } from "@/features/admin/lib/auth";
-import { productMessages, roleLabels, settingsMessages } from "@/features/admin/messages";
+import {
+  laundryMessages,
+  productMessages,
+  roleLabels,
+  settingsMessages,
+} from "@/features/admin/messages";
 
 import { SignOutButton } from "./sign-out-button";
 
@@ -20,6 +25,9 @@ export function AdminHeader({ admin }: { admin: AdminContext }) {
           </p>
           <Button asChild variant="ghost" className="px-3">
             <Link href="/admin/products">{productMessages.heading}</Link>
+          </Button>
+          <Button asChild variant="ghost" className="px-3">
+            <Link href="/admin/laundry">{laundryMessages.nav}</Link>
           </Button>
           <Button asChild variant="ghost" className="px-3">
             <Link href="/admin/settings">{settingsMessages.heading}</Link>

@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { useLaundryItems } from "@/features/laundry/laundry-items-provider";
+
 export type CartItem = {
   id: string;
   name: string;
@@ -57,7 +59,14 @@ function createCart(
 ) {
   const Context = createContext<CartContextValue | null>(null);
 
-  function Provider({ children }: { children: ReactNode }) {
+  function Provider({
+    children,
+    refresh,
+  }: {
+    children: ReactNode;
+    /** Brings a saved line up to date, or null when it can't be ordered any more. */
+    refresh?: (item: CartItem) => CartItem | null;
+  }) {
     const [items, setItems] = useState<CartItem[]>([]);
     // Persist only once the stored cart has been loaded. State (not a ref), so the save effect in
     // the same commit as the load still sees false and can't overwrite storage with the initial [].
@@ -103,10 +112,11 @@ function createCart(
     const clear = useCallback(() => setItems([]), []);
 
     const value = useMemo<CartContextValue>(() => {
-      const count = items.reduce((sum, i) => sum + i.qty, 0);
-      const total = items.reduce((sum, i) => sum + i.qty * i.price, 0);
-      return { items, count, total, add, setQty, clear };
-    }, [items, add, setQty, clear]);
+      const lines = refresh ? items.flatMap((i) => refresh(i) ?? []) : items;
+      const count = lines.reduce((sum, i) => sum + i.qty, 0);
+      const total = lines.reduce((sum, i) => sum + i.qty * i.price, 0);
+      return { items: lines, count, total, add, setQty, clear };
+    }, [items, refresh, add, setQty, clear]);
 
     return <Context.Provider value={value}>{children}</Context.Provider>;
   }
@@ -123,7 +133,22 @@ function createCart(
 /** The laundry basket (/laundry). */
 export const CART_STORAGE_KEY = "streetmart-cart";
 const laundry = createCart(CART_STORAGE_KEY, "useCart");
-export const CartProvider = laundry.Provider;
+
+/**
+ * A saved basket can be days old, so its lines always show today's name and price, and an item
+ * staff have deleted drops out. An old price can't reach a WhatsApp order.
+ */
+export function CartProvider({ children }: { children: ReactNode }) {
+  const items = useLaundryItems();
+  const refresh = useCallback(
+    (line: CartItem) => {
+      const item = items.find((i) => i.id === line.id);
+      return item ? { ...line, name: item.name, price: item.price } : null;
+    },
+    [items],
+  );
+  return <laundry.Provider refresh={refresh}>{children}</laundry.Provider>;
+}
 export const useCart = laundry.useCart;
 
 /** The shop bag (/shop). */

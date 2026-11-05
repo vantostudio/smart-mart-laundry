@@ -4,9 +4,14 @@ import { HERO_IMAGE_ID } from "@/features/home/data";
 import { categoryLabels } from "@/features/products/labels";
 import type { PublicProduct } from "@/features/products/public";
 import { shopMessages } from "@/features/shop/messages";
-import { itemsIn, laundryCategories, laundryItems } from "@/features/laundry/data";
+import {
+  itemsIn,
+  laundryCategories,
+  laundryPhoto,
+  type LaundryItem,
+} from "@/features/laundry/data";
 import { ksh } from "@/lib/format";
-import { ogImage, unsplash } from "@/lib/images";
+import { ogImage } from "@/lib/images";
 import type { OpeningHours } from "@/lib/opening-hours";
 
 /*
@@ -44,10 +49,9 @@ function areaServed() {
   );
 }
 
-const allPrices = laundryItems.map((i) => i.price);
-
 /** Every page: the business (laundry and clothing store in one) and the website. */
-export function businessJsonLd(settings: ShopSettings) {
+export function businessJsonLd(settings: ShopSettings, items: LaundryItem[]) {
+  const allPrices = items.map((i) => i.price);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -90,7 +94,7 @@ export function businessJsonLd(settings: ShopSettings) {
 }
 
 /** /laundry: the pickup service with its price list. */
-export function laundryServiceJsonLd() {
+export function laundryServiceJsonLd(items: LaundryItem[]) {
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -107,13 +111,13 @@ export function laundryServiceJsonLd() {
       itemListElement: laundryCategories.map((c) => ({
         "@type": "OfferCatalog",
         name: c.label,
-        itemListElement: itemsIn(c.id).map((i) => ({
+        itemListElement: itemsIn(c.id, items).map((i) => ({
           "@type": "Offer",
           itemOffered: {
             "@type": "Service",
             name: i.name,
             description: i.desc,
-            image: unsplash(i.image, 800),
+            image: laundryPhoto(i.image, 800),
           },
           price: i.price,
           priceCurrency: "KES",

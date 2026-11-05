@@ -1,8 +1,8 @@
 import "server-only";
 
-import { arrayOverlaps } from "drizzle-orm";
+import { arrayOverlaps, inArray } from "drizzle-orm";
 
-import { product } from "@/lib/db/schema";
+import { laundryItem, product } from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
 import { log } from "@/lib/log";
 import { getRequestId } from "@/lib/request-id";
@@ -15,9 +15,9 @@ import { thumbnailKey } from "./image-keys";
 const STORAGE_TIMEOUT_MS = 4000;
 
 /**
- * Removes photos, and their thumbnails, that a product no longer uses. Call it after the database
- * change. A key some row still lists is kept. Storage trouble is logged and never thrown: the
- * product change has happened, and a stray file only costs space.
+ * Removes photos, and their thumbnails, that nothing uses any more. Call it after the database
+ * change. A key a product or laundry item still lists is kept. Storage trouble is logged and never
+ * thrown: the change has happened, and a stray file only costs space.
  */
 export async function removePhotos(db: Db, keys: string[]): Promise<void> {
   if (keys.length === 0) return;
@@ -27,7 +27,14 @@ export async function removePhotos(db: Db, keys: string[]): Promise<void> {
       .select({ images: product.images })
       .from(product)
       .where(arrayOverlaps(product.images, keys));
-    const inUse = new Set(rows.flatMap((row) => row.images));
+    const laundry = await db
+      .select({ image: laundryItem.image })
+      .from(laundryItem)
+      .where(inArray(laundryItem.image, keys));
+    const inUse = new Set([
+      ...rows.flatMap((row) => row.images),
+      ...laundry.map((row) => row.image),
+    ]);
     const unused = keys.filter((key) => !inUse.has(key));
     const results = await withTimeout(
       Promise.allSettled(

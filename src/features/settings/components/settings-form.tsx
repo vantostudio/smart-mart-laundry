@@ -8,6 +8,9 @@ import { problemFrom, type Problem, type Result } from "@/features/admin/lib/api
 import { settingsMessages } from "@/features/admin/messages";
 import { Button } from "@/components/ui/button";
 
+/** An empty box is NaN, which JSON sends as null and the API names as the field to fix. */
+export const amount = (value: string) => (value.trim() === "" ? Number.NaN : Number(value));
+
 /** One titled panel on the settings page. */
 export function SettingsPanel({
   heading,
@@ -42,7 +45,7 @@ export function useSave<T>(save: () => Promise<Result<T>>) {
   useEffect(() => {
     if (!failure) return;
     const field = form.current?.querySelector(`[data-field="${failure.field}"]`);
-    field?.querySelector<HTMLElement>("input, select")?.focus();
+    field?.querySelector<HTMLElement>("input, select, textarea")?.focus();
     (field ?? form.current?.querySelector('[role="alert"]'))?.scrollIntoView?.({ block: "center" });
   }, [failure]);
 

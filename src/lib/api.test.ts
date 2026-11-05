@@ -126,6 +126,13 @@ describe("parsing", () => {
     await expect(parseBody(body("{"), schema)).rejects.toMatchObject({ code: "VALIDATION" });
   });
 
+  it("uses the route's own wording for a field", async () => {
+    const err = await parseBody(body(`{"n":"x"}`), schema, (field) => `Fix ${field}`).catch(
+      (e: unknown) => e,
+    );
+    expect(err).toMatchObject({ code: "VALIDATION", field: "n", message: "Fix n" });
+  });
+
   it("reads the query string", () => {
     const query = z.object({ page: z.coerce.number() });
     expect(parseQuery(new Request("http://shop.test/?page=2"), query)).toEqual({ page: 2 });

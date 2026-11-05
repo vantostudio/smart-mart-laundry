@@ -41,6 +41,8 @@ export const apiMessages = {
   staffNotFound: "That person isn't on the team any more.",
   photoInvalid: "That file isn't a photo. Use a JPEG, PNG or WebP.",
   photoTooBig: "That photo is too big. Try a smaller one.",
+  laundryItemNotFound: "That laundry item doesn't exist any more. Reload the page.",
+  lastLaundryItem: "Each group needs at least one item, so this one can't be deleted.",
 } as const;
 
 /** Copy for the products screens. */
@@ -160,6 +162,46 @@ export const settingsMessages = {
   adding: "Adding…",
   added: (name: string) => `${name} can now sign in.`,
 } as const;
+
+/** The laundry screens. */
+export const laundryMessages = {
+  heading: "Laundry prices",
+  nav: "Laundry",
+  body: "Change a price and save that group, or edit an item to change its name, photo or description.",
+  ownerOnly: "Only the owner can change laundry items and prices.",
+  back: "Back to laundry prices",
+  edit: "Edit",
+  editItem: (name: string) => `Edit ${name}`,
+  addItem: (group: string) => `Add to ${group}`,
+  addHeading: "Add a laundry item",
+  editHeading: "Edit laundry item",
+  group: "Group",
+  name: "Name",
+  description: "Description",
+  price: "Price (KSh)",
+  mark: "Size on the photo (optional)",
+  markHint: "A short label such as S, XL or 6×6.",
+  photo: "Photo",
+  photoHint: "One photo, shown on the laundry page.",
+  addPhoto: "Add photo",
+  save: "Save",
+  saving: "Saving…",
+  delete: "Delete item",
+  deleteHeading: (name: string) => `Delete ${name}?`,
+  deleteBody: "It leaves the laundry page and any customer's basket. This can't be undone.",
+  deleteConfirm: "Delete",
+  deleting: "Deleting…",
+  cancel: "Cancel",
+  /** What each field needs, shown when the API refuses it. */
+  fields: {
+    name: "Enter a name, up to 80 characters.",
+    desc: "Enter a short description, up to 200 characters.",
+    price: "Enter a whole number from 1 to 100,000.",
+    mark: "Keep this to 8 characters or fewer.",
+    image: "Add a photo.",
+    category: "Choose a group.",
+  },
+};
 
 export const signInMessages = {
   cancelled: "Sign-in was cancelled. Try again.",

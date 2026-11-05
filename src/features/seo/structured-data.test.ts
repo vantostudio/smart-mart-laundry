@@ -13,7 +13,7 @@ import {
 } from "./structured-data";
 
 describe("businessJsonLd", () => {
-  const [business, website] = businessJsonLd(defaultShopSettings)["@graph"];
+  const [business, website] = businessJsonLd(defaultShopSettings, laundryItems)["@graph"];
 
   it("describes a laundry and clothing store in Chuka", () => {
     expect(business?.["@type"]).toEqual(["DryCleaningOrLaundry", "ClothingStore"]);
@@ -43,7 +43,7 @@ describe("businessJsonLd", () => {
 
 describe("businessJsonLd with saved settings", () => {
   const saved = { ...defaultShopSettings, phone: "254700000001", weekOpen: 8, weekClose: 18 };
-  const [business] = businessJsonLd(saved)["@graph"];
+  const [business] = businessJsonLd(saved, laundryItems)["@graph"];
 
   it("uses the live phone and opening hours, not the code defaults", () => {
     expect(business).toMatchObject({
@@ -64,9 +64,27 @@ describe("openingHoursSpecification", () => {
   });
 });
 
+describe("saved laundry prices in search data", () => {
+  const prices: Record<string, number> = { "basket-small": 175, "mat-door": 60 };
+  const items = laundryItems.map((i) => ({ ...i, price: prices[i.id] ?? i.price }));
+
+  it("lists the saved price and range", () => {
+    const [business] = businessJsonLd(defaultShopSettings, items)["@graph"];
+    expect(business).toMatchObject({ priceRange: "KSh 60–400" });
+    expect(JSON.stringify(laundryServiceJsonLd(items))).toContain('"price":175');
+  });
+
+  it("shows an uploaded photo's own address", () => {
+    const photo = "https://photos.test/products/a-thumb";
+    const [first, ...rest] = laundryItems;
+    const text = JSON.stringify(laundryServiceJsonLd([{ ...first!, image: photo }, ...rest]));
+    expect(text).toContain(photo);
+  });
+});
+
 describe("laundryServiceJsonLd", () => {
   it("lists every laundry item with its price in shillings", () => {
-    const catalogue = laundryServiceJsonLd().hasOfferCatalog.itemListElement;
+    const catalogue = laundryServiceJsonLd(laundryItems).hasOfferCatalog.itemListElement;
     const offers = catalogue.flatMap((c) => c.itemListElement);
     expect(offers).toHaveLength(laundryItems.length);
     expect(offers[0]).toMatchObject({ price: 150, priceCurrency: "KES" });

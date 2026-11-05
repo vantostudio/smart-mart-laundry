@@ -18,6 +18,7 @@ import { useNow } from "@/features/booking/use-now";
 import { useCart } from "@/features/cart/cart-provider";
 import { useOpenCart } from "@/features/cart/open-cart";
 import { itemsIn, laundryCategories, type LaundryCategory } from "@/features/laundry/data";
+import { useLaundryItems } from "@/features/laundry/laundry-items-provider";
 import { parseCategory } from "@/features/laundry/lib/tabs";
 
 import { BookingSheet } from "./booking-sheet";
@@ -44,6 +45,7 @@ export function LaundryOrder({ params }: { params: Params }) {
   const nowMs = useNow();
   const now = nowMs === null ? null : new Date(nowMs);
   const { count, total } = useCart();
+  const laundryItems = useLaundryItems();
 
   const [category, setCategory] = useState(() => parseCategory(params?.get("cat")));
   // The customer's own choices win over the URL once they start picking days.
@@ -90,7 +92,7 @@ export function LaundryOrder({ params }: { params: Params }) {
               <p className="text-caption font-medium text-muted-foreground">{c.note}</p>
             </div>
             <ul className={grid}>
-              {itemsIn(c.id).map((item) => (
+              {itemsIn(c.id, laundryItems).map((item) => (
                 <li key={item.id} className="min-w-0">
                   <LaundryCard item={item} />
                 </li>

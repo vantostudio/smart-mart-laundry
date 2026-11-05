@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { Button } from "@/components/ui/button";
 import { AdminShell, AdminShellSkeleton } from "@/features/admin/components/admin-shell";
+import { FreshOnVisit } from "@/features/admin/components/fresh-on-visit";
 import { productMessages } from "@/features/admin/messages";
 import { requireAdmin } from "@/features/admin/lib/auth";
 import { DeleteProduct } from "@/features/products/components/delete-product";
@@ -38,7 +39,9 @@ async function EditProduct({ params }: Pick<PageProps<"/admin/products/[id]/edit
       </Button>
       <h1 className="mt-2 display text-display">{productMessages.editHeading}</h1>
       <p className="text-body-sm text-muted-foreground">{product.code}</p>
-      <ProductForm product={product} photos={photos} />
+      <FreshOnVisit>
+        <ProductForm product={product} photos={photos} />
+      </FreshOnVisit>
       <DeleteProduct id={product.id} name={product.name} />
     </AdminShell>
   );

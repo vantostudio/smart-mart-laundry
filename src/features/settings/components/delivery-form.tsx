@@ -8,10 +8,7 @@ import { FormField } from "@/features/admin/components/form-field";
 import { settingsMessages as m } from "@/features/admin/messages";
 
 import { saveShopSettings } from "../lib/settings-client";
-import { SaveRow, SettingsPanel, useSave } from "./settings-form";
-
-/** An empty box is NaN, which JSON sends as null and the API names as the field to fix. */
-const amount = (value: string) => (value.trim() === "" ? Number.NaN : Number(value));
+import { amount, SaveRow, SettingsPanel, useSave } from "./settings-form";
 
 const FIELDS = ["deliveryFee", "deliveryFreeFrom"];
 

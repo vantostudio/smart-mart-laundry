@@ -20,10 +20,26 @@ type Props = {
   /** True while photos are uploading, so the form can't save without them. */
   onBusyChange: (busy: boolean) => void;
   problem?: Problem | undefined;
+  /** For screens other than products: how many photos, and their field and words. */
+  max?: number;
+  field?: string;
+  copy?: { legend: string; hint: string; add: string };
 };
 
 /** Shrinks and uploads photos one at a time, keeping what worked if a later one fails. */
-export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) {
+export function PhotoPicker({
+  photos,
+  onChange,
+  onBusyChange,
+  problem,
+  max = MAX_PHOTOS,
+  field = "images",
+  copy = {
+    legend: productMessages.photos,
+    hint: productMessages.photosHint,
+    add: productMessages.addPhotos,
+  },
+}: Props) {
   const input = useRef<HTMLInputElement>(null);
   const addButton = useRef<HTMLButtonElement>(null);
   const hintId = useId();
@@ -31,9 +47,9 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
   const [failure, setFailure] = useState<Problem | null>(null);
 
   async function add(files: File[]) {
-    const room = MAX_PHOTOS - photos.length;
+    const room = max - photos.length;
     const chosen = files.slice(0, room);
-    setFailure(files.length > room ? { message: productMessages.photoLimit(MAX_PHOTOS) } : null);
+    setFailure(files.length > room ? { message: productMessages.photoLimit(max) } : null);
     onBusyChange(true);
     for (const [index, file] of chosen.entries()) {
       setProgress({ done: index + 1, total: chosen.length });
@@ -65,10 +81,10 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
 
   const shown = failure ?? problem;
   return (
-    <fieldset data-field="images">
-      <legend className="text-body-sm font-semibold">{productMessages.photos}</legend>
+    <fieldset data-field={field}>
+      <legend className="text-body-sm font-semibold">{copy.legend}</legend>
       <p id={hintId} className="text-caption text-muted-foreground">
-        {productMessages.photosHint}
+        {copy.hint}
       </p>
       {photos.length > 0 && (
         <ul className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-3">
@@ -85,7 +101,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
                 unoptimized
                 className="object-cover"
               />
-              {index === 0 && (
+              {index === 0 && max > 1 && (
                 <Badge variant="primary" size="sm" className="absolute bottom-1.5 left-1.5">
                   {productMessages.cover}
                 </Badge>
@@ -109,10 +125,10 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
         ref={input}
         type="file"
         accept="image/*"
-        multiple
+        multiple={max > 1}
         hidden
         aria-describedby={hintId}
-        aria-label={productMessages.addPhotos}
+        aria-label={copy.add}
         onChange={onPick}
       />
       <Button
@@ -120,11 +136,11 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
         type="button"
         variant="outline"
         className="mt-3"
-        disabled={progress !== null || photos.length >= MAX_PHOTOS}
+        disabled={progress !== null || photos.length >= max}
         onClick={() => input.current?.click()}
       >
         <ImagePlus aria-hidden />
-        {productMessages.addPhotos}
+        {copy.add}
       </Button>
       <p aria-live="polite" className="mt-2 text-body-sm text-muted-foreground empty:hidden">
         {progress ? productMessages.addingPhotos(progress.done, progress.total) : ""}

@@ -76,8 +76,8 @@ describe("SiteHeader", () => {
     localStorage.setItem(
       CART_STORAGE_KEY,
       JSON.stringify([
-        { id: "shirt", name: "Shirt", price: 50, qty: 2 },
-        { id: "duvet", name: "Duvet", price: 400, qty: 1 },
+        { id: "basket-small", name: "Small basket", price: 50, qty: 2 },
+        { id: "duvet-6x6", name: "Duvet", price: 400, qty: 1 },
       ]),
     );
     renderHeader();

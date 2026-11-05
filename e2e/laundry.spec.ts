@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { priceGroups } from "../src/features/laundry/data";
+import { itemsIn, laundryCategories } from "../src/features/laundry/data";
 import { addLaundryItem, device, phone, whatsappMessage } from "./helpers";
 
 /*
@@ -41,10 +41,10 @@ for (const vp of [
     test("lists every price in a staggered bento", async ({ page }) => {
       await page.goto("/laundry");
       const prices = page.locator("#prices");
-      for (const g of priceGroups) {
-        await expect(prices.getByRole("heading", { name: g.title })).toBeVisible();
-        for (const item of g.items) {
-          await expect(prices.getByText(item.label, { exact: true }).first()).toBeAttached();
+      for (const c of laundryCategories) {
+        await expect(prices.getByRole("heading", { name: c.title })).toBeVisible();
+        for (const item of itemsIn(c.id)) {
+          await expect(prices.getByText(item.name, { exact: true }).first()).toBeAttached();
         }
       }
 

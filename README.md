@@ -113,6 +113,8 @@ Two things read the database on the server instead, through cached functions (se
 
 `/admin/settings`: everyone sets their own name. Owners also change delivery, phone and hours (one row in `shop_settings`) and add or remove staff. A save shows on the site at once, in the page, the footer and the search data alike; `src/config/shop-settings.ts` is only the fallback if the database is unreachable.
 
+`/admin/laundry`: owners change prices, and add, edit or remove laundry items, including their photos; other staff can only look. Each category keeps at least one item. A save shows on the site at once, and a page left open catches up when someone returns to it, or within 5 minutes.
+
 Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's on `dev` and production. Put Cloudflare in front of the photos before real traffic, because Neon has no CDN. Grids load a ~480px thumbnail of each photo to spare the transfer limit; photos uploaded before thumbnails existed fall back to the full photo.
 
 ### Auth

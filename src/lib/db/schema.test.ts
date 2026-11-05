@@ -80,6 +80,7 @@ describe("migration", () => {
     );
     expect(rows.map((r) => r.table_name).toSorted()).toEqual([
       "admin_user",
+      "laundry_item",
       "product",
       "shop_settings",
     ]);
@@ -96,6 +97,7 @@ describe("migration", () => {
   it("rolls back every migration and applies them again", async () => {
     await addAdmin({ role: "owner" });
 
+    await applyRollback(t.client, "0005_laundry_items");
     await applyRollback(t.client, "0004_shop_settings");
     await applyRollback(t.client, "0003_remove_kids_category");
     await applyRollback(t.client, "0002_products");

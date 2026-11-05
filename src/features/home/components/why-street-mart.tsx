@@ -6,12 +6,11 @@ import { DeliveryLocationIllustration } from "@/components/illustrations/deliver
 import { MobilePaymentsIllustration } from "@/components/illustrations/mobile-payments";
 import { TextMessagesIllustration } from "@/components/illustrations/text-messages";
 import { MediaCard } from "@/components/shared/media-card";
-import { Price } from "@/components/shared/price";
 import { Section } from "@/components/shared/section";
 import { StaggerGrid } from "@/components/shared/stagger-grid";
 import { Button } from "@/components/ui/button";
 import { homeImages } from "@/features/home/data";
-import { basketFrom } from "@/features/laundry/data";
+import { BasketFrom } from "@/features/laundry/laundry-items-provider";
 import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
@@ -109,7 +108,7 @@ export function WhyStreetMart() {
         >
           <p>
             Cash or M-Pesa on delivery. Baskets from{" "}
-            <Price amount={basketFrom} size="sm" className="text-foreground" />.
+            <BasketFrom size="sm" className="text-foreground" />.
           </p>
         </MediaCard>
 
