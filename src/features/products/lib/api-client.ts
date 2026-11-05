@@ -21,8 +21,10 @@ export function deleteProduct(id: string): Promise<Result<void>> {
   return call(`${BASE}/${id}`, { method: "DELETE" });
 }
 
-export function uploadPhoto(photo: Blob): Promise<Result<Photo>> {
+/** Sends a photo with its thumbnail, in one request. */
+export function uploadPhoto(photo: Blob, thumbnail: Blob): Promise<Result<Photo>> {
   const body = new FormData();
   body.set("file", photo);
+  body.set("thumbnail", thumbnail);
   return call(`${BASE}/images`, { method: "POST", body });
 }

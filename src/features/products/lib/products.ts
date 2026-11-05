@@ -5,6 +5,7 @@ import { product, productCategories, type ProductRow } from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
 import { AppError } from "@/lib/errors";
 
+import { thumbnailKey } from "./image-keys";
 import { priceBands, type PublicProduct, type PublicProductPage } from "../public";
 import type {
   CreateProductInput,
@@ -71,9 +72,13 @@ export async function updateProduct(
   return toProduct(row);
 }
 
-export async function deleteProduct(db: Db, id: string): Promise<void> {
-  const rows = await db.delete(product).where(eq(product.id, id)).returning({ id: product.id });
-  if (rows.length === 0) throw notFound();
+/** Answers the photo keys it had, so the caller can remove them from storage. */
+export async function deleteProduct(db: Db, id: string): Promise<string[]> {
+  const rows = await db.delete(product).where(eq(product.id, id)).returning({
+    images: product.images,
+  });
+  if (!rows[0]) throw notFound();
+  return rows[0].images;
 }
 
 /** Builds a photo's public address. Passed in so this file needs no storage config. */
@@ -92,6 +97,7 @@ function toPublicProduct(row: ProductRow, photoUrl: PhotoUrl): PublicProduct {
     stock,
     note,
     photos: images.map(photoUrl),
+    thumbnail: images[0] ? photoUrl(thumbnailKey(images[0])) : null,
   };
 }
 

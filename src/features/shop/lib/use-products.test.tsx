@@ -15,6 +15,7 @@ const item = (code: string): PublicProduct => ({
   sizes: [],
   stock: 1,
   photos: [],
+  thumbnail: null,
   note: null,
 });
 

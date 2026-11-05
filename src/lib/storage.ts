@@ -31,18 +31,22 @@ export function productImageUrl(key: string): string {
   return objectUrl(key);
 }
 
-export async function putObject(
-  key: string,
-  body: Uint8Array<ArrayBuffer>,
-  contentType: string,
-): Promise<void> {
+function signer(): AwsClient {
   const env = storageEnv();
-  const client = new AwsClient({
+  return new AwsClient({
     accessKeyId: env.AWS_ACCESS_KEY_ID,
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
     region: env.AWS_REGION,
     service: "s3",
   });
+}
+
+export async function putObject(
+  key: string,
+  body: Uint8Array<ArrayBuffer>,
+  contentType: string,
+): Promise<void> {
+  const client = signer();
   const request = {
     method: "PUT",
     headers: {
@@ -57,4 +61,12 @@ export async function putObject(
   const signed = await client.sign(objectUrl(key), request);
   const response = await fetch(signed.url, { ...request, headers: signed.headers });
   if (!response.ok) throw new StorageError(response.status);
+}
+
+/** Removes one object. A key that isn't there counts as removed. */
+export async function deleteObject(key: string): Promise<void> {
+  const request = { method: "DELETE" };
+  const signed = await signer().sign(objectUrl(key), request);
+  const response = await fetch(signed.url, { ...request, headers: signed.headers });
+  if (!response.ok && response.status !== 404) throw new StorageError(response.status);
 }

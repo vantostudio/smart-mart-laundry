@@ -56,6 +56,9 @@ export function ProductList({ result, view, photoUrl }: Props) {
           </Link>
         </Button>
       </div>
+      <p className="mt-4 rounded-2xl bg-secondary px-4 py-3 text-body-sm text-secondary-foreground">
+        {productMessages.stockReminder}
+      </p>
       <ProductFilters {...view} />
       {items.length === 0 ? (
         <Empty result={result} view={view} />

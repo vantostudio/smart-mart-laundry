@@ -37,14 +37,14 @@ export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) 
     onBusyChange(true);
     for (const [index, file] of chosen.entries()) {
       setProgress({ done: index + 1, total: chosen.length });
-      let shrunk: Blob;
+      let shrunk: Awaited<ReturnType<typeof shrinkImage>>;
       try {
         shrunk = await shrinkImage(file);
       } catch {
         setFailure({ message: productMessages.photoUnreadable });
         continue;
       }
-      const result = await uploadPhoto(shrunk);
+      const result = await uploadPhoto(shrunk.photo, shrunk.thumbnail);
       if (result.ok) onChange((current) => [...current, result.data]);
       else setFailure(problemFrom(result.error));
     }

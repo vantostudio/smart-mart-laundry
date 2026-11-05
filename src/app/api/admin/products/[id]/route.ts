@@ -1,4 +1,5 @@
 import { apiMessages } from "@/features/admin/messages";
+import { removePhotos } from "@/features/products/lib/photos";
 import { deleteProduct, getProduct, updateProduct } from "@/features/products/lib/products";
 import { productId, updateProductInput } from "@/features/products/schema";
 import { adminRoute, parseBody } from "@/lib/api";
@@ -23,10 +24,19 @@ export const GET = adminRoute<Context>(async ({ context }) =>
 export const PATCH = adminRoute<Context>(async ({ request, context }) => {
   const id = await idFrom(context);
   const patch = await parseBody(request, updateProductInput);
-  return Response.json(await updateProduct(getDb(), id, patch));
+  const db = getDb();
+  // Only a patch that sets `images` can drop a photo, so only then is the old list needed.
+  const before = patch.images ? (await getProduct(db, id)).images : [];
+  const updated = await updateProduct(db, id, patch);
+  await removePhotos(
+    db,
+    before.filter((key) => !updated.images.includes(key)),
+  );
+  return Response.json(updated);
 });
 
 export const DELETE = adminRoute<Context>(async ({ context }) => {
-  await deleteProduct(getDb(), await idFrom(context));
+  const db = getDb();
+  await removePhotos(db, await deleteProduct(db, await idFrom(context)));
   return new Response(null, { status: 204 });
 });

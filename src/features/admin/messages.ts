@@ -46,6 +46,7 @@ export const apiMessages = {
 /** Copy for the products screens. */
 export const productMessages = {
   heading: "Products",
+  stockReminder: "Sold something? Lower its stock or delete it here, so the shop stays correct.",
   add: "Add product",
   addHeading: "Add a product",
   editHeading: "Edit product",

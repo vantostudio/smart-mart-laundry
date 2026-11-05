@@ -48,6 +48,15 @@ describe("ProductList", () => {
     expect(card.querySelector("img")).toHaveAttribute("src", "https://photos.test/products/a.webp");
   });
 
+  it("reminds staff to lower stock or delete what sold", () => {
+    show([product]);
+    expect(
+      screen.getByText(
+        "Sold something? Lower its stock or delete it here, so the shop stays correct.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("says when a product is out of stock or has no photo", () => {
     show([{ ...product, stock: 0, images: [] }]);
     expect(screen.getByText("Out of stock")).toBeInTheDocument();

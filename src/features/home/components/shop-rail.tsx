@@ -64,7 +64,8 @@ export function ShopRail() {
                   >
                     <div className="relative aspect-4/5 overflow-hidden rounded-3xl bg-muted">
                       <ProductPhoto
-                        src={p.photos[0]}
+                        src={p.thumbnail}
+                        fallback={p.photos[0]}
                         priority={i < 3}
                         sizes="(min-width: 1024px) 17vw, (min-width: 640px) 23vw, 40vw"
                         className="transition-transform duration-700 ease-out-expo group-hover:scale-105"

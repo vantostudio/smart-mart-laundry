@@ -48,7 +48,8 @@ export function ProductCard({ product: p, inBag, onOpen, onQuickAdd, priority }:
       />
       <div className="pointer-events-none relative aspect-4/5 overflow-hidden rounded-3xl bg-muted">
         <ProductPhoto
-          src={p.photos[0]}
+          src={p.thumbnail}
+          fallback={p.photos[0]}
           priority={priority}
           sizes="(min-width: 1152px) 270px, (min-width: 1024px) 23vw, (min-width: 640px) 31vw, 46vw"
           className="transition-transform duration-700 ease-out-expo group-hover:scale-105"

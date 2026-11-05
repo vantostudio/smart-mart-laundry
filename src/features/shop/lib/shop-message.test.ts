@@ -15,6 +15,7 @@ const product = (values: Partial<PublicProduct>): PublicProduct => ({
   sizes: ["M"],
   stock: 1,
   photos: [],
+  thumbnail: null,
   note: null,
   ...values,
 });
@@ -88,8 +89,9 @@ describe("bagLine", () => {
     expect(bagLineId(tote, null)).toBe("SM-1009:");
   });
 
-  it("keeps the main photo, or null when there is none", () => {
-    expect(bagLine(product({ photos: ["a.webp", "b.webp"] }), "M").photo).toBe("a.webp");
-    expect(bagLine(jacket, "M").photo).toBeNull();
+  it("keeps the thumbnail and the full photo, or null when there is none", () => {
+    const line = bagLine(product({ photos: ["a.webp", "b.webp"], thumbnail: "a-thumb" }), "M");
+    expect(line).toMatchObject({ photo: "a-thumb", fullPhoto: "a.webp" });
+    expect(bagLine(jacket, "M")).toMatchObject({ photo: null, fullPhoto: null });
   });
 });

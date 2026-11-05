@@ -57,11 +57,13 @@ describe("deleteProduct", () => {
 });
 
 describe("uploadPhoto", () => {
-  it("posts the photo as a form", async () => {
+  it("posts the photo and its thumbnail as a form", async () => {
     fetchMock.mockResolvedValue(Response.json({ key: "k", url: "u" }, { status: 201 }));
-    await uploadPhoto(new Blob(["x"]));
+    await uploadPhoto(new Blob(["x"]), new Blob(["y"]));
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/admin/products/images");
-    expect(fetchMock.mock.calls[0]?.[1]?.body).toBeInstanceOf(FormData);
+    const body = fetchMock.mock.calls[0]?.[1]?.body;
+    expect(body).toBeInstanceOf(FormData);
+    expect([...(body as FormData).keys()]).toEqual(["file", "thumbnail"]);
   });
 });
 

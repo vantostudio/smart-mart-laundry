@@ -6,9 +6,11 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/request-id", () => ({ getRequestId: async () => "req-1" }));
 vi.mock("@/features/admin/lib/auth", () => ({ requireAdminForAction: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDb: vi.fn() }));
+vi.mock("@/lib/storage", () => ({ deleteObject: vi.fn() }));
 
 const { requireAdminForAction } = await import("@/features/admin/lib/auth");
 const { getDb } = await import("@/lib/db");
+const { deleteObject } = await import("@/lib/storage");
 const collection = await import("./route");
 const single = await import("./[id]/route");
 
@@ -25,6 +27,8 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await t.client.exec("truncate product");
+  vi.mocked(deleteObject).mockReset();
+  vi.mocked(deleteObject).mockResolvedValue();
   vi.mocked(requireAdminForAction).mockResolvedValue({
     ok: true,
     admin: { adminId: "a", email: "a@example.com", name: null, role: "admin" },
@@ -114,5 +118,71 @@ describe("/api/admin/products", () => {
     });
     expect((await create()).res.status).toBe(401);
     expect((await t.client.query("select 1 from product")).rows).toEqual([]);
+  });
+});
+
+describe("photos in storage", () => {
+  const photo = (n: number) => `products/00000000-0000-4000-8000-00000000000${n}.webp`;
+  const removed = () =>
+    vi
+      .mocked(deleteObject)
+      .mock.calls.map(([key]) => key)
+      .sort();
+
+  it("deleting a product removes its photos and thumbnails", async () => {
+    const { body } = await create({ images: [photo(1), photo(2)] });
+    const res = await single.DELETE(send("DELETE", `${base}/${body.id}`), paramsFor(body.id));
+    expect(res.status).toBe(204);
+    expect(removed()).toEqual(
+      [
+        photo(1),
+        photo(2),
+        photo(1).replace(".webp", "-thumb"),
+        photo(2).replace(".webp", "-thumb"),
+      ].sort(),
+    );
+  });
+
+  it("editing removes only the photos that were dropped", async () => {
+    const { body } = await create({ images: [photo(1), photo(2), photo(3)] });
+    const url = `${base}/${body.id}`;
+    const res = await single.PATCH(
+      send("PATCH", url, { images: [photo(3), photo(1)] }),
+      paramsFor(body.id),
+    );
+    expect(res.status).toBe(200);
+    expect(removed()).toEqual([photo(2), photo(2).replace(".webp", "-thumb")].sort());
+  });
+
+  it("a change that doesn't touch the photos removes nothing", async () => {
+    const { body } = await create({ images: [photo(1)] });
+    await single.PATCH(send("PATCH", `${base}/${body.id}`, { price: 5 }), paramsFor(body.id));
+    expect(deleteObject).not.toHaveBeenCalled();
+  });
+
+  it("keeps a photo that another product still lists", async () => {
+    const { body } = await create({ images: [photo(1), photo(2)] });
+    await create({ images: [photo(1)] });
+    await single.DELETE(send("DELETE", `${base}/${body.id}`), paramsFor(body.id));
+    expect(removed()).toEqual([photo(2), photo(2).replace(".webp", "-thumb")].sort());
+  });
+
+  it("still succeeds, tries every key and logs only the status when storage fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.mocked(deleteObject).mockRejectedValue(
+      Object.assign(new Error("secret-value"), { name: "StorageError", code: "503" }),
+    );
+    const { body } = await create({ images: [photo(1), photo(2)] });
+    const res = await single.DELETE(send("DELETE", `${base}/${body.id}`), paramsFor(body.id));
+    expect(res.status).toBe(204);
+    expect(deleteObject).toHaveBeenCalledTimes(4);
+    expect((await single.GET(send("GET", `${base}/${body.id}`), paramsFor(body.id))).status).toBe(
+      404,
+    );
+    const logged = warn.mock.calls.map(([line]) => String(line)).join("\n");
+    expect(logged).toContain("503");
+    expect(logged).not.toContain("secret-value");
+    expect(logged).not.toContain("products/");
+    warn.mockRestore();
   });
 });
