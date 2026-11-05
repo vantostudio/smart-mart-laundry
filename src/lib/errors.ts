@@ -13,6 +13,7 @@ export const appErrorCodes = [
   "LAST_OWNER",
   "CANNOT_CHANGE_SELF",
   "AUTH_UNAVAILABLE",
+  "RATE_LIMITED",
   "INTERNAL",
 ] as const;
 

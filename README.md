@@ -25,6 +25,8 @@ up, on port 3210 by default:
 pnpm build && pnpm start -p 3210
 pnpm e2e
 
+# the API limits one client to about 120 reads a minute, and e2e is one client, so start the
+# server with RATE_LIMIT_OFF=1: RATE_LIMIT_OFF=1 pnpm start -p 3210
 # or against the dev server
 E2E_BASE_URL=http://localhost:3000 pnpm e2e
 ```
@@ -66,6 +68,12 @@ Provisioning, done once by a person. The `db:*` scripts exist; the `cf:*` script
    one we generate, not Neon: `openssl rand -base64 32`, a different value per environment. Copy
    the dev values into `.dev.vars` for local preview. Switch the live deploy to `pnpm cf:deploy`,
    or to Workers Builds on the repo with the same command.
+   Rate limiting: the API counts requests in each Worker instance's memory
+   (`src/lib/rate-limit.ts`), so every instance has its own count. That is a basic guard only. At
+   this step add a Cloudflare Rate Limiting binding named `API_RATE_LIMIT` in `wrangler.jsonc`
+   (`ratelimits`), implement `RateLimitStore` over it and pass it to `setRateLimitStore`; no route
+   changes. Also add a Cloudflare WAF rate-limiting rule on `/api/*` in front of the Worker.
+   Never set `RATE_LIMIT_OFF` there.
 5. After slice `db`: from a dev machine with the direct Neon URL, run `pnpm db:migrate` against
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
 6. After slice `admin-shell`: sign in on the preview Worker, then production. Landing on `/admin`

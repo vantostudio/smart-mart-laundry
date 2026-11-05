@@ -1,6 +1,11 @@
 /* Every message the public shop shows when something goes wrong or there's nothing to show. */
 
-export type LoadProblem = "offline" | "unavailable" | "not-found";
+export type LoadProblem = "offline" | "unavailable" | "busy" | "not-found";
+
+const busy = {
+  title: "That was a lot of requests",
+  body: "That was a lot of requests. Please wait a moment and try again.",
+};
 
 const offline = {
   title: "You're offline",
@@ -10,6 +15,7 @@ const offline = {
 export const shopMessages = {
   list: {
     offline,
+    busy,
     unavailable: {
       title: "We couldn't load the shop just now",
       body: "Please try again in a moment. You can also ask us on WhatsApp what's in stock.",
@@ -17,10 +23,12 @@ export const shopMessages = {
   },
   more: {
     offline: "You're offline. Check your connection, then try again.",
+    busy: "That was a lot of requests. Please wait a moment and try again.",
     unavailable: "We couldn't load more items. Please try again.",
   },
   item: {
     offline,
+    busy,
     unavailable: {
       title: "We couldn't load this item",
       body: "Please try again in a moment.",

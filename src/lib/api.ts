@@ -4,10 +4,11 @@ import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { requireAdminForAction, type AdminContext } from "@/features/admin/lib/auth";
-import { actionRefusalMessages, apiMessages } from "@/features/admin/messages";
+import { actionRefusalMessages, apiMessages, errorMessages } from "@/features/admin/messages";
 import { driverFailure } from "@/lib/db/errors";
 import { AppError, toErrorShape, type AppErrorCode, type AppErrorShape } from "@/lib/errors";
 import { log } from "@/lib/log";
+import { clientIdFrom, rateLimit, type LimitGroup } from "@/lib/rate-limit";
 import { getRequestId } from "@/lib/request-id";
 
 /*
@@ -24,6 +25,7 @@ const statusFor: Record<AppErrorCode, number> = {
   ALREADY_EXISTS: 409,
   LAST_OWNER: 409,
   CANNOT_CHANGE_SELF: 409,
+  RATE_LIMITED: 429,
   AUTH_UNAVAILABLE: 503,
   INTERNAL: 500,
 };
@@ -32,6 +34,32 @@ const readMethods = new Set(["GET", "HEAD"]);
 
 function errorResponse(error: AppErrorShape): Response {
   return Response.json({ error }, { status: statusFor[error.code] });
+}
+
+/**
+ * Counts the request against `group` and, over the limit, answers 429 with `Retry-After`. Never
+ * cached, and the log line names the route and group, never the client.
+ */
+async function limitedResponse(
+  request: Request,
+  group: LimitGroup,
+  key: string,
+  body: (requestId: string) => { error: Record<string, unknown> },
+  adminId?: string,
+): Promise<Response | null> {
+  const result = await rateLimit(key, group);
+  if (result.allowed) return null;
+  const requestId = await getRequestId();
+  log.warn("rate_limited", {
+    requestId,
+    ...(adminId === undefined ? {} : { adminId }),
+    route: new URL(request.url).pathname,
+    group,
+  });
+  return Response.json(body(requestId), {
+    status: statusFor.RATE_LIMITED,
+    headers: { "Retry-After": String(result.retryAfterSeconds), "Cache-Control": "no-store" },
+  });
 }
 
 /** Short enough that a sold-out item leaves the shop quickly; long enough to let Neon sleep. */
@@ -56,23 +84,44 @@ export type AdminRequest<Context> = { request: Request; context: Context; admin:
 
 /**
  * Wraps a handler. Responses are never cached, because they depend on who is asking. Pass
- * `{ role: "owner" }` for what only an owner may do.
+ * `{ role: "owner" }` for what only an owner may do, `{ limit: "upload" }` for the tighter photo
+ * limit. Requests are counted by IP before any auth work, then by signed-in person.
  */
 export function adminRoute<Context>(
   handler: (args: AdminRequest<Context>) => Promise<Response>,
-  options?: { role: "owner" },
+  options?: { role?: "owner"; limit?: "upload" },
 ): (request: Request, context: Context) => Promise<Response> {
   return async (request, context) => {
     const requestId = await getRequestId();
     let response: Response;
+    const tooMany = (requestId: string) => ({
+      error: { code: "RATE_LIMITED", message: errorMessages.RATE_LIMITED, requestId },
+    });
     try {
       if (!readMethods.has(request.method) && !isSameOrigin(request)) {
         throw new AppError("FORBIDDEN", actionRefusalMessages.FORBIDDEN);
       }
+      const gated = await limitedResponse(
+        request,
+        "adminGate",
+        clientIdFrom(request.headers),
+        tooMany,
+      );
+      if (gated) return gated;
       const access = await requireAdminForAction(options);
-      response = access.ok
-        ? await handler({ request, context, admin: access.admin })
-        : errorResponse(access.error);
+      if (!access.ok) {
+        response = errorResponse(access.error);
+      } else {
+        const group = options?.limit ?? (readMethods.has(request.method) ? "adminRead" : "write");
+        const limited = await limitedResponse(
+          request,
+          group,
+          `admin:${access.admin.adminId}`,
+          tooMany,
+          access.admin.adminId,
+        );
+        response = limited ?? (await handler({ request, context, admin: access.admin }));
+      }
     } catch (err) {
       unstable_rethrow(err);
       if (!(err instanceof AppError)) {
@@ -93,9 +142,17 @@ const expectedPublicErrors = new Set<AppErrorCode>(["VALIDATION", "NOT_FOUND"]);
  */
 export function publicRoute<Context>(
   handler: (args: { request: Request; context: Context }) => Promise<Response>,
+  options?: { limit?: "settings" },
 ): (request: Request, context: Context) => Promise<Response> {
   return async (request, context) => {
     try {
+      const limited = await limitedResponse(
+        request,
+        options?.limit ?? "read",
+        clientIdFrom(request.headers),
+        (requestId) => ({ error: { code: "RATE_LIMITED", requestId } }),
+      );
+      if (limited) return limited;
       const response = await handler({ request, context });
       response.headers.set("Cache-Control", publicCache);
       return response;

@@ -58,8 +58,8 @@ const conditionOptions = [
 
 type Params = Pick<URLSearchParams, "get"> | null;
 
-/** A list has no single item to be missing, so anything but offline reads as unavailable. */
-const listProblem = (problem: LoadProblem) => (problem === "offline" ? "offline" : "unavailable");
+/** A list has no single item to be missing, so "not found" reads as unavailable. */
+const listProblem = (problem: LoadProblem) => (problem === "not-found" ? "unavailable" : problem);
 
 /** Reads search, filters and the open item from the URL. Must sit inside <Suspense>. */
 export function ShopCatalogueFromUrl() {

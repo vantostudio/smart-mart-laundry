@@ -16,13 +16,16 @@ async function photoFrom(request: Request): Promise<File> {
 }
 
 /** Stores one photo under a key we choose, and answers the key to save on the product. */
-export const POST = adminRoute(async ({ request }) => {
-  const file = await photoFrom(request);
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const type = imageTypeOf(bytes);
-  if (!type) throw new AppError("VALIDATION", apiMessages.photoInvalid);
+export const POST = adminRoute(
+  async ({ request }) => {
+    const file = await photoFrom(request);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const type = imageTypeOf(bytes);
+    if (!type) throw new AppError("VALIDATION", apiMessages.photoInvalid);
 
-  const key = `products/${crypto.randomUUID()}.${type.extension}`;
-  await putObject(key, bytes, type.contentType);
-  return Response.json({ key, url: productImageUrl(key) }, { status: 201 });
-});
+    const key = `products/${crypto.randomUUID()}.${type.extension}`;
+    await putObject(key, bytes, type.contentType);
+    return Response.json({ key, url: productImageUrl(key) }, { status: 201 });
+  },
+  { limit: "upload" },
+);

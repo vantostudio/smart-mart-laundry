@@ -14,6 +14,7 @@ async function read<T>(url: string, signal: AbortSignal): Promise<Result<T>> {
     // showing something that just sold, so it always asks.
     const response = await fetch(url, { signal, cache: "no-cache" });
     if (response.status === 404) return { ok: false, problem: "not-found" };
+    if (response.status === 429) return { ok: false, problem: "busy" };
     if (!response.ok) return { ok: false, problem: "unavailable" };
     return { ok: true, data: (await response.json()) as T };
   } catch {

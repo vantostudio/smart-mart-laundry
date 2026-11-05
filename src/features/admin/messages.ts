@@ -15,6 +15,7 @@ export const errorMessages = {
   ALREADY_EXISTS: "That email is already on the team.",
   LAST_OWNER: "There must always be at least one owner. Make someone else an owner first.",
   CANNOT_CHANGE_SELF: "You can't change your own access. Ask another owner.",
+  RATE_LIMITED: "That was a lot of requests. Please wait a moment and try again.",
   INTERNAL: (requestId: string) =>
     `That didn't save. Please try again. If it keeps happening, tell the owner and quote code ${requestId}.`,
 } as const satisfies Record<
