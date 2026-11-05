@@ -36,6 +36,8 @@ export async function SignInPanel({
   const { unavailable } = await checkSignedIn();
   const message =
     signInReasonMessage(reason) ?? (unavailable ? errorMessages.AUTH_UNAVAILABLE : null);
+  // Mid-outage a real admin isn't redirected above, so a crafted link must not sign them out.
+  const signOutStale = reason === "FORBIDDEN" && !unavailable;
 
   return (
     <section aria-labelledby="sign-in-heading" className={cardClass}>
@@ -45,7 +47,7 @@ export async function SignInPanel({
       <p className="mt-2 text-body-sm text-muted-foreground">
         For the Street Mart team. Use the Google account the owner added.
       </p>
-      <GoogleSignIn message={message} signOutStale={reason === "FORBIDDEN"} />
+      <GoogleSignIn message={message} signOutStale={signOutStale} />
     </section>
   );
 }
