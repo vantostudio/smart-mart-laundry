@@ -12,11 +12,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ProblemText } from "@/features/admin/components/problem-text";
+import { problemFrom, type Problem } from "@/features/admin/lib/api-call";
 import { productMessages } from "@/features/admin/messages";
 
-import { deleteProduct, problemFrom, type Problem } from "../lib/api-client";
+import { deleteProduct } from "../lib/api-client";
 import { productsHref } from "../lib/links";
-import { ProblemText } from "./problem-text";
 
 /** Asks first, naming the product. Stays open on failure so the message can be read. */
 export function DeleteProduct({ id, name }: { id: string; name: string }) {

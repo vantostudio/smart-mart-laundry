@@ -1,16 +1,13 @@
-import type { Route } from "next";
 import Link from "next/link";
 
 import { Wordmark } from "@/components/shared/wordmark";
 import { Button } from "@/components/ui/button";
 import type { AdminContext } from "@/features/admin/lib/auth";
-import { productMessages } from "@/features/admin/messages";
+import { productMessages, roleLabels, settingsMessages } from "@/features/admin/messages";
 
 import { SignOutButton } from "./sign-out-button";
 
-const roleLabels: Record<AdminContext["role"], string> = { owner: "Owner", admin: "Admin" };
-
-/** Who is signed in, from our `admin_user` row. The Team link is display only. */
+/** Who is signed in, by name and role. The email stays on the server. */
 export function AdminHeader({ admin }: { admin: AdminContext }) {
   return (
     <header className="border-b border-border bg-card">
@@ -18,18 +15,15 @@ export function AdminHeader({ admin }: { admin: AdminContext }) {
         <Wordmark />
         <div className="order-last flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-2 lg:order-none lg:ml-auto lg:w-auto">
           <p className="mr-auto min-w-0 text-body-sm lg:mr-2">
-            <span className="font-semibold break-all">{admin.name ?? admin.email}</span>
-            <span className="text-muted-foreground"> · {roleLabels[admin.role]}</span>
+            {admin.name && <span className="font-semibold wrap-anywhere">{admin.name} · </span>}
+            <span className="text-muted-foreground">{roleLabels[admin.role]}</span>
           </p>
           <Button asChild variant="ghost" className="px-3">
             <Link href="/admin/products">{productMessages.heading}</Link>
           </Button>
-          {admin.role === "owner" && (
-            <Button asChild variant="ghost" className="px-3">
-              {/* The page arrives with the team slice. */}
-              <Link href={"/admin/team" as Route}>Team</Link>
-            </Button>
-          )}
+          <Button asChild variant="ghost" className="px-3">
+            <Link href="/admin/settings">{settingsMessages.heading}</Link>
+          </Button>
         </div>
         <SignOutButton />
       </div>

@@ -56,6 +56,7 @@ for (const vp of viewports) {
 
     for (const { path, h1, h2 } of pages) {
       test(path, async ({ page }) => {
+        await mockShopApi(page);
         await page.goto(path);
         await settle(page);
         const expected = scale[deviceClass(vp.width)];

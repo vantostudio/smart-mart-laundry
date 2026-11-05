@@ -44,7 +44,7 @@ export function openingHoursOf(s: ShopSettings): OpeningHours {
 }
 
 /** 7 → "7:00 AM". */
-const longTime = (hour: number) => formatTime(clock(hour)).replace(" ", ":00 ");
+export const longTime = (hour: number) => formatTime(clock(hour)).replace(" ", ":00 ");
 
 /** Opening hours as people read them. */
 export function hoursRows(s: ShopSettings) {

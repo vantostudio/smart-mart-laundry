@@ -6,12 +6,13 @@ import { useId, useRef, useState, type ChangeEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ProblemText } from "@/features/admin/components/problem-text";
+import { problemFrom, type Problem } from "@/features/admin/lib/api-call";
 import { productMessages } from "@/features/admin/messages";
 
-import { problemFrom, uploadPhoto, type Photo, type Problem } from "../lib/api-client";
+import { uploadPhoto, type Photo } from "../lib/api-client";
 import { shrinkImage } from "../lib/shrink-image";
 import { MAX_PHOTOS } from "../limits";
-import { ProblemText } from "./problem-text";
 
 type Props = {
   photos: Photo[];

@@ -39,24 +39,29 @@ describe("AdminHeader", () => {
     );
   });
 
-  it("shows an owner their name, role and the Team link", () => {
+  it("links every admin to Settings, and no longer to a Team page", () => {
     render(<AdminHeader admin={owner} />);
-    expect(screen.getByText("Mo Kamau")).toBeInTheDocument();
-    expect(screen.getByText(/Owner/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Team" })).toHaveAttribute("href", "/admin/team");
-    expect(screen.getByRole("link", { name: "Street Mart home" })).toBeInTheDocument();
-  });
-
-  it("shows an admin their role and no Team link", () => {
-    render(<AdminHeader admin={admin} />);
-    expect(screen.getByText(/Admin/)).toBeInTheDocument();
-    expect(screen.queryByText(/Owner/)).toBeNull();
+    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute(
+      "href",
+      "/admin/settings",
+    );
     expect(screen.queryByRole("link", { name: "Team" })).toBeNull();
   });
 
-  it("falls back to the email when there is no name", () => {
-    render(<AdminHeader admin={{ ...admin, name: null }} />);
-    expect(screen.getByText("mo@example.com")).toBeInTheDocument();
+  it("shows a name and role", () => {
+    render(<AdminHeader admin={owner} />);
+    expect(screen.getByText(/Mo Kamau/)).toBeInTheDocument();
+    expect(screen.getByText("Owner")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Street Mart home" })).toBeInTheDocument();
+  });
+
+  it("never shows an email, with a name or without one", () => {
+    const { container, rerender } = render(<AdminHeader admin={owner} />);
+    expect(container.textContent).not.toContain("@");
+
+    rerender(<AdminHeader admin={{ ...admin, name: null }} />);
+    expect(container.textContent).not.toContain("@");
+    expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
   it("signs out, stays busy and goes to sign-in", async () => {

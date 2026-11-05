@@ -1,68 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FormField } from "@/features/admin/components/form-field";
+import { ProblemText } from "@/features/admin/components/problem-text";
+import { problemFrom, type Problem } from "@/features/admin/lib/api-call";
 import { productMessages } from "@/features/admin/messages";
 import type { ProductCategory, ProductCondition } from "@/lib/db/schema";
 
 import { categoryLabels, conditionLabels, optionsOf } from "../labels";
-import {
-  problemFrom,
-  saveProduct,
-  type Photo,
-  type Problem,
-  type ProductDraft,
-} from "../lib/api-client";
+import { saveProduct, type Photo, type ProductDraft } from "../lib/api-client";
 import { productsHref } from "../lib/links";
 import type { Product } from "../lib/products";
 import { keepSizes } from "../sizes";
 import { PhotoPicker } from "./photo-picker";
-import { ProblemText } from "./problem-text";
 import { SizePicker } from "./size-picker";
 
 const FIELDS = ["name", "condition", "category", "price", "stock", "sizes", "images", "note"];
-
-function Field({
-  name,
-  label,
-  htmlFor,
-  hint,
-  error,
-  children,
-}: {
-  name: string;
-  label: string;
-  htmlFor?: string;
-  hint?: string;
-  error?: string | undefined;
-  children: ReactNode;
-}) {
-  return (
-    <div data-field={name}>
-      {htmlFor ? (
-        <label htmlFor={htmlFor} className="text-body-sm font-semibold">
-          {label}
-        </label>
-      ) : (
-        <p className="text-body-sm font-semibold">{label}</p>
-      )}
-      <div className="mt-1.5">{children}</div>
-      <div id={htmlFor && `${htmlFor}-help`}>
-        {hint && <p className="mt-1 text-caption text-muted-foreground">{hint}</p>}
-        {error && (
-          <p role="alert" className="mt-1 text-body-sm text-destructive">
-            {error}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 type Props = { product?: Product; photos?: Photo[] };
 
@@ -135,7 +94,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
       className="mt-6 space-y-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start lg:gap-6 lg:space-y-0"
     >
       <div className="space-y-6 rounded-3xl bg-card p-4 shadow-card sm:p-6">
-        <Field
+        <FormField
           name="name"
           label={productMessages.name}
           htmlFor={`${id}-name`}
@@ -150,9 +109,9 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
             aria-describedby={`${id}-name-help`}
             onChange={(event) => setName(event.target.value)}
           />
-        </Field>
+        </FormField>
 
-        <Field name="condition" label={productMessages.condition} error={errorFor("condition")}>
+        <FormField name="condition" label={productMessages.condition} error={errorFor("condition")}>
           <ChoiceChips
             label={productMessages.condition}
             options={optionsOf(conditionLabels)}
@@ -160,9 +119,9 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
             onChange={setCondition}
             aria-invalid={errorFor("condition") !== undefined}
           />
-        </Field>
+        </FormField>
 
-        <Field name="category" label={productMessages.category} error={errorFor("category")}>
+        <FormField name="category" label={productMessages.category} error={errorFor("category")}>
           <ChoiceChips
             label={productMessages.category}
             options={optionsOf(categoryLabels)}
@@ -171,19 +130,19 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
             className="sm:grid-cols-4"
             aria-invalid={errorFor("category") !== undefined}
           />
-        </Field>
+        </FormField>
 
-        <Field
+        <FormField
           name="sizes"
           label={productMessages.sizes}
           hint={category ? productMessages.sizesHint : undefined}
           error={errorFor("sizes")}
         >
           <SizePicker category={category} sizes={sizes} onChange={setSizes} />
-        </Field>
+        </FormField>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field
+          <FormField
             name="price"
             label={productMessages.price}
             htmlFor={`${id}-price`}
@@ -201,8 +160,8 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
               aria-describedby={`${id}-price-help`}
               onChange={(event) => setPrice(event.target.value)}
             />
-          </Field>
-          <Field
+          </FormField>
+          <FormField
             name="stock"
             label={productMessages.stock}
             htmlFor={`${id}-stock`}
@@ -220,7 +179,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
               aria-describedby={`${id}-stock-help`}
               onChange={(event) => setStock(event.target.value)}
             />
-          </Field>
+          </FormField>
         </div>
       </div>
 
@@ -233,7 +192,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
             problem={failure?.field === "images" ? failure : undefined}
           />
 
-          <Field
+          <FormField
             name="note"
             label={productMessages.note}
             htmlFor={`${id}-note`}
@@ -249,7 +208,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
               aria-describedby={`${id}-note-help`}
               onChange={(event) => setNote(event.target.value)}
             />
-          </Field>
+          </FormField>
         </div>
 
         {general && <ProblemText problem={general} />}

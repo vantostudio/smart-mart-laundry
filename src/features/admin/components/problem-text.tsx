@@ -1,7 +1,6 @@
+import type { Problem } from "@/features/admin/lib/api-call";
 import { productMessages } from "@/features/admin/messages";
 import { cn } from "@/lib/utils";
-
-import type { Problem } from "../lib/api-client";
 
 /** A failure, announced as it appears. Sign-in opens a new tab, so unsaved work stays here. */
 export function ProblemText({ problem, className }: { problem: Problem; className?: string }) {

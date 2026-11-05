@@ -117,7 +117,7 @@ test("robots.txt keeps crawlers out of /admin and /api/", async ({ request }) =>
   expect(text).toContain("Sitemap:");
 });
 
-for (const path of ["/admin/sign-in", "/admin"]) {
+for (const path of ["/admin/sign-in", "/admin", "/admin/settings"]) {
   test(`GET ${path} can't be framed or cached`, async ({ request }) => {
     const response = await request.get(path, { maxRedirects: 0 });
     const headers = response.headers();

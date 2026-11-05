@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { deleteProduct, problemFrom, saveProduct, uploadPhoto } from "./api-client";
+import { problemFrom } from "@/features/admin/lib/api-call";
+
+import { deleteProduct, saveProduct, uploadPhoto } from "./api-client";
 
 const fetchMock = vi.fn<typeof fetch>();
 const draft = { name: "Dress", category: "ladies", condition: "new", price: 1, stock: 1 } as const;
