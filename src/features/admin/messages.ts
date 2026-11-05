@@ -38,6 +38,8 @@ export const apiMessages = {
   invalidInput: "Check this and try again.",
   invalidJson: "That request couldn't be read.",
   productNotFound: "That product doesn't exist.",
+  photoInvalid: "That file isn't a photo. Use a JPEG, PNG or WebP.",
+  photoTooBig: "That photo is too big. Try a smaller one.",
 } as const;
 
 export const signInMessages = {

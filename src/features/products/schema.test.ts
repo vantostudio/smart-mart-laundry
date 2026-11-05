@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { createProductInput, listProductsInput, updateProductInput } from "./schema";
 
+const photo = "products/00000000-0000-4000-8000-000000000000.webp";
 const valid = { name: "Linen dress", category: "ladies", condition: "new", price: 800, stock: 1 };
 
 describe("createProductInput", () => {
@@ -21,9 +22,17 @@ describe("createProductInput", () => {
     ["negative stock", { stock: -1 }],
     ["an empty name", { name: "   " }],
     ["a NUL byte", { name: "a\0b" }],
-    ["too many images", { images: Array.from({ length: 11 }, () => "a") }],
+    ["too many photos", { images: Array.from({ length: 7 }, () => photo) }],
+    ["a link for a photo", { images: ["https://evil.test/a.webp"] }],
+    ["a key outside products", { images: ["other/00000000-0000-4000-8000-000000000000.webp"] }],
   ])("refuses %s", (_label, change) => {
     expect(createProductInput.safeParse({ ...valid, ...change }).success).toBe(false);
+  });
+});
+
+describe("photos", () => {
+  it("takes keys our upload made", () => {
+    expect(createProductInput.parse({ ...valid, images: [photo] }).images).toEqual([photo]);
   });
 });
 
