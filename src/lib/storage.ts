@@ -42,10 +42,8 @@ export async function putObject(
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
     region: env.AWS_REGION,
     service: "s3",
-    // Its default of 10 retries would hold a staff member's upload for most of a minute.
-    retries: 2,
   });
-  const response = await client.fetch(objectUrl(key), {
+  const request = {
     method: "PUT",
     headers: {
       "Content-Type": contentType,
@@ -53,6 +51,10 @@ export async function putObject(
       "Cache-Control": "public, max-age=31536000, immutable",
     },
     body,
-  });
+  };
+  // Sign, then send the bytes ourselves. `client.fetch` hands over a `Request`, and under Next's
+  // `fetch` that streams with no length, which Neon refuses with 501 for all but tiny files.
+  const signed = await client.sign(objectUrl(key), request);
+  const response = await fetch(signed.url, { ...request, headers: signed.headers });
   if (!response.ok) throw new StorageError(response.status);
 }

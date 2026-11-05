@@ -25,13 +25,17 @@ describe("storage", () => {
     expect(productImageUrl(key)).toBe("https://storage.test/products/products/a.webp");
   });
 
-  it("signs the upload and sets the type", async () => {
+  it("signs the upload and sends the bytes themselves, so the length is known", async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
-    await putObject(key, new Uint8Array([1]), "image/webp");
-    const request = fetchMock.mock.calls[0]?.[0] as Request;
-    expect(request.method).toBe("PUT");
-    expect(request.headers.get("authorization")).toContain("AWS4-HMAC-SHA256");
-    expect(request.headers.get("content-type")).toBe("image/webp");
+    const bytes = new Uint8Array([1]);
+    await putObject(key, bytes, "image/webp");
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(String(url)).toBe("https://storage.test/products/products/a.webp");
+    expect(init?.method).toBe("PUT");
+    expect(init?.body).toBe(bytes);
+    const headers = new Headers(init?.headers);
+    expect(headers.get("authorization")).toContain("AWS4-HMAC-SHA256");
+    expect(headers.get("content-type")).toBe("image/webp");
   });
 
   it("fails with only the status when Neon refuses", async () => {
