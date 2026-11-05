@@ -5,7 +5,6 @@ import type { ProductCategory, ProductCondition } from "@/lib/db/schema";
 export const categoryLabels: Record<ProductCategory, string> = {
   ladies: "Ladies wear",
   men: "Men's wear",
-  kids: "Kids & family",
   shoes: "Shoes",
 };
 

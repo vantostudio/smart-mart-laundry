@@ -15,6 +15,7 @@ describe("createProductInput", () => {
     ["a code", { code: "SM-1" }],
     ["an unknown field", { brand: "x" }],
     ["an old category", { category: "campus" }],
+    ["the removed kids category", { category: "kids" }],
     ["an unknown condition", { condition: "used" }],
     ["a negative price", { price: -1 }],
     ["a fractional price", { price: 1.5 }],

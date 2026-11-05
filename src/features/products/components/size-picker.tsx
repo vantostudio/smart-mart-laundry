@@ -4,7 +4,7 @@ import { ToggleChip } from "@/components/shared/toggle-chip";
 import { productMessages } from "@/features/admin/messages";
 import type { ProductCategory } from "@/lib/db/schema";
 
-import { keepSizes, sizeGroups } from "../sizes";
+import { keepSizes, sizesFor } from "../sizes";
 
 type Props = {
   category: ProductCategory | null;
@@ -24,24 +24,11 @@ export function SizePicker({ category, sizes, onChange }: Props) {
     onChange(keepSizes(next, category as ProductCategory));
   }
   return (
-    <div className="space-y-3">
-      {sizeGroups[category].map((group) => (
-        <div key={group.label ?? "sizes"}>
-          {group.label && (
-            <p className="mb-1.5 text-caption text-muted-foreground">{group.label}</p>
-          )}
-          <div
-            role="group"
-            aria-label={group.label ?? productMessages.sizes}
-            className="flex flex-wrap gap-2"
-          >
-            {group.sizes.map((size) => (
-              <ToggleChip key={size} selected={sizes.includes(size)} onClick={() => toggle(size)}>
-                {size}
-              </ToggleChip>
-            ))}
-          </div>
-        </div>
+    <div role="group" aria-label={productMessages.sizes} className="flex flex-wrap gap-2">
+      {sizesFor(category).map((size) => (
+        <ToggleChip key={size} selected={sizes.includes(size)} onClick={() => toggle(size)}>
+          {size}
+        </ToggleChip>
       ))}
     </div>
   );

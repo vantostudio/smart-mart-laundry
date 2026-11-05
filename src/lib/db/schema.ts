@@ -45,7 +45,7 @@ export const adminUser = pgTable(
 export type AdminUser = typeof adminUser.$inferSelect;
 export type NewAdminUser = typeof adminUser.$inferInsert;
 
-export const productCategories = ["ladies", "men", "kids", "shoes"] as const;
+export const productCategories = ["ladies", "men", "shoes"] as const;
 export type ProductCategory = (typeof productCategories)[number];
 
 export const productConditions = ["new", "mtumba"] as const;

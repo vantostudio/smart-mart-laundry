@@ -6,34 +6,20 @@ import type { ProductCategory } from "@/lib/db/schema";
  */
 
 const clothes = ["XS", "S", "M", "L", "XL", "XXL"];
-const ages = ["2–3 yrs", "4–5 yrs", "6–8 yrs", "9–11 yrs", "12–14 yrs"];
-const range = (from: number, to: number) =>
-  Array.from({ length: to - from + 1 }, (_, i) => String(from + i));
+const shoes = Array.from({ length: 11 }, (_, i) => String(36 + i));
 
-export type SizeGroup = { label?: string; sizes: readonly string[] };
-
-export const sizeGroups: Record<ProductCategory, readonly SizeGroup[]> = {
-  ladies: [{ sizes: clothes }],
-  men: [{ sizes: clothes }],
-  kids: [
-    { label: "Age", sizes: ages },
-    { label: "Shoe size", sizes: range(19, 35) },
-  ],
-  shoes: [{ sizes: range(36, 46) }],
+const sizesByCategory: Record<ProductCategory, readonly string[]> = {
+  ladies: clothes,
+  men: clothes,
+  shoes,
 };
 
-export function sizesFor(category: ProductCategory): string[] {
-  return sizeGroups[category].flatMap((group) => [...group.sizes]);
+export function sizesFor(category: ProductCategory): readonly string[] {
+  return sizesByCategory[category];
 }
 
-const allSizes = new Set(
-  Object.values(sizeGroups)
-    .flat()
-    .flatMap((group) => [...group.sizes]),
-);
-
 export function isKnownSize(size: string): boolean {
-  return allSizes.has(size);
+  return clothes.includes(size) || shoes.includes(size);
 }
 
 /** `sizes` that belong to `category`, in the order they're listed. */

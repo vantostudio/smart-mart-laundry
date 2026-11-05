@@ -92,6 +92,7 @@ describe("migration", () => {
   it("rolls back every migration and applies them again", async () => {
     await addAdmin({ role: "owner" });
 
+    await applyRollback(t.client, "0003_remove_kids_category");
     await applyRollback(t.client, "0002_products");
     expect(await tableExists("product")).toBe(false);
     await applyRollback(t.client, "0001_drop_audit_log");

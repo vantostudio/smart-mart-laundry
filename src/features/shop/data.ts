@@ -7,7 +7,7 @@ import { unsplash } from "@/lib/images";
  * shapes close to what a product API would return.
  */
 
-export type ShopCategoryId = "campus" | "ladies" | "men" | "shoes" | "formal" | "kids";
+export type ShopCategoryId = "campus" | "ladies" | "men" | "shoes" | "formal";
 
 type ShopCategory = {
   id: ShopCategoryId;
@@ -46,12 +46,6 @@ export const shopCategories: ShopCategory[] = [
     name: "Suits & occasion",
     caption: "Suits, dresses and shoes for big days",
     image: unsplash("photo-1586232902955-df204f34b36e"),
-  },
-  {
-    id: "kids",
-    name: "Kids & family",
-    caption: "Clothes and shoes in all sizes",
-    image: unsplash("photo-1791774023109-54667cb235e7"),
   },
 ];
 
@@ -442,63 +436,6 @@ export const products: Product[] = [
     images: ["photo-1515965230482-0b9b46fbee14"],
     note: "Hand-stitched, for weddings and church.",
     added: "2026-10-04",
-  },
-
-  // Kids & family
-  {
-    id: "kids-weekend-set",
-    code: "SM-1501",
-    name: "Kids weekend outfit",
-    colour: "Mixed",
-    category: "kids",
-    condition: "new",
-    price: 1100,
-    sizes: ["2–3 yrs", "4–5 yrs", "6–8 yrs"],
-    stock: 6,
-    images: ["photo-1791774023109-54667cb235e7"],
-    note: "Top and bottoms, easy wash.",
-    added: "2026-10-19",
-  },
-  {
-    id: "baby-sneakers",
-    code: "SM-1502",
-    name: "Baby sneakers",
-    colour: "Blue and pink",
-    category: "kids",
-    condition: "new",
-    price: 700,
-    sizes: ["19", "20", "21", "22"],
-    stock: 8,
-    images: ["photo-1624958797025-b119e2fa2b53"],
-    note: "Soft soles for first steps. EU sizes.",
-    added: "2026-10-25",
-  },
-  {
-    id: "kids-canvas-shoes",
-    code: "SM-1503",
-    name: "Kids canvas shoes",
-    colour: "Beige",
-    category: "kids",
-    condition: "mtumba",
-    price: 500,
-    sizes: ["28"],
-    stock: 1,
-    images: ["photo-1552912276-56ef47874741"],
-    note: "Grade A, cleaned.",
-    added: "2026-10-07",
-  },
-  {
-    id: "baby-white-shoes",
-    code: "SM-1504",
-    name: "Baby white shoes",
-    colour: "White",
-    category: "kids",
-    condition: "new",
-    price: 650,
-    sizes: ["19", "20", "21"],
-    stock: 5,
-    images: ["photo-1565430076958-f6579417a6ef"],
-    added: "2026-10-03",
   },
 ];
 

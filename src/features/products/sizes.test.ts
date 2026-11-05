@@ -6,7 +6,6 @@ describe("sizes", () => {
   it("lists what each category sells", () => {
     expect(sizesFor("ladies")).toEqual(["XS", "S", "M", "L", "XL", "XXL"]);
     expect(sizesFor("shoes")).toContain("42");
-    expect(sizesFor("kids")).toEqual(expect.arrayContaining(["2–3 yrs", "19"]));
   });
 
   it("is exact about case", () => {
