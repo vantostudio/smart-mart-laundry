@@ -15,6 +15,8 @@ export type PublicProduct = {
   stock: number;
   /** Public addresses, first one is the main photo. Can be empty. */
   photos: string[];
+  /** A small copy of the first photo, or null. Photos from before thumbnails have none to find. */
+  thumbnail: string | null;
   note: string | null;
 };
 

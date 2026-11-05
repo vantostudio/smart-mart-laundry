@@ -11,19 +11,24 @@ vi.mock("@/lib/storage", () => ({
 const { requireAdminForAction } = await import("@/features/admin/lib/auth");
 const { putObject } = await import("@/lib/storage");
 const { POST } = await import("./route");
+const { thumbnailKey } = await import("@/features/products/lib/image-keys");
 
 const webp = new TextEncoder().encode("RIFF....WEBPVP8 ");
 const sameSite = { origin: "http://shop.test", host: "shop.test" };
 
 /** Under jsdom a `Request` can't parse multipart, so the route gets the parsed field directly. */
-function upload(file: unknown, headers: Record<string, string> = sameSite) {
+function upload(
+  file: unknown,
+  headers: Record<string, string> = sameSite,
+  thumbnail: unknown = photo(webp),
+) {
   const request = new Request("http://shop.test/api/admin/products/images", {
     method: "POST",
     headers,
   });
   request.formData = async () => {
     if (file === undefined) throw new TypeError("Not a form");
-    return { get: () => file } as unknown as FormData;
+    return { get: (name: string) => (name === "file" ? file : thumbnail) } as unknown as FormData;
   };
   return request;
 }
@@ -51,6 +56,19 @@ describe("POST /api/admin/products/images", () => {
     expect(key).toMatch(/^products\/[0-9a-f-]{36}\.webp$/);
     expect(url).toBe(`https://photos.test/${key}`);
     expect(putObject).toHaveBeenCalledWith(key, expect.any(Uint8Array), "image/webp");
+    expect(putObject).toHaveBeenCalledWith(thumbnailKey(key), expect.any(Uint8Array), "image/webp");
+  });
+
+  it("refuses a missing, oversized, unreadable or PNG thumbnail, and stores nothing", async () => {
+    const big = new Uint8Array(100 * 1024 + 1);
+    big.set(webp);
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
+    const page = new TextEncoder().encode("<script>alert(1)</script>");
+    for (const bad of [null, "text", photo(big), photo(png), photo(page)]) {
+      const res = await POST(upload(photo(webp), sameSite, bad), undefined);
+      expect(res.status).toBe(400);
+    }
+    expect(putObject).not.toHaveBeenCalled();
   });
 
   it("goes by the bytes, not what the file claims to be", async () => {

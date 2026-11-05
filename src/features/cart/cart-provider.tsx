@@ -19,8 +19,10 @@ export type CartItem = {
   detail?: string;
   /** Most that can be ordered (stock). */
   max?: number;
-  /** The product's main photo. Always set on shop lines, null when it has none. */
+  /** The product's main photo, as the small thumbnail. Always set on shop lines, null when it has none. Older saved lines hold the full photo. */
   photo?: string | null;
+  /** The full photo, shown if the thumbnail can't load. Missing on older saved lines. */
+  fullPhoto?: string | null;
 };
 
 type CartContextValue = {

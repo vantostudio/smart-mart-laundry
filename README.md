@@ -96,17 +96,17 @@ create one before then.
 
 ### Products API
 
-Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&condition=`, newest first, gives `{ items, page, limit, total }`) and `POST`, then `GET`, `PATCH` and `DELETE` on `/api/admin/products/<id>`. Writes must come from the site's own pages. `POST /api/admin/products/images` stores a photo and answers its key. Staff use all of this at `/admin/products`.
+Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&condition=`, newest first, gives `{ items, page, limit, total }`) and `POST`, then `GET`, `PATCH` and `DELETE` on `/api/admin/products/<id>`. Writes must come from the site's own pages. `POST /api/admin/products/images` stores a photo and its thumbnail (form fields `file` and `thumbnail`) and answers the photo's key. Deleting a product, or removing a photo from one, deletes the files too. Staff use all of this at `/admin/products`.
 
 ### Public API
 
-No sign-in, GET only, cached by a CDN for up to 90 seconds: `/api/products` (`?page=&limit=&q=&category=&condition=&size=&price=&sort=`, gives `{ items, page, limit, total, counts }`), `/api/products/<code>` and `/api/settings`. Only in-stock products appear, and they carry photo URLs but no ids or storage keys. The shop, the home rail and every phone number and opening time load from these in the browser, so the site needs `DATABASE_URL` and the `AWS_*` values wherever it runs.
+No sign-in, GET only, cached by a CDN for up to 90 seconds: `/api/products` (`?page=&limit=&q=&category=&condition=&size=&price=&sort=`, gives `{ items, page, limit, total, counts }`), `/api/products/<code>` and `/api/settings`. Only in-stock products appear, and they carry photo and thumbnail URLs but no ids or storage keys. The shop, the home rail and every phone number and opening time load from these in the browser, so the site needs `DATABASE_URL` and the `AWS_*` values wherever it runs.
 
 ### Settings
 
 `/admin/settings`: everyone sets their own name. Owners also change delivery, phone and hours (one row in `shop_settings`) and add or remove staff. Search data keeps the values in `src/config/shop-settings.ts`, so update those too after changing the phone or hours.
 
-Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's on `dev` and production. Put Cloudflare in front of the photos before real traffic, because Neon has no CDN.
+Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's on `dev` and production. Put Cloudflare in front of the photos before real traffic, because Neon has no CDN. Grids load a ~480px thumbnail of each photo to spare the transfer limit; photos uploaded before thumbnails existed fall back to the full photo.
 
 ### Auth
 

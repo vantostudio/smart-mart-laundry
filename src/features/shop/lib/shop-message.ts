@@ -14,7 +14,8 @@ export function bagLine(p: PublicProduct, size: string | null): Omit<CartItem, "
     price: p.price,
     detail: size ? `${p.code} · Size ${size}` : p.code,
     max: p.stock,
-    photo: p.photos[0] ?? null,
+    photo: p.thumbnail,
+    fullPhoto: p.photos[0] ?? null,
   };
 }
 

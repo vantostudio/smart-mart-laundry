@@ -10,7 +10,7 @@ vi.mock("@/config/env", () => ({
   }),
 }));
 
-const { productImageUrl, putObject } = await import("./storage");
+const { deleteObject, productImageUrl, putObject } = await import("./storage");
 
 const key = "products/a.webp";
 const fetchMock = vi.fn<typeof fetch>();
@@ -42,6 +42,24 @@ describe("storage", () => {
     fetchMock.mockResolvedValue(new Response("<Error>detail</Error>", { status: 403 }));
     const err = await putObject(key, new Uint8Array([1]), "image/webp").catch((e: unknown) => e);
     expect(err).toMatchObject({ name: "StorageError", code: "403" });
+    expect((err as Error).message).not.toContain("detail");
+  });
+
+  it("signs a delete", async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    await deleteObject(key);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(String(url)).toBe("https://storage.test/products/products/a.webp");
+    expect(init?.method).toBe("DELETE");
+    expect(new Headers(init?.headers).get("authorization")).toContain("AWS4-HMAC-SHA256");
+  });
+
+  it("treats a missing object as deleted, but fails with only the status otherwise", async () => {
+    fetchMock.mockResolvedValue(new Response("<Error>detail</Error>", { status: 404 }));
+    await expect(deleteObject(key)).resolves.toBeUndefined();
+    fetchMock.mockResolvedValue(new Response("<Error>detail</Error>", { status: 500 }));
+    const err = await deleteObject(key).catch((e: unknown) => e);
+    expect(err).toMatchObject({ name: "StorageError", code: "500" });
     expect((err as Error).message).not.toContain("detail");
   });
 });

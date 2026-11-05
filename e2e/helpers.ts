@@ -40,6 +40,7 @@ type Product = {
   sizes: string[];
   stock: number;
   photos: string[];
+  thumbnail: string | null;
   note: string | null;
 };
 
@@ -50,6 +51,7 @@ const product = (values: Partial<Product> & Pick<Product, "code" | "name">): Pro
   sizes: ["M", "L"],
   stock: 5,
   photos: [],
+  thumbnail: null,
   note: null,
   ...values,
 });
@@ -63,6 +65,7 @@ export const shopProducts: Product[] = [
     sizes: ["S", "M", "L", "XL"],
     stock: 8,
     photos: ["/apple-icon"],
+    thumbnail: "/apple-icon",
   }),
   product({
     code: "SM-1204",

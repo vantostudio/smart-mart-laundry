@@ -62,6 +62,7 @@ describe("listPublicProducts", () => {
       stock: 1,
       note: "Grade A",
       photos: [`https://photos.test/${photo}`],
+      thumbnail: "https://photos.test/products/00000000-0000-4000-8000-000000000000-thumb",
     });
   });
 
@@ -134,6 +135,14 @@ describe("getPublicProduct", () => {
     const item = await getPublicProduct(t.db, "SM-1001", photoUrl);
     expect(item.photos).toEqual([`https://photos.test/${photo}`]);
     expect(item).not.toHaveProperty("id");
+  });
+
+  it("has no thumbnail without a photo, and no keys beyond addresses", async () => {
+    await add();
+    const item = await getPublicProduct(t.db, "SM-1001", photoUrl);
+    expect(item.thumbnail).toBeNull();
+    expect(item).not.toHaveProperty("createdAt");
+    expect(item).not.toHaveProperty("images");
   });
 
   it("treats sold out the same as missing", async () => {

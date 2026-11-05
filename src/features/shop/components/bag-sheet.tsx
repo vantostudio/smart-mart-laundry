@@ -91,7 +91,7 @@ export function BagSheet({ open, onOpenChange }: Props) {
                 {items.map((line) => (
                   <li key={line.id} className="flex items-center gap-3">
                     <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                      <ProductPhoto src={line.photo} sizes="64px" />
+                      <ProductPhoto src={line.photo} fallback={line.fullPhoto} sizes="64px" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-body-sm font-semibold">{line.name}</p>
