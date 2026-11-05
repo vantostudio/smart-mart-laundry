@@ -94,6 +94,10 @@ Secrets live only in Wrangler. `.env.local` and `.dev.vars` are never committed;
 lists the names. `.dev.vars` isn't gitignored until slice `hosting` adds it, so nobody should
 create one before then.
 
+### Products API
+
+Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&condition=`, newest first, gives `{ items, page, limit, total }`) and `POST`, then `GET`, `PATCH` and `DELETE` on `/api/admin/products/<id>`. Writes must come from the site's own pages. The shop still shows the samples in `src/features/shop/data.ts`.
+
 ### Auth
 
 Staff sign in with Google through Neon Auth. `/api/auth/*` is the Neon Auth proxy; without its env

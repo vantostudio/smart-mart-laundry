@@ -33,6 +33,13 @@ export const actionRefusalMessages = {
   string
 >;
 
+/** What the admin API answers beyond the refusals above. */
+export const apiMessages = {
+  invalidInput: "Check this and try again.",
+  invalidJson: "That request couldn't be read.",
+  productNotFound: "That product doesn't exist.",
+} as const;
+
 export const signInMessages = {
   cancelled: "Sign-in was cancelled. Try again.",
   signOutFailed: "Sign-out didn't work. Please try again.",

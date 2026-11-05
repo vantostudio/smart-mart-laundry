@@ -74,11 +74,11 @@ describe("admin_user", () => {
 });
 
 describe("migration", () => {
-  it("leaves only admin_user in public", async () => {
+  it("leaves only our tables in public", async () => {
     const { rows } = await t.client.query<{ table_name: string }>(
       `select table_name from information_schema.tables where table_schema = 'public'`,
     );
-    expect(rows).toEqual([{ table_name: "admin_user" }]);
+    expect(rows.map((r) => r.table_name).toSorted()).toEqual(["admin_user", "product"]);
   });
 
   it("gives admin_user exactly its five columns", async () => {
@@ -89,9 +89,11 @@ describe("migration", () => {
     expect(rows.map((r) => r.column_name)).toEqual(["id", "email", "name", "role", "created_at"]);
   });
 
-  it("rolls back both migrations and applies them again", async () => {
+  it("rolls back every migration and applies them again", async () => {
     await addAdmin({ role: "owner" });
 
+    await applyRollback(t.client, "0002_products");
+    expect(await tableExists("product")).toBe(false);
     await applyRollback(t.client, "0001_drop_audit_log");
     expect(await tableExists("admin_event")).toBe(true);
     await applyRollback(t.client, "0000_admin_users");
@@ -100,6 +102,7 @@ describe("migration", () => {
 
     await migrate(drizzle({ client: t.client }), { migrationsFolder });
     expect(await tableExists("admin_user")).toBe(true);
+    expect(await tableExists("product")).toBe(true);
     expect(await tableExists("admin_event")).toBe(false);
     expect(await t.db.select().from(adminUser)).toEqual([]);
   });

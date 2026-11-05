@@ -1,8 +1,17 @@
 import { sql } from "drizzle-orm";
-import { check, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  check,
+  index,
+  integer,
+  pgSequence,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 /*
- * The admin tables, all in `public` and owned by our migrations (`drizzle/`). Neon Auth owns
+ * Our tables, all in `public` and owned by our migrations (`drizzle/`). Neon Auth owns
  * `neon_auth.*`; nothing here points into it. After a change run `pnpm db:generate` and review the
  * SQL. A plain module: drizzle-kit, the seed script and tests load it.
  */
@@ -35,3 +44,52 @@ export const adminUser = pgTable(
 
 export type AdminUser = typeof adminUser.$inferSelect;
 export type NewAdminUser = typeof adminUser.$inferInsert;
+
+export const productCategories = ["ladies", "men", "kids", "shoes"] as const;
+export type ProductCategory = (typeof productCategories)[number];
+
+export const productConditions = ["new", "mtumba"] as const;
+export type ProductCondition = (typeof productConditions)[number];
+
+/** Numbers the printed tag codes. Gaps are fine: a code only has to be unique. */
+export const productCodeSeq = pgSequence("product_code_seq", { startWith: 1001 });
+
+/**
+ * What the shop sells. `category` and `condition` are independent: "mtumba" + "ladies". `price` is
+ * whole KSh. `code` comes from Postgres and never changes, because it's on the tag.
+ */
+export const product = pgTable(
+  "product",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code")
+      .notNull()
+      .unique()
+      .default(sql`'SM-' || nextval('product_code_seq')`),
+    name: text("name").notNull(),
+    category: text("category", { enum: productCategories }).notNull(),
+    condition: text("condition", { enum: productConditions }).notNull(),
+    price: integer("price").notNull(),
+    sizes: text("sizes")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    stock: integer("stock").notNull(),
+    images: text("images")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("product_category_check", sql`${t.category} in (${literals(productCategories)})`),
+    check("product_condition_check", sql`${t.condition} in (${literals(productConditions)})`),
+    check("product_price_check", sql`${t.price} >= 0`),
+    check("product_stock_check", sql`${t.stock} >= 0`),
+    index("product_list_idx").on(t.createdAt, t.id),
+  ],
+);
+
+export type ProductRow = typeof product.$inferSelect;
+export type NewProduct = typeof product.$inferInsert;

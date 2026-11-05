@@ -7,6 +7,7 @@ import { cache } from "react";
 
 import { actionRefusalMessages } from "@/features/admin/messages";
 import { getDb, type Db } from "@/lib/db";
+import { driverFailure } from "@/lib/db/errors";
 import { adminUser, type AdminRole } from "@/lib/db/schema";
 import {
   AppError,
@@ -47,16 +48,6 @@ function emailDomain(email: string): string {
 function deny(requestId: string, reason: DenialReason, email: string): AdminDecision {
   log.warn("sign_in_denied", { requestId, reason, emailDomain: emailDomain(email) });
   return { status: "forbidden" };
-}
-
-/** Only what is safe to log from a failed query: the driver error's name and code. */
-function driverFailure(err: unknown): { errorName: string; errorCode: string | null } {
-  const driver = err instanceof Error && err.cause instanceof Error ? err.cause : err;
-  const { name, code } = (driver ?? {}) as { name?: unknown; code?: unknown };
-  return {
-    errorName: typeof name === "string" ? name : "unknown",
-    errorCode: typeof code === "string" ? code : null,
-  };
 }
 
 /**
