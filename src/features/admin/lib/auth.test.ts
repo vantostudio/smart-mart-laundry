@@ -170,7 +170,7 @@ describe("resolveAdmin", () => {
     const { decision } = run(session);
     await expect(decision).resolves.toEqual({
       status: "admin",
-      admin: { adminId: row.id, email: "staff@example.com", name: null, role: "admin" },
+      admin: { adminId: row.id, email: "staff@example.com", name: "Staff", role: "admin" },
     });
     expect(await allRows()).toEqual(before);
   });

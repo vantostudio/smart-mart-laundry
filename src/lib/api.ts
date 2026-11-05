@@ -11,14 +11,14 @@ import { log } from "@/lib/log";
 import { getRequestId } from "@/lib/request-id";
 
 /*
- * The one way into an admin API route. `adminRoute` checks the caller before the handler runs, so a
- * handler can't forget to, and turns anything thrown into `{ error }` with the right status.
+ * The way into an API route. `adminRoute` checks the caller before the handler runs, so a handler
+ * can't forget to. `publicRoute` is for what the public shop reads. Both turn anything thrown into
+ * `{ error }` with the right status.
  */
 
 const statusFor: Record<AppErrorCode, number> = {
   UNAUTHENTICATED: 401,
   FORBIDDEN: 403,
-  ADMIN_DISABLED: 403,
   VALIDATION: 400,
   NOT_FOUND: 404,
   ALREADY_EXISTS: 409,
@@ -33,6 +33,9 @@ const readMethods = new Set(["GET", "HEAD"]);
 function errorResponse(error: AppErrorShape): Response {
   return Response.json({ error }, { status: statusFor[error.code] });
 }
+
+/** Short enough that a sold-out item leaves the shop quickly; long enough to let Neon sleep. */
+const publicCache = "public, s-maxage=30, stale-while-revalidate=60";
 
 /**
  * Route handlers don't get the check server actions get, so a write must prove it came from our own
@@ -51,9 +54,13 @@ function isSameOrigin(request: Request): boolean {
 
 export type AdminRequest<Context> = { request: Request; context: Context; admin: AdminContext };
 
-/** Wraps a handler. Responses are never cached, because they depend on who is asking. */
+/**
+ * Wraps a handler. Responses are never cached, because they depend on who is asking. Pass
+ * `{ role: "owner" }` for what only an owner may do.
+ */
 export function adminRoute<Context>(
   handler: (args: AdminRequest<Context>) => Promise<Response>,
+  options?: { role: "owner" },
 ): (request: Request, context: Context) => Promise<Response> {
   return async (request, context) => {
     const requestId = await getRequestId();
@@ -62,7 +69,7 @@ export function adminRoute<Context>(
       if (!readMethods.has(request.method) && !isSameOrigin(request)) {
         throw new AppError("FORBIDDEN", actionRefusalMessages.FORBIDDEN);
       }
-      const access = await requireAdminForAction();
+      const access = await requireAdminForAction(options);
       response = access.ok
         ? await handler({ request, context, admin: access.admin })
         : errorResponse(access.error);
@@ -75,6 +82,35 @@ export function adminRoute<Context>(
     }
     response.headers.set("Cache-Control", "no-store");
     return response;
+  };
+}
+
+const expectedPublicErrors = new Set<AppErrorCode>(["VALIDATION", "NOT_FOUND"]);
+
+/**
+ * Wraps a GET anyone can call. Only success is cached. The error body holds the code and no
+ * message, because a configuration message names server settings; the shop has its own copy.
+ */
+export function publicRoute<Context>(
+  handler: (args: { request: Request; context: Context }) => Promise<Response>,
+): (request: Request, context: Context) => Promise<Response> {
+  return async (request, context) => {
+    try {
+      const response = await handler({ request, context });
+      response.headers.set("Cache-Control", publicCache);
+      return response;
+    } catch (err) {
+      unstable_rethrow(err);
+      const requestId = await getRequestId();
+      const { code } = toErrorShape(err, requestId);
+      if (!expectedPublicErrors.has(code)) {
+        log.error("public_api_failed", { requestId, ...driverFailure(err) });
+      }
+      return Response.json(
+        { error: { code, requestId } },
+        { status: statusFor[code], headers: { "Cache-Control": "no-store" } },
+      );
+    }
   };
 }
 

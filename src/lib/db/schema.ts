@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   integer,
@@ -93,3 +94,34 @@ export const product = pgTable(
 
 export type ProductRow = typeof product.$inferSelect;
 export type NewProduct = typeof product.$inferInsert;
+
+/**
+ * What staff can change about the shop. One row, added by the migration: `id` can only be true.
+ * Fee and threshold are whole KSh, `phone` is digits ("254113154708") for both calls and WhatsApp,
+ * and opening times are whole hours (24 h) because pickup booking works in whole hours.
+ */
+export const shopSettings = pgTable(
+  "shop_settings",
+  {
+    id: boolean("id").primaryKey().default(true),
+    deliveryFee: integer("delivery_fee").notNull(),
+    deliveryFreeFrom: integer("delivery_free_from").notNull(),
+    phone: text("phone").notNull(),
+    weekOpen: integer("week_open").notNull(),
+    weekClose: integer("week_close").notNull(),
+    sundayOpen: integer("sunday_open").notNull(),
+    sundayClose: integer("sunday_close").notNull(),
+  },
+  (t) => [
+    check("shop_settings_one_row", sql`${t.id}`),
+    check("shop_settings_delivery_check", sql`${t.deliveryFee} >= 0 and ${t.deliveryFreeFrom} >= 0`),
+    check(
+      "shop_settings_week_hours_check",
+      sql`${t.weekOpen} >= 0 and ${t.weekOpen} < ${t.weekClose} and ${t.weekClose} <= 24`,
+    ),
+    check(
+      "shop_settings_sunday_hours_check",
+      sql`${t.sundayOpen} >= 0 and ${t.sundayOpen} < ${t.sundayClose} and ${t.sundayClose} <= 24`,
+    ),
+  ],
+);

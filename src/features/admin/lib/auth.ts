@@ -27,6 +27,7 @@ import { readSession, type SessionUser } from "./neon-auth";
  * in `admin_user`, and the role comes only from that row. Deny by default; nothing is written.
  */
 
+/** `email` is for server code only: never send it to the browser or put it on a page. */
 export type AdminContext = { adminId: string; email: string; name: string | null; role: AdminRole };
 
 export type AdminDecision =
@@ -90,7 +91,7 @@ export async function resolveAdmin(deps: {
   if (!row) return deny(deps.requestId, "not_on_allowlist", email);
   return {
     status: "admin",
-    admin: { adminId: row.id, email: row.email, name: row.name, role: row.role },
+    admin: { adminId: row.id, email: row.email, name: row.name ?? session.name, role: row.role },
   };
 }
 

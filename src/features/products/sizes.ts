@@ -18,6 +18,11 @@ export function sizesFor(category: ProductCategory): readonly string[] {
   return sizesByCategory[category];
 }
 
+/** Sizes to filter by: one category's, or all of them. */
+export function sizeChoices(category: ProductCategory | null): readonly string[] {
+  return category ? sizesFor(category) : [...clothes, ...shoes];
+}
+
 export function isKnownSize(size: string): boolean {
   return clothes.includes(size) || shoes.includes(size);
 }

@@ -78,7 +78,7 @@ describe("migration", () => {
     const { rows } = await t.client.query<{ table_name: string }>(
       `select table_name from information_schema.tables where table_schema = 'public'`,
     );
-    expect(rows.map((r) => r.table_name).toSorted()).toEqual(["admin_user", "product"]);
+    expect(rows.map((r) => r.table_name).toSorted()).toEqual(["admin_user", "product", "shop_settings"]);
   });
 
   it("gives admin_user exactly its five columns", async () => {
@@ -92,6 +92,7 @@ describe("migration", () => {
   it("rolls back every migration and applies them again", async () => {
     await addAdmin({ role: "owner" });
 
+    await applyRollback(t.client, "0004_shop_settings");
     await applyRollback(t.client, "0003_remove_kids_category");
     await applyRollback(t.client, "0002_products");
     expect(await tableExists("product")).toBe(false);

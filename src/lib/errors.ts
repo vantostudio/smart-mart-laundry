@@ -7,7 +7,6 @@
 export const appErrorCodes = [
   "UNAUTHENTICATED",
   "FORBIDDEN",
-  "ADMIN_DISABLED",
   "VALIDATION",
   "NOT_FOUND",
   "ALREADY_EXISTS",

@@ -5,12 +5,11 @@ import type { AppErrorCode } from "@/lib/errors";
  * only: no `server-only`, no server imports. People never see SDK, Google or `error.message` text.
  */
 
-/** Copy per error code. `NOT_FOUND` gets its copy with the team slice. */
+/** Copy per error code. */
 export const errorMessages = {
   UNAUTHENTICATED: "Please sign in to continue.",
   FORBIDDEN:
     "This Google account isn't on the Street Mart team. Ask the owner to add your email, then sign in again.",
-  ADMIN_DISABLED: "Your access has been turned off. Ask the owner if this is a mistake.",
   AUTH_UNAVAILABLE: "Sign-in isn't available right now. Please try again in a few minutes.",
   VALIDATION: "That email address doesn't look right.",
   ALREADY_EXISTS: "That email is already on the team.",
@@ -38,6 +37,7 @@ export const apiMessages = {
   invalidInput: "Check this and try again.",
   invalidJson: "That request couldn't be read.",
   productNotFound: "That product doesn't exist.",
+  staffNotFound: "That person isn't on the team any more.",
   photoInvalid: "That file isn't a photo. Use a JPEG, PNG or WebP.",
   photoTooBig: "That photo is too big. Try a smaller one.",
 } as const;

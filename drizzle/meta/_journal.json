@@ -29,6 +29,13 @@
       "when": 1793892953670,
       "tag": "0003_remove_kids_category",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793894938337,
+      "tag": "0004_shop_settings",
+      "breakpoints": true
     }
   ]
 }
