@@ -139,6 +139,8 @@ cart/bag bars apply it. Set `[--ink:…]` to change the light colour.
 Use a `gradient-*` button for the single main action in a view, solid buttons for secondary actions,
 and `inverse` / `outline-inverse` on brand bands.
 
+The `google` Button variant is the one exception to our palette: Sign in with Google uses Google's fixed colours (`--google*`), Google Sans and the unchanged "G" (`src/features/admin/components/google-g.png`), per [their branding rules](https://developers.google.com/identity/branding-guidelines). Use it only for that button.
+
 **Shared** (`src/components/shared`, built from the primitives):
 
 | Component              | Use                                                                                                                                                     |

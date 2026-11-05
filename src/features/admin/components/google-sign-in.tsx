@@ -1,11 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { failureStatus, getAuthClient } from "@/features/admin/lib/auth-client";
 import { navigateTo } from "@/features/admin/lib/navigate";
 import { errorMessages, signInMessages } from "@/features/admin/messages";
+
+import googleG from "./google-g.png";
 
 /*
  * The "Continue with Google" button. Google sends the browser back here with
@@ -130,13 +133,15 @@ export function GoogleSignIn({
       )}
       <Button
         type="button"
-        variant="gradient-primary"
+        variant="google"
         block
-        className="mt-6"
+        className="mt-6 gap-2.5 px-3 font-google leading-5"
         disabled={!mounted || busy}
         aria-busy={busy}
         onClick={() => void signIn()}
       >
+        {/* Cropped unchanged from Google's approved assets (signin-assets.zip); never recolour it. */}
+        <Image src={googleG} alt="" width={20} height={20} unoptimized />
         {labels[shown]}
       </Button>
     </>

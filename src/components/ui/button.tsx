@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
  * Solid:     primary · clay · secondary · inverse (on dark bands)
  * Gradient:  gradient-primary · gradient-clay (with hover sheen)
  * Quiet:     outline · outline-inverse · soft · ghost
+ * Brand:     google (Sign in with Google, Google's colours)
  */
 const buttonVariants = cva(
   [
@@ -38,6 +39,8 @@ const buttonVariants = cva(
           "border border-primary-foreground/30 text-primary-foreground hover:border-primary-foreground/60 hover:bg-primary-foreground/10",
         soft: "bg-clay-soft text-accent-foreground hover:bg-clay hover:text-clay-foreground",
         ghost: "text-foreground hover:bg-secondary",
+        google:
+          "border border-google-stroke bg-google font-medium text-google-foreground hover:bg-google-hover",
       },
       size: {
         sm: "h-9 px-4 text-sm",
