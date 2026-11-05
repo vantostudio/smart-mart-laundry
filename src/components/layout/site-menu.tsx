@@ -15,15 +15,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { HoursSummary, PhoneLink, WhatsAppLink } from "@/components/shared/contact";
 import { siteNav } from "@/config/navigation";
-import { phoneHref, site } from "@/config/site";
-import { formatHoursSummary } from "@/lib/opening-hours";
+import { site } from "@/config/site";
 import { cn } from "@/lib/utils";
-import { WHATSAPP_ORDER_DEFAULT, waLink } from "@/lib/whatsapp";
 
 import { OpenNow } from "./open-now";
-
-const hoursSummary = formatHoursSummary(site.openingHours);
 
 const contactClass = "h-auto min-h-16 flex-col gap-1 rounded-2xl px-2 py-2.5 text-body-sm";
 
@@ -101,21 +98,16 @@ export function SiteMenu({ className }: { className?: string }) {
 
             <div className="mt-5 grid grid-cols-3 gap-2">
               <Button asChild variant="secondary" className={contactClass}>
-                <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
+                <PhoneLink>
                   <Phone aria-hidden className="size-5 text-clay" />
                   Call
-                </a>
+                </PhoneLink>
               </Button>
               <Button asChild variant="secondary" className={contactClass}>
-                <a
-                  href={waLink(WHATSAPP_ORDER_DEFAULT)}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Chat on WhatsApp"
-                >
+                <WhatsAppLink aria-label="Chat on WhatsApp">
                   <MessageCircle aria-hidden className="size-5 text-clay" />
                   WhatsApp
-                </a>
+                </WhatsAppLink>
               </Button>
               <Button asChild variant="secondary" className={contactClass}>
                 <a href={site.mapsUrl} target="_blank" rel="noreferrer">
@@ -127,7 +119,9 @@ export function SiteMenu({ className }: { className?: string }) {
 
             <div className="mt-5 rounded-2xl bg-secondary/70 p-3.5">
               <OpenNow />
-              <p className="text-caption text-muted-foreground">{hoursSummary}</p>
+              <p className="text-caption text-muted-foreground">
+                <HoursSummary />
+              </p>
               <p className="mt-0.5 text-caption text-muted-foreground">{site.location.point}</p>
             </div>
           </SheetBody>

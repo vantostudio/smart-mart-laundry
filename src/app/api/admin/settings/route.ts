@@ -5,6 +5,8 @@ import { getDb } from "@/lib/db";
 
 export const PATCH = adminRoute(
   async ({ request }) =>
-    Response.json(await updateShopSettings(getDb(), await parseBody(request, updateShopSettingsInput))),
+    Response.json(
+      await updateShopSettings(getDb(), await parseBody(request, updateShopSettingsInput)),
+    ),
   { role: "owner" },
 );

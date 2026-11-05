@@ -78,7 +78,11 @@ describe("migration", () => {
     const { rows } = await t.client.query<{ table_name: string }>(
       `select table_name from information_schema.tables where table_schema = 'public'`,
     );
-    expect(rows.map((r) => r.table_name).toSorted()).toEqual(["admin_user", "product", "shop_settings"]);
+    expect(rows.map((r) => r.table_name).toSorted()).toEqual([
+      "admin_user",
+      "product",
+      "shop_settings",
+    ]);
   });
 
   it("gives admin_user exactly its five columns", async () => {

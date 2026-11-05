@@ -4,8 +4,9 @@ import { CheckCircle2, Copy, Phone } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { phoneHref, site } from "@/config/site";
 import { cn } from "@/lib/utils";
+
+import { PhoneLink } from "./contact";
 
 type Props = {
   /** The current order has been opened in WhatsApp. */
@@ -48,9 +49,9 @@ export function OrderSent({ sent, message, className, children }: Props) {
               <Copy aria-hidden /> {copied ? "Copied" : "Copy order"}
             </Button>
             <Button asChild variant="secondary" size="md">
-              <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
+              <PhoneLink>
                 <Phone aria-hidden /> Call us
-              </a>
+              </PhoneLink>
             </Button>
           </div>
         </div>

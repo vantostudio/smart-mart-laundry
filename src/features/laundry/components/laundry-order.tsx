@@ -7,7 +7,13 @@ import { useState } from "react";
 import { FloatingCartBar } from "@/components/shared/floating-cart-bar";
 import { Section } from "@/components/shared/section";
 import { Button } from "@/components/ui/button";
-import { dateParams, parseDates, type BookingDates } from "@/features/booking/schedule";
+import {
+  dateParams,
+  openingWeek,
+  parseDates,
+  type BookingDates,
+} from "@/features/booking/schedule";
+import { useOpeningHours } from "@/features/settings/shop-settings-provider";
 import { useNow } from "@/features/booking/use-now";
 import { useCart } from "@/features/cart/cart-provider";
 import { useOpenCart } from "@/features/cart/open-cart";
@@ -42,7 +48,8 @@ export function LaundryOrder({ params }: { params: Params }) {
   const [category, setCategory] = useState(() => parseCategory(params?.get("cat")));
   // The customer's own choices win over the URL once they start picking days.
   const [draftDates, setDraftDates] = useState<BookingDates | null>(null);
-  const dates = draftDates ?? (now ? parseDates(params, now) : { pickup: null, back: null });
+  const week = openingWeek(useOpeningHours());
+  const dates = draftDates ?? (now ? parseDates(params, now, week) : { pickup: null, back: null });
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // The header's orders button opens the sheet here, or links to /laundry#cart from other pages.

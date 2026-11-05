@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowRight, ShoppingBag, Store, Truck } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 import { AreaPicker } from "@/components/shared/area-picker";
@@ -24,15 +23,12 @@ import {
 import { site } from "@/config/site";
 import { useBag } from "@/features/cart/cart-provider";
 import { deliveryFor, fulfilOptions, type FulfilMethod } from "@/features/shop/lib/delivery";
-import {
-  buildShopMessage,
-  productForLine,
-  shopGapLabels,
-  shopGaps,
-} from "@/features/shop/lib/shop-message";
+import { useShopSettings } from "@/features/settings/shop-settings-provider";
+import { buildShopMessage, shopGapLabels, shopGaps } from "@/features/shop/lib/shop-message";
 import { ksh } from "@/lib/format";
-import { unsplash } from "@/lib/images";
 import { useOrderPlace } from "@/lib/saved-details";
+
+import { ProductPhoto } from "./product-photo";
 
 const fulfilIcons = { delivery: Truck, pickup: Store };
 const AREA_ID = "bag-area";
@@ -49,14 +45,15 @@ type Props = {
  */
 export function BagSheet({ open, onOpenChange }: Props) {
   const { items, count, total, setQty, clear } = useBag();
+  const rates = useShopSettings();
   const [method, setMethod] = useState<FulfilMethod>("delivery");
   const { area, setArea, note, setNote, remember } = useOrderPlace(site.areas);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
 
   const order = { method, area, note };
   const gaps = shopGaps(count, order);
-  const delivery = deliveryFor(total, method);
-  const message = buildShopMessage(items, order);
+  const delivery = deliveryFor(total, method, rates);
+  const message = buildShopMessage(items, order, rates);
   const sent = sentMessage === message;
 
   return (
@@ -91,36 +88,25 @@ export function BagSheet({ open, onOpenChange }: Props) {
           <>
             <SheetBody className="pb-6">
               <ul className="grid gap-3">
-                {items.map((line) => {
-                  const product = productForLine(line.id);
-                  return (
-                    <li key={line.id} className="flex items-center gap-3">
-                      <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                        {product && (
-                          <Image
-                            src={unsplash(product.images[0]!, 200)}
-                            alt=""
-                            fill
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-body-sm font-semibold">{line.name}</p>
-                        <p className="truncate text-caption text-muted-foreground">{line.detail}</p>
-                        <Price amount={line.price * line.qty} size="sm" />
-                      </div>
-                      <QuantityStepper
-                        label={line.name}
-                        value={line.qty}
-                        max={line.max}
-                        onChange={(n) => setQty(line.id, n)}
-                        className="shrink-0"
-                      />
-                    </li>
-                  );
-                })}
+                {items.map((line) => (
+                  <li key={line.id} className="flex items-center gap-3">
+                    <span className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
+                      <ProductPhoto src={line.photo} sizes="64px" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-body-sm font-semibold">{line.name}</p>
+                      <p className="truncate text-caption text-muted-foreground">{line.detail}</p>
+                      <Price amount={line.price * line.qty} size="sm" />
+                    </div>
+                    <QuantityStepper
+                      label={line.name}
+                      value={line.qty}
+                      max={line.max}
+                      onChange={(n) => setQty(line.id, n)}
+                      className="shrink-0"
+                    />
+                  </li>
+                ))}
               </ul>
               <button
                 type="button"

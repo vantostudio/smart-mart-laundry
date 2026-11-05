@@ -9,7 +9,9 @@ import { device } from "./helpers";
 
 const carts = {
   "streetmart-cart": [{ id: "basket-small", name: "Small basket", price: 150, qty: 2 }],
-  "streetmart-bag": [{ id: "SM-1002:M", name: "Oversized hoodie", price: 1500, qty: 1, max: 8 }],
+  "streetmart-bag": [
+    { id: "SM-1002:M", name: "Oversized hoodie", price: 1500, qty: 1, max: 8, photo: null },
+  ],
 };
 
 for (const width of [320, 360, 390, 430, 768]) {

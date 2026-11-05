@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { device } from "./helpers";
+import { device, mockShopApi } from "./helpers";
 
 /*
  * Every page at phone, tablet and desktop widths: no sideways scroll, the type scale in

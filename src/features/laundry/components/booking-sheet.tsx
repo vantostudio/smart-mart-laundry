@@ -26,6 +26,7 @@ import {
   addDays,
   COLLECTION_DAYS,
   firstCollectionDay,
+  openingWeek,
   formatDay,
   isCollectionDay,
   isReturnDay,
@@ -35,6 +36,7 @@ import {
   type BookingDates,
 } from "@/features/booking/schedule";
 import { useCart } from "@/features/cart/cart-provider";
+import { useOpeningHours } from "@/features/settings/shop-settings-provider";
 import { laundryItems } from "@/features/laundry/data";
 import {
   bookingGaps,
@@ -68,6 +70,7 @@ const imageOf = new Map(laundryItems.map((i) => [i.id, i.image]));
 export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: Props) {
   const { items, count, total, setQty } = useCart();
   const { area, setArea, note, setNote, remember } = useOrderPlace(site.areas);
+  const week = openingWeek(useOpeningHours());
   // Which day the calendar is choosing; it moves on to Return once collection is picked.
   const [picking, setPicking] = useState<"pickup" | "back">(dates.pickup ? "back" : "pickup");
   const [sentMessage, setSentMessage] = useState<string | null>(null);
@@ -96,7 +99,7 @@ export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: 
   }
 
   const today = now ? toIsoDate(now) : null;
-  const first = now ? firstCollectionDay(now) : null;
+  const first = now ? firstCollectionDay(now, week) : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -202,7 +205,7 @@ export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: 
                   active={picking === "pickup" ? dates.pickup : dates.back}
                   isEnabled={(day) =>
                     picking === "pickup"
-                      ? isCollectionDay(day, now)
+                      ? isCollectionDay(day, now, week)
                       : dates.pickup !== null && isReturnDay(day, dates.pickup)
                   }
                   onSelect={choose}

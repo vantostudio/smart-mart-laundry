@@ -1,8 +1,17 @@
 "use client";
 
-import { SearchX, Search, SlidersHorizontal, Store, Truck, Wallet, X } from "lucide-react";
+import {
+  PackageOpen,
+  Search,
+  SearchX,
+  SlidersHorizontal,
+  Store,
+  Truck,
+  Wallet,
+  X,
+} from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useState } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { PerkList } from "@/components/shared/perk-list";
@@ -13,46 +22,33 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useBag } from "@/features/cart/cart-provider";
 import { useOpenCart } from "@/features/cart/open-cart";
-import {
-  categoryName,
-  productByCode,
-  products,
-  SHOP_DELIVERY,
-  shopCategories,
-  type Condition,
-  type Product,
-  type ShopCategoryId,
-} from "@/features/shop/data";
+import { categoryLabels } from "@/features/products/labels";
+import { priceBands, type PublicProduct, type SortId } from "@/features/products/public";
+import { sizeChoices } from "@/features/products/sizes";
+import { useShopSettings } from "@/features/settings/shop-settings-provider";
 import {
   activeFilterCount,
   emptyFilters,
   filterParams,
-  filterProducts,
   parseFilters,
-  priceBands,
-  sizeOptions,
   sortOptions,
   type Filters,
-  type SortId,
 } from "@/features/shop/lib/filters";
 import { bagLine, bagLineId } from "@/features/shop/lib/shop-message";
+import { PAGE_SIZE, useProduct, useProducts } from "@/features/shop/lib/use-products";
+import { shopMessages, type LoadProblem } from "@/features/shop/messages";
+import type { ProductCondition } from "@/lib/db/schema";
 import { ksh } from "@/lib/format";
 
 import { BagSheet } from "./bag-sheet";
 import { CategoryRail } from "./category-rail";
 import { FiltersSheet } from "./filters-sheet";
-import { ProductCard } from "./product-card";
+import { LoadProblemNotice } from "./load-problem";
+import { ProductCard, ProductCardSkeleton } from "./product-card";
 import { ProductSheet } from "./product-sheet";
 import { ShopBagBar } from "./shop-bag-bar";
 
 export const CATALOGUE_ID = "catalogue";
-const PAGE_SIZE = 12;
-
-const perks = [
-  { icon: Store, label: "Mtumba & brand new" },
-  { icon: Truck, label: `Free delivery over ${ksh(SHOP_DELIVERY.freeFrom)}` },
-  { icon: Wallet, label: "Pay on delivery" },
-];
 
 const conditionOptions = [
   { value: "all", label: "All" },
@@ -62,6 +58,9 @@ const conditionOptions = [
 
 type Params = Pick<URLSearchParams, "get"> | null;
 
+/** A list has no single item to be missing, so anything but offline reads as unavailable. */
+const listProblem = (problem: LoadProblem) => (problem === "offline" ? "offline" : "unavailable");
+
 /** Reads search, filters and the open item from the URL. Must sit inside <Suspense>. */
 export function ShopCatalogueFromUrl() {
   const searchParams = useSearchParams();
@@ -69,28 +68,30 @@ export function ShopCatalogueFromUrl() {
 }
 
 /**
- * The shop: search, aisles, condition, more filters (size, price) and sort over the catalogue,
- * with a quick view per item and a bag that sends one WhatsApp order. Everything you narrow by,
- * and the item you're looking at, lives in the URL so a link shows the same thing.
+ * The shop: search, aisles, condition, more filters (size, price) and sort, all answered by the
+ * API, with a quick view per item and a bag that sends one WhatsApp order. Everything you narrow
+ * by, and the item you're looking at, lives in the URL so a link shows the same thing.
  */
 export function ShopCatalogue({ params }: { params: Params }) {
   const { items: bagItems, add } = useBag();
+  const { deliveryFreeFrom } = useShopSettings();
   const [filters, setFilters] = useState<Filters>(() => parseFilters(params));
   const [itemCode, setItemCode] = useState<string | null>(() => params?.get("item") ?? null);
   const [bagOpen, setBagOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [shown, setShown] = useState(PAGE_SIZE);
-  // Typing stays instant; the grid catches up a moment later.
-  const q = useDeferredValue(filters.q);
 
-  const results = useMemo(() => filterProducts(products, { ...filters, q }), [filters, q]);
-  const counts = useMemo(() => {
-    const everyAisle = filterProducts(products, { ...filters, q, cat: null });
-    return Object.fromEntries(
-      shopCategories.map((c) => [c.id, everyAisle.filter((p) => p.category === c.id).length]),
-    ) as Record<ShopCategoryId, number>;
-  }, [filters, q]);
-  const sizes = sizeOptions(products, filters.cat);
+  const list = useProducts(filters);
+  const { items: results, total, loading } = list;
+  const firstLoad = loading && results.length === 0;
+  const item = useProduct(
+    itemCode,
+    results.find((p) => p.code.toLowerCase() === itemCode?.toLowerCase()),
+  );
+  const perks = [
+    { icon: Store, label: "Mtumba & brand new" },
+    { icon: Truck, label: `Free delivery over ${ksh(deliveryFreeFrom)}` },
+    { icon: Wallet, label: "Pay on delivery" },
+  ];
   const narrowing = activeFilterCount(filters) + (filters.q.trim() ? 1 : 0);
 
   // The header's orders button opens the bag here, or links to /shop#bag from other pages.
@@ -108,9 +109,8 @@ export function ShopCatalogue({ params }: { params: Params }) {
   function change(next: Partial<Filters>) {
     const f = { ...filters, ...next };
     // A size from another aisle would hide everything.
-    if (f.size && !sizeOptions(products, f.cat).includes(f.size)) f.size = null;
+    if (f.size && !sizeChoices(f.cat).includes(f.size)) f.size = null;
     setFilters(f);
-    setShown(PAGE_SIZE);
     writeUrl(f, itemCode);
   }
 
@@ -119,19 +119,20 @@ export function ShopCatalogue({ params }: { params: Params }) {
     writeUrl(filters, code);
   }
 
-  function quickAdd(p: Product) {
-    const size = p.sizes.length === 1 ? p.sizes[0]! : null;
-    const line = size ? bagItems.find((i) => i.id === bagLineId(p, size)) : undefined;
-    if (size && (!line || line.qty < p.stock)) add(bagLine(p, size));
+  function quickAdd(p: PublicProduct) {
+    if (p.sizes.length > 1) return openItem(p.code);
+    const size = p.sizes[0] ?? null;
+    const line = bagItems.find((i) => i.id === bagLineId(p, size));
+    if (!line || line.qty < p.stock) add(bagLine(p, size));
     else openItem(p.code);
   }
 
-  const inBag = (p: Product) => bagItems.some((i) => i.id.startsWith(`${p.code}:`));
+  const inBag = (p: PublicProduct) => bagItems.some((i) => i.id.startsWith(`${p.code}:`));
 
   const chips: { key: string; label: string; clear: Partial<Filters> }[] = [
     ...(filters.q.trim() ? [{ key: "q", label: `“${filters.q.trim()}”`, clear: { q: "" } }] : []),
     ...(filters.cat
-      ? [{ key: "cat", label: categoryName(filters.cat), clear: { cat: null } }]
+      ? [{ key: "cat", label: categoryLabels[filters.cat], clear: { cat: null } }]
       : []),
     ...(filters.cond
       ? [
@@ -185,6 +186,7 @@ export function ShopCatalogue({ params }: { params: Params }) {
               shape="pill"
               enterKeyHint="search"
               autoComplete="off"
+              maxLength={80}
               placeholder="Search dresses, sneakers, jeans…"
               value={filters.q}
               onChange={(e) => change({ q: e.target.value })}
@@ -214,7 +216,11 @@ export function ShopCatalogue({ params }: { params: Params }) {
           <h2 id="catalogue-heading" className="sr-only">
             Catalogue
           </h2>
-          <CategoryRail value={filters.cat} onChange={(cat) => change({ cat })} counts={counts} />
+          <CategoryRail
+            value={filters.cat}
+            onChange={(cat) => change({ cat })}
+            counts={firstLoad || list.problem ? null : list.counts}
+          />
 
           <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
             <ChoiceChips
@@ -222,7 +228,7 @@ export function ShopCatalogue({ params }: { params: Params }) {
               columns={3}
               options={conditionOptions}
               value={filters.cond ?? "all"}
-              onChange={(v) => change({ cond: v === "all" ? null : (v as Condition) })}
+              onChange={(v) => change({ cond: v === "all" ? null : (v as ProductCondition) })}
               className="sm:w-80"
             />
             <div className="flex items-center gap-2 sm:ml-auto sm:gap-3">
@@ -245,10 +251,11 @@ export function ShopCatalogue({ params }: { params: Params }) {
               </label>
               <NativeSelect
                 id="shop-sort"
-                value={filters.sort}
-                onChange={(e) => change({ sort: e.target.value as SortId })}
+                value={filters.sort ?? ""}
+                onChange={(e) => change({ sort: (e.target.value || null) as SortId | null })}
                 className="min-w-0 flex-1 sm:w-52 sm:flex-none"
               >
+                <option value="">Sort by</option>
                 {sortOptions.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.label}
@@ -260,7 +267,13 @@ export function ShopCatalogue({ params }: { params: Params }) {
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <p aria-live="polite" className="mr-1 text-body-sm font-semibold figures">
-              {results.length} {results.length === 1 ? "item" : "items"}
+              {firstLoad ? (
+                shopMessages.loadingList
+              ) : list.problem ? null : (
+                <>
+                  {total} {total === 1 ? "item" : "items"}
+                </>
+              )}
             </p>
             {chips.map((c) => (
               <button
@@ -284,11 +297,38 @@ export function ShopCatalogue({ params }: { params: Params }) {
             )}
           </div>
 
-          {results.length > 0 ? (
+          {firstLoad ? (
+            <ul
+              aria-hidden
+              className="mt-5 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4 lg:gap-x-6"
+            >
+              {Array.from({ length: PAGE_SIZE }, (_, i) => (
+                <li key={i} className="min-w-0">
+                  <ProductCardSkeleton />
+                </li>
+              ))}
+            </ul>
+          ) : list.problem ? (
+            <LoadProblemNotice
+              {...shopMessages.list[listProblem(list.problem)]}
+              onRetry={list.retry}
+            >
+              <WhatsAppButton
+                message={shopMessages.askWhatsAppMessage}
+                variant="secondary"
+                size="lg"
+              >
+                {shopMessages.askWhatsApp}
+              </WhatsAppButton>
+            </LoadProblemNotice>
+          ) : results.length > 0 ? (
             <>
-              <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4 lg:gap-x-6">
-                {results.slice(0, shown).map((p, i) => (
-                  <li key={p.id} className="min-w-0">
+              <ul
+                aria-busy={loading}
+                className="mt-5 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4 lg:gap-x-6"
+              >
+                {results.map((p, i) => (
+                  <li key={p.code} className="min-w-0">
                     <ProductCard
                       product={p}
                       inBag={inBag(p)}
@@ -299,19 +339,47 @@ export function ShopCatalogue({ params }: { params: Params }) {
                   </li>
                 ))}
               </ul>
-              {results.length > shown && (
-                <div className="mt-10 flex justify-center">
+              {total > results.length && (
+                <div className="mt-10 grid justify-items-center gap-3">
+                  {list.moreProblem && (
+                    <p role="alert" className="text-center text-body-sm text-destructive">
+                      {shopMessages.more[listProblem(list.moreProblem)]}
+                    </p>
+                  )}
                   <Button
                     type="button"
                     variant="outline"
                     size="lg"
-                    onClick={() => setShown((n) => n + PAGE_SIZE)}
+                    disabled={list.loadingMore}
+                    onClick={list.loadMore}
                   >
-                    Show more ({results.length - shown} left)
+                    {list.loadingMore
+                      ? "Loading…"
+                      : list.moreProblem
+                        ? shopMessages.retry
+                        : `Show more (${total - results.length} left)`}
                   </Button>
                 </div>
               )}
             </>
+          ) : narrowing === 0 ? (
+            <div className="mt-6 grid justify-items-center gap-3 rounded-3xl bg-card px-5 py-12 text-center shadow-card">
+              <span className="flex size-14 items-center justify-center rounded-full bg-secondary text-primary">
+                <PackageOpen aria-hidden className="size-6" />
+              </span>
+              <p className="display text-title">{shopMessages.empty.title}</p>
+              <p className="max-w-sm text-body-sm text-muted-foreground">
+                {shopMessages.empty.body}
+              </p>
+              <WhatsAppButton
+                message={shopMessages.askWhatsAppMessage}
+                variant="primary"
+                size="lg"
+                className="mt-1"
+              >
+                {shopMessages.askWhatsApp}
+              </WhatsAppButton>
+            </div>
           ) : (
             <div className="mt-6 grid justify-items-center gap-3 rounded-3xl bg-card px-5 py-12 text-center shadow-card">
               <span className="flex size-14 items-center justify-center rounded-full bg-secondary text-primary">
@@ -353,11 +421,14 @@ export function ShopCatalogue({ params }: { params: Params }) {
         onOpenChange={setFiltersOpen}
         filters={filters}
         onChange={change}
-        sizes={sizes}
-        resultCount={results.length}
+        sizes={sizeChoices(filters.cat)}
+        resultCount={total}
       />
       <ProductSheet
-        product={productByCode(itemCode) ?? null}
+        open={itemCode !== null}
+        product={item.product}
+        problem={item.problem}
+        onRetry={item.retry}
         onOpenChange={(open) => !open && openItem(null)}
         onViewBag={() => {
           openItem(null);

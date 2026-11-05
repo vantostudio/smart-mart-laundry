@@ -7,7 +7,9 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/request-id", () => ({ getRequestId: async () => "req-1" }));
 vi.mock("@/features/admin/lib/auth", () => ({ requireAdminForAction: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDb: vi.fn() }));
-vi.mock("@/lib/storage", () => ({ productImageUrl: (key: string) => `https://photos.test/${key}` }));
+vi.mock("@/lib/storage", () => ({
+  productImageUrl: (key: string) => `https://photos.test/${key}`,
+}));
 vi.mock("@/lib/log", () => ({ log: { error: vi.fn(), warn: vi.fn(), info: vi.fn() } }));
 
 const { getDb } = await import("@/lib/db");
@@ -44,9 +46,7 @@ describe("GET /api/products", () => {
   it("answers with a cacheable page of what's in stock", async () => {
     const res = await collection.GET(get(), undefined);
     expect(res.status).toBe(200);
-    expect(res.headers.get("Cache-Control")).toBe(
-      "public, s-maxage=30, stale-while-revalidate=60",
-    );
+    expect(res.headers.get("Cache-Control")).toBe("public, s-maxage=30, stale-while-revalidate=60");
     const body = await res.json();
     expect(body.items.map((p: { code: string }) => p.code)).toEqual(["SM-1001"]);
     expect(body).toMatchObject({ page: 1, limit: 12, total: 1 });

@@ -114,7 +114,10 @@ export const shopSettings = pgTable(
   },
   (t) => [
     check("shop_settings_one_row", sql`${t.id}`),
-    check("shop_settings_delivery_check", sql`${t.deliveryFee} >= 0 and ${t.deliveryFreeFrom} >= 0`),
+    check(
+      "shop_settings_delivery_check",
+      sql`${t.deliveryFee} >= 0 and ${t.deliveryFreeFrom} >= 0`,
+    ),
     check(
       "shop_settings_week_hours_check",
       sql`${t.weekOpen} >= 0 and ${t.weekOpen} < ${t.weekClose} and ${t.weekClose} <= 24`,

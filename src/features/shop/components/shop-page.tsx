@@ -2,6 +2,7 @@ import { Bike, Clock, MapPin, MessageCircle, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { Suspense } from "react";
 
+import { HoursLine } from "@/components/shared/contact";
 import { InfoItem } from "@/components/shared/info-item";
 import { Section } from "@/components/shared/section";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -16,7 +17,7 @@ const buySteps = [
   {
     icon: ShoppingBag,
     title: "Add it to your bag",
-    body: "Pick a size and tap Add. Mtumba pieces are one of a kind, so don't wait too long.",
+    body: "Pick a size and tap Add. Mtumba pieces go fast, so don't wait too long.",
   },
   {
     icon: MessageCircle,
@@ -33,7 +34,7 @@ const buySteps = [
 export function ShopPage() {
   return (
     <>
-      {/* Filters live in the URL; until the client reads it, show the whole catalogue. */}
+      {/* Filters live in the URL; until the client reads it, the catalogue shows placeholders. */}
       <Suspense fallback={<ShopCatalogue params={null} />}>
         <ShopCatalogueFromUrl />
       </Suspense>
@@ -91,7 +92,7 @@ export function ShopPage() {
               {site.location.country}
             </InfoItem>
             <InfoItem icon={Clock} title="Opening hours">
-              {site.hours.map((h) => `${h.days}: ${h.time}`).join(" · ")}
+              <HoursLine />
             </InfoItem>
             <InfoItem icon={MessageCircle} title="Ask what's in stock">
               Send us a WhatsApp message and we reply the same day.

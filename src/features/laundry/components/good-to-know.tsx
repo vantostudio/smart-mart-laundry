@@ -3,12 +3,13 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { MobilePaymentsIllustration } from "@/components/illustrations/mobile-payments";
+import { HoursGrid, PhoneLink } from "@/components/shared/contact";
 import { Price } from "@/components/shared/price";
 import { Section } from "@/components/shared/section";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
-import { areasText, phoneHref, site } from "@/config/site";
+import { areasText, site } from "@/config/site";
 import { homeImages } from "@/features/home/data";
 import {
   basketFrom,
@@ -213,12 +214,7 @@ function HoursTile({ className }: { className?: string }) {
     <Tile className={className}>
       <h3 className="display text-title">Open daily</h3>
       <dl className="mt-3 grid gap-x-4 gap-y-2 text-body-sm @sm:grid-cols-2">
-        {site.hours.map((h) => (
-          <div key={h.days}>
-            <dt className="text-caption text-muted-foreground">{h.days}</dt>
-            <dd className="font-semibold">{h.time}</dd>
-          </div>
-        ))}
+        <HoursGrid />
       </dl>
       <p className="mt-3 text-caption text-muted-foreground">{site.hoursNote}</p>
     </Tile>
@@ -234,9 +230,9 @@ function HelpTile() {
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild variant="inverse" size="md" className="flex-1">
-          <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
+          <PhoneLink>
             <Phone aria-hidden /> Call us
-          </a>
+          </PhoneLink>
         </Button>
         <WhatsAppButton
           message="Hi Street Mart, which laundry basket size do I need?"

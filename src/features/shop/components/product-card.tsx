@@ -1,26 +1,25 @@
 "use client";
 
 import { Check, Plus } from "lucide-react";
-import Image from "next/image";
 
 import { Price } from "@/components/shared/price";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Product } from "@/features/shop/data";
-import { unsplash } from "@/lib/images";
+import { categoryLabels } from "@/features/products/labels";
+import type { PublicProduct } from "@/features/products/public";
 import { cn } from "@/lib/utils";
 
-/** "Size M", "S–XL", "38–44", "Ages 2–8". */
+import { ProductPhoto } from "./product-photo";
+
+/** "One size", "Size M", "S–XL", "38–44". */
 function sizeSummary(sizes: readonly string[]) {
+  if (sizes.length === 0) return "One size";
   if (sizes.length === 1) return `Size ${sizes[0]}`;
-  const first = sizes[0]!;
-  const last = sizes.at(-1)!;
-  if (last.endsWith("yrs")) return `Ages ${parseInt(first)}–${last.match(/(\d+) yrs$/)?.[1]}`;
-  return `${first}–${last}`;
+  return `${sizes[0]}–${sizes.at(-1)}`;
 }
 
 type Props = {
-  product: Product;
+  product: PublicProduct;
   /** Some size of this product is in the bag. */
   inBag: boolean;
   /** Open the quick view. */
@@ -31,12 +30,12 @@ type Props = {
 };
 
 /**
- * Catalogue card: photo with its condition, name, brand and colour, price and sizes. The
- * whole card opens the quick view; the + over the photo adds straight to the bag when there's
- * only one size to choose.
+ * Catalogue card: photo with its condition, name, category, price and sizes. The whole card opens
+ * the quick view; the + over the photo adds straight to the bag when there's no size to choose.
  */
 export function ProductCard({ product: p, inBag, onOpen, onQuickAdd, priority }: Props) {
-  const oneOff = p.condition === "mtumba";
+  const mtumba = p.condition === "mtumba";
+  const lastOne = p.stock === 1;
 
   return (
     <article className="group relative flex min-w-0 flex-col">
@@ -48,16 +47,14 @@ export function ProductCard({ product: p, inBag, onOpen, onQuickAdd, priority }:
         className="absolute inset-0 rounded-3xl focus-visible:ring-4 focus-visible:ring-ring/35 focus-visible:outline-none"
       />
       <div className="pointer-events-none relative aspect-4/5 overflow-hidden rounded-3xl bg-muted">
-        <Image
-          src={unsplash(p.images[0]!, 600)}
-          alt=""
-          fill
+        <ProductPhoto
+          src={p.photos[0]}
           priority={priority}
           sizes="(min-width: 1152px) 270px, (min-width: 1024px) 23vw, (min-width: 640px) 31vw, 46vw"
-          className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+          className="transition-transform duration-700 ease-out-expo group-hover:scale-105"
         />
-        <Badge variant={oneOff ? "soft" : "chip"} size="sm" className="absolute top-2.5 left-2.5">
-          {oneOff ? "Mtumba" : "New"}
+        <Badge variant={mtumba ? "soft" : "chip"} size="sm" className="absolute top-2.5 left-2.5">
+          {mtumba ? "Mtumba" : "New"}
         </Badge>
         <Button
           type="button"
@@ -76,17 +73,29 @@ export function ProductCard({ product: p, inBag, onOpen, onQuickAdd, priority }:
 
       <div className="pointer-events-none relative mt-3 min-w-0 px-1">
         <h3 className="line-clamp-2 text-body font-semibold">{p.name}</h3>
-        <p className="truncate text-caption text-muted-foreground">
-          {[p.brand, p.colour].filter(Boolean).join(" · ")}
-        </p>
+        <p className="truncate text-caption text-muted-foreground">{categoryLabels[p.category]}</p>
         <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2">
           <Price amount={p.price} size="sm" />
-          <span className={cn("text-caption text-muted-foreground", oneOff && "font-semibold")}>
+          <span className={cn("text-caption text-muted-foreground", lastOne && "font-semibold")}>
             {sizeSummary(p.sizes)}
-            {oneOff && " · 1 piece"}
+            {lastOne && " · 1 piece"}
           </span>
         </div>
       </div>
     </article>
+  );
+}
+
+/** The same shape as a card, while products load, so nothing jumps when they arrive. */
+export function ProductCardSkeleton() {
+  return (
+    <div aria-hidden className="flex min-w-0 flex-col">
+      <div className="aspect-4/5 animate-pulse rounded-3xl bg-muted" />
+      <div className="mt-3 grid gap-2 px-1">
+        <div className="h-4 w-4/5 animate-pulse rounded-full bg-muted" />
+        <div className="h-3 w-1/2 animate-pulse rounded-full bg-muted" />
+        <div className="h-4 w-1/3 animate-pulse rounded-full bg-muted" />
+      </div>
+    </div>
   );
 }

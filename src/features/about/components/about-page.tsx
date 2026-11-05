@@ -1,14 +1,15 @@
-import { ArrowRight, Bike, Clock, Mail, MapPin, Phone, Shirt, Sparkles } from "lucide-react";
+import { ArrowRight, Bike, Clock, MapPin, Phone, Shirt, Sparkles } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { HoursLines, PhoneLink, PhoneNumber } from "@/components/shared/contact";
 import { InfoItem } from "@/components/shared/info-item";
 import { PageHero } from "@/components/shared/page-hero";
 import { Section } from "@/components/shared/section";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
-import { phoneHref, site } from "@/config/site";
+import { site } from "@/config/site";
 import { aboutPhotos } from "@/features/about/data";
 import { promises } from "@/features/laundry/data";
 import { cn } from "@/lib/utils";
@@ -153,28 +154,16 @@ export function AboutPage() {
               {site.location.country}
             </InfoItem>
             <InfoItem icon={Clock} title="Opening hours">
-              {site.hours.map((h) => (
-                <p key={h.days}>
-                  {h.days}: {h.time}
-                </p>
-              ))}
+              <HoursLines />
               <p className="mt-1 text-caption">{site.hoursNote}</p>
             </InfoItem>
             <InfoItem icon={Phone} title="Call or WhatsApp">
-              <a
-                href={phoneHref}
+              <PhoneLink
+                showsNumber
                 className="-my-3 inline-flex min-h-11 items-center transition-colors hover:text-clay"
               >
-                {site.phoneDisplay}
-              </a>
-            </InfoItem>
-            <InfoItem icon={Mail} title="Email">
-              <a
-                href={`mailto:${site.email}`}
-                className="-my-3 inline-flex min-h-11 items-center break-all transition-colors hover:text-clay"
-              >
-                {site.email}
-              </a>
+                <PhoneNumber />
+              </PhoneLink>
             </InfoItem>
           </ul>
           <WhatsAppButton variant="clay" size="lg" block className="mt-6 sm:mt-8">

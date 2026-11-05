@@ -17,8 +17,10 @@ export type CartItem = {
   qty: number;
   /** Shown under the name, e.g. "SM-1024 · Size M". */
   detail?: string;
-  /** Most that can be ordered (stock); mtumba pieces are 1. */
+  /** Most that can be ordered (stock). */
   max?: number;
+  /** The product's main photo. Always set on shop lines, null when it has none. */
+  photo?: string | null;
 };
 
 type CartContextValue = {
@@ -32,11 +34,11 @@ type CartContextValue = {
 
 const clamp = (qty: number, max?: number) => (max === undefined ? qty : Math.min(qty, max));
 
-function readStored(key: string): CartItem[] {
+function readStored(key: string, keep: (item: CartItem) => boolean): CartItem[] {
   try {
     const raw = localStorage.getItem(key);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as CartItem[]) : [];
+    return Array.isArray(parsed) ? (parsed as CartItem[]).filter(keep) : [];
   } catch {
     return [];
   }
@@ -44,9 +46,13 @@ function readStored(key: string): CartItem[] {
 
 /**
  * A cart kept in localStorage under `storageKey`. Each call makes its own context, so the laundry
- * basket and the shop bag never mix.
+ * basket and the shop bag never mix. `keep` decides which saved lines are still good.
  */
-function createCart(storageKey: string, name: string) {
+function createCart(
+  storageKey: string,
+  name: string,
+  keep: (item: CartItem) => boolean = () => true,
+) {
   const Context = createContext<CartContextValue | null>(null);
 
   function Provider({ children }: { children: ReactNode }) {
@@ -59,7 +65,7 @@ function createCart(storageKey: string, name: string) {
       // localStorage is only readable after hydration; reading it during render
       // would make the server and client markup disagree.
       // oxlint-disable-next-line react/set-state-in-effect
-      setItems(readStored(storageKey));
+      setItems(readStored(storageKey, keep));
       setLoaded(true);
     }, []);
 
@@ -120,6 +126,7 @@ export const useCart = laundry.useCart;
 
 /** The shop bag (/shop). */
 export const BAG_STORAGE_KEY = "streetmart-bag";
-const bag = createCart(BAG_STORAGE_KEY, "useBag");
+// Lines saved before the shop had real products have no `photo` and can't be ordered.
+const bag = createCart(BAG_STORAGE_KEY, "useBag", (item) => item.photo !== undefined);
 export const BagProvider = bag.Provider;
 export const useBag = bag.useCart;

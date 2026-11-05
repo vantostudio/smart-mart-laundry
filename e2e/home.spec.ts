@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { phone } from "./helpers";
+import { mockShopApi, phone } from "./helpers";
 
 /* The home page: the hero's way into booking, and motion that runs on every device. */
 
 test.use(phone);
+
+test.beforeEach(({ page }) => mockShopApi(page));
 
 test("hero button opens the booking page", async ({ page }) => {
   await page.goto("/");
@@ -28,6 +30,16 @@ test("the shop is one tap or one swipe from the top", async ({ page }) => {
   await rail.getByRole("listitem").first().getByRole("link").click();
   await expect(page).toHaveURL(/\/shop\?item=SM-\d+/);
   await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("the rail isn't there when the shop can't load or has nothing", async ({ page }) => {
+  await mockShopApi(page, { failing: true });
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "New at the shop" })).toHaveCount(0);
+
+  await mockShopApi(page, { products: [] });
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "New at the shop" })).toHaveCount(0);
 });
 
 test("how booking works sits in 'Everything taken care of'", async ({ page }) => {

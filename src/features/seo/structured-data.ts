@@ -1,7 +1,6 @@
 import { site } from "@/config/site";
 import { HERO_IMAGE_ID } from "@/features/home/data";
 import { itemsIn, laundryCategories, laundryItems } from "@/features/laundry/data";
-import { products } from "@/features/shop/data";
 import { ksh } from "@/lib/format";
 import { ogImage, unsplash } from "@/lib/images";
 import type { OpeningHours } from "@/lib/opening-hours";
@@ -41,7 +40,7 @@ export function areaServed() {
   );
 }
 
-const allPrices = [...laundryItems, ...products].map((i) => i.price);
+const allPrices = laundryItems.map((i) => i.price);
 
 /** Every page: the business (laundry and clothing store in one) and the website. */
 export function businessJsonLd() {
@@ -58,7 +57,6 @@ export function businessJsonLd() {
         logo: `${site.url}/apple-icon`,
         image: ogImage(HERO_IMAGE_ID),
         telephone: `+${site.whatsapp}`,
-        email: site.email,
         priceRange: `${ksh(Math.min(...allPrices))}–${ksh(Math.max(...allPrices)).replace("KSh ", "")}`,
         currenciesAccepted: "KES",
         paymentAccepted: "Cash, M-Pesa",

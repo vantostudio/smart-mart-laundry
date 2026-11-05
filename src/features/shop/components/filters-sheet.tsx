@@ -1,7 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
-
 import { ToggleChip } from "@/components/shared/toggle-chip";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,16 +11,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { priceBands, type Filters } from "@/features/shop/lib/filters";
-import { cn } from "@/lib/utils";
+import { priceBands } from "@/features/products/public";
+import type { Filters } from "@/features/shop/lib/filters";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   filters: Filters;
   onChange: (next: Partial<Filters>) => void;
-  /** Sizes stocked in the current category. */
-  sizes: string[];
+  /** Sizes in the current category. */
+  sizes: readonly string[];
   /** Results with the current filters, for the "Show N items" button. */
   resultCount: number;
 };

@@ -58,7 +58,10 @@ describe("/api/admin/staff", () => {
     expect(added).toEqual({ id: added.id, name: "Wanjiru", role: "admin" });
 
     const context = paramsFor(added.id);
-    const changed = await single.PATCH(send("PATCH", `${base}/${added.id}`, { role: "owner" }), context);
+    const changed = await single.PATCH(
+      send("PATCH", `${base}/${added.id}`, { role: "owner" }),
+      context,
+    );
     expect((await changed.json()).role).toBe("owner");
 
     const removed = await single.DELETE(send("DELETE", `${base}/${added.id}`), context);
