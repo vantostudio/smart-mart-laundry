@@ -38,6 +38,9 @@ export class AppError extends Error {
   }
 }
 
+/** What people get for anything unexpected. */
+export const internalErrorMessage = "Internal error";
+
 /**
  * The shape sent to a client. Pure: callers log unexpected errors at their boundary. Anything that
  * isn't an `AppError` becomes `INTERNAL`, with no text from the original error.
@@ -51,5 +54,5 @@ export function toErrorShape(err: unknown, requestId: string): AppErrorShape {
       requestId,
     };
   }
-  return { code: "INTERNAL", message: "Internal error", requestId };
+  return { code: "INTERNAL", message: internalErrorMessage, requestId };
 }
