@@ -125,6 +125,46 @@ describe("ProductForm", () => {
     expect(save()).toBeEnabled();
   });
 
+  it("takes people to the field that needs fixing", async () => {
+    mocks.saveProduct.mockResolvedValue({
+      ok: false,
+      error: { code: "VALIDATION", message: "Check this", field: "name", requestId: "r" },
+    });
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(save());
+    await screen.findByRole("alert");
+    expect(screen.getByLabelText("Name")).toHaveFocus();
+    expect(screen.getByLabelText("Name")).toHaveAccessibleDescription("Check this");
+  });
+
+  it("takes people to the category when none is chosen", async () => {
+    const user = userEvent.setup();
+    render(<ProductForm />);
+    await user.type(screen.getByLabelText("Name"), "Sneakers");
+    await user.click(screen.getByRole("radio", { name: "New" }));
+    await user.type(screen.getByLabelText("Price (KSh)"), "1");
+    await user.type(screen.getByLabelText("Stock"), "1");
+    await user.click(save());
+    expect(await screen.findByRole("alert")).toHaveTextContent("Choose a category.");
+    expect(screen.getByRole("radio", { name: "Ladies wear" })).toHaveFocus();
+  });
+
+  it("offers sign-in in a new tab when the session has ended, keeping the form", async () => {
+    mocks.saveProduct.mockResolvedValue({
+      ok: false,
+      error: { code: "UNAUTHENTICATED", message: "Please sign in.", requestId: "r" },
+    });
+    const user = userEvent.setup();
+    render(<ProductForm product={product} photos={photos} />);
+    await user.click(save());
+    const link = await screen.findByRole("link", { name: "Sign in again" });
+    expect(link).toHaveAttribute("href", "/admin/sign-in");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(screen.getByLabelText("Name")).toHaveValue("Linen dress");
+    expect(save()).toBeEnabled();
+  });
+
   it("shows a failure with no field, with the code to quote", async () => {
     mocks.saveProduct.mockResolvedValue({
       ok: false,
@@ -190,6 +230,7 @@ describe("ProductForm", () => {
     const user = userEvent.setup();
     render(<ProductForm product={product} photos={photos} />);
     await user.click(screen.getByRole("button", { name: "Remove photo 1" }));
+    expect(screen.getByRole("button", { name: "Add photos" })).toHaveFocus();
     await user.click(save());
     expect(mocks.saveProduct).toHaveBeenCalledWith("p1", expect.objectContaining({ images: [] }));
   });

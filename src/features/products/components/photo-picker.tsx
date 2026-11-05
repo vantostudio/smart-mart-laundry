@@ -8,29 +8,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { productMessages } from "@/features/admin/messages";
 
-import { errorText, uploadPhoto, type Photo } from "../lib/api-client";
+import { problemFrom, uploadPhoto, type Photo, type Problem } from "../lib/api-client";
 import { shrinkImage } from "../lib/shrink-image";
 import { MAX_PHOTOS } from "../limits";
+import { ProblemText } from "./problem-text";
 
 type Props = {
   photos: Photo[];
   onChange: (update: (photos: Photo[]) => Photo[]) => void;
   /** True while photos are uploading, so the form can't save without them. */
   onBusyChange: (busy: boolean) => void;
-  error?: string | undefined;
+  problem?: Problem | undefined;
 };
 
 /** Shrinks and uploads photos one at a time, keeping what worked if a later one fails. */
-export function PhotoPicker({ photos, onChange, onBusyChange, error }: Props) {
+export function PhotoPicker({ photos, onChange, onBusyChange, problem }: Props) {
   const input = useRef<HTMLInputElement>(null);
+  const addButton = useRef<HTMLButtonElement>(null);
   const hintId = useId();
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [failure, setFailure] = useState<Problem | null>(null);
 
   async function add(files: File[]) {
     const room = MAX_PHOTOS - photos.length;
     const chosen = files.slice(0, room);
-    setFailure(files.length > room ? productMessages.photoLimit(MAX_PHOTOS) : null);
+    setFailure(files.length > room ? { message: productMessages.photoLimit(MAX_PHOTOS) } : null);
     onBusyChange(true);
     for (const [index, file] of chosen.entries()) {
       setProgress({ done: index + 1, total: chosen.length });
@@ -38,12 +40,12 @@ export function PhotoPicker({ photos, onChange, onBusyChange, error }: Props) {
       try {
         shrunk = await shrinkImage(file);
       } catch {
-        setFailure(productMessages.photoUnreadable);
+        setFailure({ message: productMessages.photoUnreadable });
         continue;
       }
       const result = await uploadPhoto(shrunk);
       if (result.ok) onChange((current) => [...current, result.data]);
-      else setFailure(errorText(result.error));
+      else setFailure(problemFrom(result.error));
     }
     setProgress(null);
     onBusyChange(false);
@@ -55,9 +57,14 @@ export function PhotoPicker({ photos, onChange, onBusyChange, error }: Props) {
     if (files.length > 0) void add(files);
   }
 
-  const message = failure ?? error;
+  function remove(key: string) {
+    onChange((current) => current.filter((item) => item.key !== key));
+    addButton.current?.focus(); // The button that was focused is about to go.
+  }
+
+  const shown = failure ?? problem;
   return (
-    <fieldset>
+    <fieldset data-field="images">
       <legend className="text-body-sm font-semibold">{productMessages.photos}</legend>
       <p id={hintId} className="text-caption text-muted-foreground">
         {productMessages.photosHint}
@@ -87,9 +94,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange, error }: Props) {
                 variant="secondary"
                 aria-label={productMessages.removePhoto(index + 1)}
                 className="absolute top-0 right-0 size-11 rounded-full p-0"
-                onClick={() =>
-                  onChange((current) => current.filter((item) => item.key !== photo.key))
-                }
+                onClick={() => remove(photo.key)}
               >
                 <X aria-hidden />
               </Button>
@@ -108,6 +113,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange, error }: Props) {
         onChange={onPick}
       />
       <Button
+        ref={addButton}
         type="button"
         variant="outline"
         className="mt-3"
@@ -120,11 +126,7 @@ export function PhotoPicker({ photos, onChange, onBusyChange, error }: Props) {
       <p aria-live="polite" className="mt-2 text-body-sm text-muted-foreground empty:hidden">
         {progress ? productMessages.addingPhotos(progress.done, progress.total) : ""}
       </p>
-      {message && (
-        <p role="alert" className="mt-2 text-body-sm text-destructive">
-          {message}
-        </p>
-      )}
+      {shown && <ProblemText problem={shown} className="mt-2" />}
     </fieldset>
   );
 }

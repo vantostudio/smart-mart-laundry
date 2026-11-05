@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { deleteProduct, errorText, saveProduct, uploadPhoto } from "./api-client";
+import { deleteProduct, problemFrom, saveProduct, uploadPhoto } from "./api-client";
 
 const fetchMock = vi.fn<typeof fetch>();
 const draft = { name: "Dress", category: "ladies", condition: "new", price: 1, stock: 1 } as const;
@@ -38,6 +38,15 @@ describe("saveProduct", () => {
   });
 });
 
+describe("an answer that isn't JSON", () => {
+  it("isn't blamed on the connection", async () => {
+    fetchMock.mockResolvedValue(new Response("<html>", { status: 502 }));
+    const result = await saveProduct(undefined, draft);
+    expect(result).toMatchObject({ ok: false, error: { requestId: "" } });
+    expect(JSON.stringify(result)).not.toContain("connection");
+  });
+});
+
 describe("deleteProduct", () => {
   it("treats 204 as done", async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
@@ -54,14 +63,26 @@ describe("uploadPhoto", () => {
   });
 });
 
-describe("errorText", () => {
+describe("problemFrom", () => {
   it("adds the code to quote for an unexpected failure", () => {
-    const text = errorText({ code: "INTERNAL", message: "Internal error", requestId: "abc" });
-    expect(text).toContain("abc");
+    const problem = problemFrom({ code: "INTERNAL", message: "Internal error", requestId: "abc" });
+    expect(problem.message).toContain("abc");
   });
 
-  it("uses the API's words otherwise, and for a network failure", () => {
-    expect(errorText(error)).toBe("Check this");
-    expect(errorText({ code: "INTERNAL", message: "Offline", requestId: "" })).toBe("Offline");
+  it("uses the API's words and field otherwise, and for a network failure", () => {
+    expect(problemFrom(error)).toEqual({ message: "Check this", field: "name" });
+    expect(problemFrom({ code: "INTERNAL", message: "Offline", requestId: "" }).message).toBe(
+      "Offline",
+    );
+  });
+
+  it("names the field for a bad photo", () => {
+    expect(problemFrom({ ...error, field: "images.2" }).field).toBe("images");
+  });
+
+  it("marks a signed-out caller, so the page can offer sign-in", () => {
+    const problem = problemFrom({ code: "UNAUTHENTICATED", message: "x", requestId: "r" });
+    expect(problem.signedOut).toBe(true);
+    expect(problem.message).toContain("nothing here is lost");
   });
 });

@@ -14,15 +14,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { productMessages } from "@/features/admin/messages";
 
-import { deleteProduct, errorText } from "../lib/api-client";
+import { deleteProduct, problemFrom, type Problem } from "../lib/api-client";
 import { productsHref } from "../lib/links";
+import { ProblemText } from "./problem-text";
 
 /** Asks first, naming the product. Stays open on failure so the message can be read. */
 export function DeleteProduct({ id, name }: { id: string; name: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [failure, setFailure] = useState<Problem | null>(null);
 
   async function confirm() {
     setDeleting(true);
@@ -34,7 +35,7 @@ export function DeleteProduct({ id, name }: { id: string; name: string }) {
       return;
     }
     setDeleting(false);
-    setFailure(errorText(result.error));
+    setFailure(problemFrom(result.error));
   }
 
   return (
@@ -47,11 +48,7 @@ export function DeleteProduct({ id, name }: { id: string; name: string }) {
       <AlertDialogContent>
         <AlertDialogTitle>{productMessages.deleteHeading(name)}</AlertDialogTitle>
         <AlertDialogDescription>{productMessages.deleteBody}</AlertDialogDescription>
-        {failure && (
-          <p role="alert" className="mt-3 text-body-sm text-destructive">
-            {failure}
-          </p>
-        )}
+        {failure && <ProblemText problem={failure} className="mt-3" />}
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <AlertDialogCancel asChild>
             <Button variant="secondary" disabled={deleting}>

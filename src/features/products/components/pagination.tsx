@@ -11,7 +11,10 @@ type Props = { view: ProductsView; page: number; limit: number; total: number };
 export function Pagination({ view, page, limit, total }: Props) {
   const pages = Math.max(1, Math.ceil(total / limit));
   return (
-    <nav aria-label="Pages" className="mt-8 flex flex-wrap items-center justify-between gap-3">
+    <nav
+      aria-label={productMessages.pages}
+      className="mt-8 flex flex-wrap items-center justify-between gap-3"
+    >
       <p className="text-body-sm text-muted-foreground">
         {productMessages.pageOf(page, pages, total)}
       </p>

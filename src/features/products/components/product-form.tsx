@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,19 @@ import { productMessages } from "@/features/admin/messages";
 import type { ProductCategory, ProductCondition } from "@/lib/db/schema";
 
 import { categoryLabels, conditionLabels, optionsOf } from "../labels";
-import { errorText, saveProduct, type Photo, type ProductDraft } from "../lib/api-client";
+import {
+  problemFrom,
+  saveProduct,
+  type Photo,
+  type Problem,
+  type ProductDraft,
+} from "../lib/api-client";
 import { productsHref } from "../lib/links";
 import type { Product } from "../lib/products";
 import { PhotoPicker } from "./photo-picker";
+import { ProblemText } from "./problem-text";
 
-type Failure = { field?: string | undefined; message: string };
+const FIELDS = ["name", "condition", "category", "price", "stock", "sizes", "images", "note"];
 
 /** "S, M,, m " becomes ["S", "M", "m"]. */
 export function parseSizes(text: string): string[] {
@@ -28,12 +35,14 @@ export function parseSizes(text: string): string[] {
 }
 
 function Field({
+  name,
   label,
   htmlFor,
   hint,
   error,
   children,
 }: {
+  name: string;
   label: string;
   htmlFor?: string;
   hint?: string;
@@ -41,7 +50,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <div>
+    <div data-field={name}>
       {htmlFor ? (
         <label htmlFor={htmlFor} className="text-body-sm font-semibold">
           {label}
@@ -50,12 +59,14 @@ function Field({
         <p className="text-body-sm font-semibold">{label}</p>
       )}
       <div className="mt-1.5">{children}</div>
-      {hint && <p className="mt-1 text-caption text-muted-foreground">{hint}</p>}
-      {error && (
-        <p role="alert" className="mt-1 text-body-sm text-destructive">
-          {error}
-        </p>
-      )}
+      <div id={htmlFor && `${htmlFor}-help`}>
+        {hint && <p className="mt-1 text-caption text-muted-foreground">{hint}</p>}
+        {error && (
+          <p role="alert" className="mt-1 text-body-sm text-destructive">
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -76,11 +87,19 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [failure, setFailure] = useState<Failure | null>(null);
+  const [failure, setFailure] = useState<Problem | null>(null);
+  const form = useRef<HTMLFormElement>(null);
 
   const errorFor = (field: string) => (failure?.field === field ? failure.message : undefined);
-  const known = ["name", "category", "condition", "price", "stock", "sizes", "note", "images"];
-  const general = failure && !known.includes(failure.field ?? "") ? failure.message : null;
+  const general = failure && !FIELDS.includes(failure.field ?? "") ? failure : null;
+
+  // Save is at the bottom of a long form, so take people to whatever needs fixing.
+  useEffect(() => {
+    if (!failure?.field || !FIELDS.includes(failure.field)) return;
+    const field = form.current?.querySelector(`[data-field="${failure.field}"]`);
+    field?.querySelector<HTMLElement>("input:not([hidden]), textarea, button")?.focus();
+    field?.scrollIntoView?.({ block: "center" });
+  }, [failure]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -108,24 +127,33 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
       return;
     }
     setSaving(false);
-    // "images.0" is the photos field.
-    setFailure({ field: result.error.field?.split(".")[0], message: errorText(result.error) });
+    setFailure(problemFrom(result.error));
   }
 
   return (
-    <form onSubmit={submit} className="mt-6 space-y-6 rounded-3xl bg-card p-6 shadow-card">
-      <Field label={productMessages.name} htmlFor={`${id}-name`} error={errorFor("name")}>
+    <form
+      ref={form}
+      onSubmit={submit}
+      className="mt-6 space-y-6 rounded-3xl bg-card p-6 shadow-card"
+    >
+      <Field
+        name="name"
+        label={productMessages.name}
+        htmlFor={`${id}-name`}
+        error={errorFor("name")}
+      >
         <Input
           id={`${id}-name`}
           value={name}
           required
           maxLength={200}
           aria-invalid={errorFor("name") !== undefined}
+          aria-describedby={`${id}-name-help`}
           onChange={(event) => setName(event.target.value)}
         />
       </Field>
 
-      <Field label={productMessages.condition} error={errorFor("condition")}>
+      <Field name="condition" label={productMessages.condition} error={errorFor("condition")}>
         <ChoiceChips
           label={productMessages.condition}
           options={optionsOf(conditionLabels)}
@@ -135,7 +163,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
         />
       </Field>
 
-      <Field label={productMessages.category} error={errorFor("category")}>
+      <Field name="category" label={productMessages.category} error={errorFor("category")}>
         <ChoiceChips
           label={productMessages.category}
           options={optionsOf(categoryLabels)}
@@ -146,7 +174,12 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label={productMessages.price} htmlFor={`${id}-price`} error={errorFor("price")}>
+        <Field
+          name="price"
+          label={productMessages.price}
+          htmlFor={`${id}-price`}
+          error={errorFor("price")}
+        >
           <Input
             id={`${id}-price`}
             type="number"
@@ -156,10 +189,16 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
             value={price}
             required
             aria-invalid={errorFor("price") !== undefined}
+            aria-describedby={`${id}-price-help`}
             onChange={(event) => setPrice(event.target.value)}
           />
         </Field>
-        <Field label={productMessages.stock} htmlFor={`${id}-stock`} error={errorFor("stock")}>
+        <Field
+          name="stock"
+          label={productMessages.stock}
+          htmlFor={`${id}-stock`}
+          error={errorFor("stock")}
+        >
           <Input
             id={`${id}-stock`}
             type="number"
@@ -169,12 +208,14 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
             value={stock}
             required
             aria-invalid={errorFor("stock") !== undefined}
+            aria-describedby={`${id}-stock-help`}
             onChange={(event) => setStock(event.target.value)}
           />
         </Field>
       </div>
 
       <Field
+        name="sizes"
         label={productMessages.sizes}
         htmlFor={`${id}-sizes`}
         hint={productMessages.sizesHint}
@@ -184,6 +225,7 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
           id={`${id}-sizes`}
           value={sizes}
           aria-invalid={errorFor("sizes") !== undefined}
+          aria-describedby={`${id}-sizes-help`}
           onChange={(event) => setSizes(event.target.value)}
         />
       </Field>
@@ -192,10 +234,11 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
         photos={photos}
         onChange={setPhotos}
         onBusyChange={setUploading}
-        error={errorFor("images")}
+        problem={failure?.field === "images" ? failure : undefined}
       />
 
       <Field
+        name="note"
         label={productMessages.note}
         htmlFor={`${id}-note`}
         hint={productMessages.noteHint}
@@ -207,15 +250,12 @@ export function ProductForm({ product, photos: initialPhotos = [] }: Props) {
           maxLength={1000}
           rows={3}
           aria-invalid={errorFor("note") !== undefined}
+          aria-describedby={`${id}-note-help`}
           onChange={(event) => setNote(event.target.value)}
         />
       </Field>
 
-      {general && (
-        <p role="alert" className="text-body-sm text-destructive">
-          {general}
-        </p>
-      )}
+      {general && <ProblemText problem={general} />}
 
       <Button type="submit" variant="clay" size="lg" block disabled={saving || uploading}>
         {saving ? productMessages.saving : productMessages.save}

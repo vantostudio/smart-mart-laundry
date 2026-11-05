@@ -59,6 +59,7 @@ export const productMessages = {
   noPhoto: "No photo",
   pageOf: (page: number, pages: number, total: number) =>
     `Page ${page} of ${pages} · ${total} ${total === 1 ? "product" : "products"}`,
+  pages: "Pages",
   previous: "Previous",
   next: "Next",
   allConditions: "All conditions",
@@ -79,6 +80,10 @@ export const productMessages = {
   save: "Save product",
   saving: "Saving…",
   offline: "That didn't go through. Check your connection and try again.",
+  notSaved: "That didn't go through. Please try again.",
+  signedOut:
+    "You've been signed out. Sign in again in a new tab, then come back: nothing here is lost.",
+  signInAgain: "Sign in again",
   photos: "Photos",
   photosHint: "The first photo is the one customers see first.",
   addPhotos: "Add photos",

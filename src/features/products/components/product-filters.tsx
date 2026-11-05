@@ -10,9 +10,17 @@ type Pill = { label: string; view: ProductsView; current: boolean };
 
 function PillRow({ label, pills }: { label: string; pills: Pill[] }) {
   return (
-    <nav aria-label={label} className="flex flex-wrap gap-2">
+    <nav
+      aria-label={label}
+      className="flex [scrollbar-width:none] gap-2 overflow-x-auto md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden"
+    >
       {pills.map((pill) => (
-        <Button key={pill.label} asChild variant={pill.current ? "primary" : "secondary"}>
+        <Button
+          key={pill.label}
+          asChild
+          variant={pill.current ? "primary" : "secondary"}
+          className="shrink-0"
+        >
           <Link href={productsHref(pill.view)} aria-current={pill.current ? "true" : undefined}>
             {pill.label}
           </Link>

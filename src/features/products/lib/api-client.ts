@@ -20,19 +20,26 @@ const json = (method: string, body: unknown): RequestInit => ({
   body: JSON.stringify(body),
 });
 
+function failure(message: string): { ok: false; error: AppErrorShape } {
+  return { ok: false, error: { code: "INTERNAL", message, requestId: "" } };
+}
+
 async function call<T>(path: string, init: RequestInit): Promise<Result<T>> {
+  let response: Response;
   try {
-    const response = await fetch(path, init);
-    if (response.status === 204) return { ok: true, data: undefined as T };
+    response = await fetch(path, init);
+  } catch {
+    return failure(productMessages.offline);
+  }
+  if (response.status === 204) return { ok: true, data: undefined as T };
+  try {
     const body: unknown = await response.json();
     return response.ok
       ? { ok: true, data: body as T }
       : { ok: false, error: (body as { error: AppErrorShape }).error };
   } catch {
-    return {
-      ok: false,
-      error: { code: "INTERNAL", message: productMessages.offline, requestId: "" },
-    };
+    // Our API always answers JSON, so something between us and it answered instead.
+    return failure(productMessages.notSaved);
   }
 }
 
@@ -52,9 +59,22 @@ export function uploadPhoto(photo: Blob): Promise<Result<Photo>> {
   return call(`${BASE}/images`, { method: "POST", body });
 }
 
-/** The sentence to show. An unexpected failure gives the code to quote to the owner. */
-export function errorText(error: AppErrorShape): string {
-  return error.code === "INTERNAL" && error.requestId
-    ? errorMessages.INTERNAL(error.requestId)
-    : error.message;
+/** What to show for a failure. */
+export type Problem = {
+  message: string;
+  field?: string | undefined;
+  /** Add a way to sign in again that keeps this page open. */
+  signedOut?: boolean;
+};
+
+/** "images.0" is the photos field. An unexpected failure gives the code to quote to the owner. */
+export function problemFrom(error: AppErrorShape): Problem {
+  if (error.code === "UNAUTHENTICATED") {
+    return { message: productMessages.signedOut, signedOut: true };
+  }
+  const message =
+    error.code === "INTERNAL" && error.requestId
+      ? errorMessages.INTERNAL(error.requestId)
+      : error.message;
+  return { message, field: error.field?.split(".")[0] };
 }

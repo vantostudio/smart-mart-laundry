@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/shared/wordmark";
 import { Button } from "@/components/ui/button";
 import type { AdminContext } from "@/features/admin/lib/auth";
+import { productMessages } from "@/features/admin/messages";
 
 import { SignOutButton } from "./sign-out-button";
 
@@ -21,7 +22,7 @@ export function AdminHeader({ admin }: { admin: AdminContext }) {
             <span className="text-muted-foreground"> · {roleLabels[admin.role]}</span>
           </p>
           <Button asChild variant="ghost" className="px-3">
-            <Link href="/admin/products">Products</Link>
+            <Link href="/admin/products">{productMessages.heading}</Link>
           </Button>
           {admin.role === "owner" && (
             <Button asChild variant="ghost" className="px-3">
