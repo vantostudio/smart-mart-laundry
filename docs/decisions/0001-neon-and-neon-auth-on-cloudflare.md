@@ -8,8 +8,9 @@ Status: **Accepted**, 2026-11-03. Plan: `.factory/plans/001-backend-auth-for-adm
   sent over WhatsApp and nothing stored beyond the visitor's own `localStorage`.
 - 3 to 5 named Street Mart staff must sign in to a private `/admin` area.
 - The site is moving to Cloudflare (slice `hosting` adds the config).
-- The public pages stay static and never touch the database. (Later: they load products and shop
-  settings in the browser from a public API, so the rule holds but the site now needs its database.)
+- The public pages stay static and never touch the database. (Later: they load products in the
+  browser from a public API. Since [0002](0002-server-cached-public-reads.md) three cached server
+  reads are the only exception: shop settings, product pages and the sitemap.)
 - The project's scale moves from `small` to `growing`, because staff now log in.
 
 ## Options considered

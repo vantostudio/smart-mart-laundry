@@ -21,8 +21,6 @@ type Limit = { max: number; windowMs: number };
 export const limits = {
   /** Public product reads. */
   read: { max: 120, windowMs: 60_000 },
-  /** Shop settings: one per page load, so its budget is separate from product reads. */
-  settings: { max: 120, windowMs: 60_000 },
   /** Any admin request by IP, before auth work. Generous: all staff may share the shop's IP. */
   adminGate: { max: 300, windowMs: 60_000 },
   /** Admin GETs, per person. */
@@ -109,8 +107,7 @@ export function clientIdFrom(headers: Headers): string {
   return "ip:unknown";
 }
 
-/** Counts one request. `RATE_LIMIT_OFF=1` turns it off for local e2e runs; never set it in production. */
+/** Counts one request. */
 export function rateLimit(key: string, group: LimitGroup): Promise<RateLimitResult> {
-  if (process.env.RATE_LIMIT_OFF === "1") return Promise.resolve({ allowed: true });
   return store.hit(key, group);
 }

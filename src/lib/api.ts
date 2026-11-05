@@ -142,13 +142,12 @@ const expectedPublicErrors = new Set<AppErrorCode>(["VALIDATION", "NOT_FOUND"]);
  */
 export function publicRoute<Context>(
   handler: (args: { request: Request; context: Context }) => Promise<Response>,
-  options?: { limit?: "settings" },
 ): (request: Request, context: Context) => Promise<Response> {
   return async (request, context) => {
     try {
       const limited = await limitedResponse(
         request,
-        options?.limit ?? "read",
+        "read",
         clientIdFrom(request.headers),
         (requestId) => ({ error: { code: "RATE_LIMITED", requestId } }),
       );

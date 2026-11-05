@@ -156,13 +156,6 @@ describe("rate limiting", () => {
     expect(logged).not.toContain("9.9.9.9");
   });
 
-  it("keeps settings out of the product read budget", async () => {
-    const reads = publicRoute(async () => Response.json({}));
-    const settings = publicRoute(async () => Response.json({}), { limit: "settings" });
-    for (let i = 0; i <= limits.read.max; i++) await reads(getFrom("7.7.7.7"), undefined);
-    expect((await settings(getFrom("7.7.7.7"), undefined)).status).toBe(200);
-  });
-
   it("limits admin writes per person, so staff on one IP don't share a bucket", async () => {
     const route = adminRoute(async () => Response.json({ done: true }));
     const write = () => route(post({ ...sameSite, "cf-connecting-ip": "5.5.5.5" }), undefined);

@@ -7,10 +7,12 @@ vi.mock("@/lib/request-id", () => ({ getRequestId: async () => "req-1" }));
 vi.mock("@/features/admin/lib/auth", () => ({ requireAdminForAction: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDb: vi.fn() }));
 vi.mock("@/lib/storage", () => ({ deleteObject: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 const { requireAdminForAction } = await import("@/features/admin/lib/auth");
 const { getDb } = await import("@/lib/db");
 const { deleteObject } = await import("@/lib/storage");
+const { revalidateTag } = await import("next/cache");
 const collection = await import("./route");
 const single = await import("./[id]/route");
 
@@ -26,6 +28,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  vi.mocked(revalidateTag).mockClear();
   await t.client.exec("truncate product");
   vi.mocked(deleteObject).mockReset();
   vi.mocked(deleteObject).mockResolvedValue();
@@ -78,6 +81,26 @@ describe("/api/admin/products", () => {
     const deleted = await single.DELETE(send("DELETE", `${base}/${created.id}`), context);
     expect(deleted.status).toBe(204);
     expect((await single.GET(send("GET", `${base}/${created.id}`), context)).status).toBe(404);
+  });
+
+  it("expires the cached public product pages and sitemap after each write", async () => {
+    const { body } = await create();
+    expect(revalidateTag).toHaveBeenCalledTimes(1);
+    expect(revalidateTag).toHaveBeenLastCalledWith("products", { expire: 0 });
+
+    const context = paramsFor(body.id);
+    await single.PATCH(send("PATCH", `${base}/${body.id}`, { stock: 0 }), context);
+    expect(revalidateTag).toHaveBeenCalledTimes(2);
+    await single.DELETE(send("DELETE", `${base}/${body.id}`), context);
+    expect(revalidateTag).toHaveBeenCalledTimes(3);
+  });
+
+  it("expires nothing when a write fails", async () => {
+    await create({ category: "campus" });
+    const missing = "5b3f0a7e-6f0e-4a0e-9a63-0c1c1c1c1c1c";
+    await single.PATCH(send("PATCH", `${base}/${missing}`, { price: 1 }), paramsFor(missing));
+    await single.DELETE(send("DELETE", `${base}/${missing}`), paramsFor(missing));
+    expect(revalidateTag).not.toHaveBeenCalled();
   });
 
   it("lists a page with filters", async () => {

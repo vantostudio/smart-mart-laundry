@@ -1,3 +1,7 @@
+import { categoryLabels } from "@/features/products/labels";
+import type { PublicProduct } from "@/features/products/public";
+import { ksh } from "@/lib/format";
+
 /* Every message the public shop shows when something goes wrong or there's nothing to show. */
 
 export type LoadProblem = "offline" | "unavailable" | "busy" | "not-found";
@@ -37,6 +41,19 @@ export const shopMessages = {
       title: "This item is no longer available",
       body: "It may have just sold. There's plenty more in the shop.",
     },
+  },
+  /** The product page `/shop/[code]`: text for search results and social cards. */
+  productPage: {
+    description: (p: PublicProduct) => {
+      const kind = p.condition === "mtumba" ? "Mtumba" : "Brand new";
+      const note = p.note ? ` ${p.note.trim()}` : "";
+      return `${p.name}: ${kind.toLowerCase()} ${categoryLabels[p.category].toLowerCase()} for ${ksh(p.price)}.${note} Order on WhatsApp for delivery in Chuka, or try it on at Chuka General.`.slice(
+        0,
+        300,
+      );
+    },
+    missingTitle: "Item no longer available",
+    back: "Back to the shop",
   },
   empty: {
     title: "New stock is on its way",

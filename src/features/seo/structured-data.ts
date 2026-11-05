@@ -1,5 +1,9 @@
+import { openingHoursOf, type ShopSettings } from "@/config/shop-settings";
 import { site } from "@/config/site";
 import { HERO_IMAGE_ID } from "@/features/home/data";
+import { categoryLabels } from "@/features/products/labels";
+import type { PublicProduct } from "@/features/products/public";
+import { shopMessages } from "@/features/shop/messages";
 import { itemsIn, laundryCategories, laundryItems } from "@/features/laundry/data";
 import { ksh } from "@/lib/format";
 import { ogImage, unsplash } from "@/lib/images";
@@ -9,7 +13,7 @@ import type { OpeningHours } from "@/lib/opening-hours";
  * schema.org data (JSON-LD) that tells search engines what Street Mart is, where it is, when it's
  * open and which areas it serves, so local searches ("laundry near Chuka University", "mtumba
  * Chuka") can match it. Built from the same config and data the pages show, so they never drift.
- * Check changes with https://search.google.com/test/rich-results.
+ * The phone and opening hours are the live shop settings, passed in. Check changes with https://search.google.com/test/rich-results.
  */
 
 const BUSINESS_ID = `${site.url}/#business`;
@@ -43,7 +47,7 @@ function areaServed() {
 const allPrices = laundryItems.map((i) => i.price);
 
 /** Every page: the business (laundry and clothing store in one) and the website. */
-export function businessJsonLd() {
+export function businessJsonLd(settings: ShopSettings) {
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -56,7 +60,7 @@ export function businessJsonLd() {
         url: site.url,
         logo: `${site.url}/apple-icon`,
         image: ogImage(HERO_IMAGE_ID),
-        telephone: `+${site.whatsapp}`,
+        telephone: `+${settings.phone}`,
         priceRange: `${ksh(Math.min(...allPrices))}–${ksh(Math.max(...allPrices)).replace("KSh ", "")}`,
         currenciesAccepted: "KES",
         paymentAccepted: "Cash, M-Pesa",
@@ -69,7 +73,7 @@ export function businessJsonLd() {
           addressCountry: site.location.countryCode,
         },
         hasMap: site.mapsUrl,
-        openingHoursSpecification: openingHoursSpecification(site.openingHours),
+        openingHoursSpecification: openingHoursSpecification(openingHoursOf(settings)),
         areaServed: areaServed(),
         knowsAbout: ["Laundry", "Dry cleaning", "Ironing", "Duvet cleaning", "Mtumba", "Shoes"],
       },
@@ -115,6 +119,40 @@ export function laundryServiceJsonLd() {
           priceCurrency: "KES",
         })),
       })),
+    },
+  };
+}
+
+/** What `itemCondition` says for each way we sell: mtumba is second hand. */
+const conditionUrls = {
+  new: "https://schema.org/NewCondition",
+  mtumba: "https://schema.org/UsedCondition",
+} as const;
+
+/**
+ * `/shop/[code]`: one piece with its price and whether it can be bought. Built only from the public
+ * product, so it never carries an id, a date or a storage key.
+ */
+export function productJsonLd(p: PublicProduct) {
+  const url = `${site.url}/shop/${p.code}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "@id": `${url}#product`,
+    name: p.name,
+    sku: p.code,
+    url,
+    description: shopMessages.productPage.description(p),
+    category: categoryLabels[p.category],
+    ...(p.photos.length > 0 && { image: p.photos }),
+    offers: {
+      "@type": "Offer",
+      url,
+      price: p.price,
+      priceCurrency: "KES",
+      availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: conditionUrls[p.condition],
+      seller: { "@id": BUSINESS_ID },
     },
   };
 }

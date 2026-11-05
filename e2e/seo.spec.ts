@@ -66,3 +66,20 @@ test("logo icons, manifest, sitemap and robots are served", async ({ page, reque
   expect(await (await request.get("/sitemap.xml")).text()).toContain("/shop");
   expect(await (await request.get("/robots.txt")).text()).toContain("Sitemap:");
 });
+
+test("the first HTML already holds the shop's phone and hours, with no request for them", async ({
+  page,
+  request,
+}) => {
+  // With no database these are the defaults in src/config/shop-settings.ts; with one, the saved row.
+  // Either way the server sends them, and the page never asks `/api/settings`.
+  const asked: string[] = [];
+  page.on("request", (r) => asked.push(new URL(r.url()).pathname));
+  const html = await (await request.get("/")).text();
+  expect(html).toMatch(/href="tel:\+\d{12}"/);
+  expect(html).toMatch(/"telephone":"\+\d{12}"/);
+  expect(html).toContain('"opens":"');
+  await page.goto("/");
+  await expect(page.locator("footer").getByRole("link", { name: /^Call/ })).toBeVisible();
+  expect(asked).not.toContain("/api/settings");
+});

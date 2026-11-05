@@ -76,6 +76,22 @@ test("filters sheet narrows by size and price", async ({ page }) => {
   }
 });
 
+test("a card links to its own page, and a plain click still opens the quick view", async ({
+  page,
+}) => {
+  await page.goto("/shop");
+  const first = page.locator("#catalogue article").first();
+  await expect(first).toBeVisible();
+  const link = first.getByRole("link");
+  await expect(link).toHaveAttribute("href", /^\/shop\/SM-\d+$/);
+
+  await expect(async () => {
+    await link.click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  await expect(page).toHaveURL(/\/shop\?item=SM-\d+/);
+});
+
 test("quick view needs a size, then the bag sends one WhatsApp order", async ({ page }) => {
   await page.goto("/shop?item=SM-1002");
   const sheet = page.getByRole("dialog", { name: "Oversized hoodie" });
@@ -217,29 +233,6 @@ test("sample items left in a saved bag are dropped", async ({ page }) => {
   await page.goto("/shop");
   await expect(count(page)).toBeVisible();
   await expect(page.getByRole("button", { name: "View bag" })).toHaveCount(0);
-});
-
-test("saved delivery and contact settings replace the defaults", async ({ page }) => {
-  await mockShopApi(page, {
-    settings: {
-      deliveryFee: 150,
-      deliveryFreeFrom: 3000,
-      phone: "254700000001",
-      weekOpen: 8,
-      weekClose: 18,
-      sundayOpen: 10,
-      sundayClose: 14,
-    },
-  });
-  await page.goto("/shop");
-  await expect(page.getByText("Free delivery over KSh 3,000")).toBeVisible();
-  await expect(page.getByText("Monday – Saturday: 8:00 AM – 6:00 PM")).toBeVisible();
-  const ask = page.getByRole("link", { name: "Ask on WhatsApp" }).first();
-  await expect(ask).toHaveAttribute("href", /wa\.me\/254700000001/);
-  await expect(page.locator("footer").getByRole("link", { name: /^Call/ })).toHaveAttribute(
-    "href",
-    "tel:+254700000001",
-  );
 });
 
 test("the About page shows no email", async ({ page }) => {

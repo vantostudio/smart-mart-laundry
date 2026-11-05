@@ -1,4 +1,3 @@
-import type { ShopSettings } from "@/config/shop-settings";
 import type { PublicProduct, PublicProductPage } from "@/features/products/public";
 import type { LoadProblem } from "@/features/shop/messages";
 
@@ -36,8 +35,4 @@ export function fetchProducts(url: string, signal: AbortSignal) {
 
 export function fetchProduct(code: string, signal: AbortSignal) {
   return read<PublicProduct>(`/api/products/${encodeURIComponent(code)}`, signal);
-}
-
-export function fetchShopSettings(signal: AbortSignal) {
-  return read<ShopSettings>("/api/settings", signal);
 }

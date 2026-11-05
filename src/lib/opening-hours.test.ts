@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { defaultShopSettings, openingHoursOf } from "@/config/shop-settings";
 import { site } from "@/config/site";
 
 import { formatHoursSummary, formatTime, getOpenStatus } from "./opening-hours";
 
 // Nairobi is UTC+3 all year. 2026-10-26 is a Monday, 2026-10-31 a Saturday, 2026-11-01 a Sunday.
+const hours = openingHoursOf(defaultShopSettings);
 const at = (iso: string) => new Date(`${iso}+03:00`);
-const status = (iso: string) => getOpenStatus(at(iso), site.openingHours, site.timeZone);
+const status = (iso: string) => getOpenStatus(at(iso), hours, site.timeZone);
 
 describe("getOpenStatus", () => {
   it("is open during weekday hours", () => {
@@ -31,9 +33,7 @@ describe("getOpenStatus", () => {
 
   it("reads the clock in the shop's time zone, not the device's", () => {
     // 04:30 UTC on Monday is 07:30 in Nairobi.
-    expect(
-      getOpenStatus(new Date("2026-10-26T04:30:00Z"), site.openingHours, site.timeZone).open,
-    ).toBe(true);
+    expect(getOpenStatus(new Date("2026-10-26T04:30:00Z"), hours, site.timeZone).open).toBe(true);
   });
 
   it("names the weekday when the next opening is further away", () => {
@@ -54,6 +54,6 @@ describe("formatTime", () => {
 
 describe("formatHoursSummary", () => {
   it("matches the published hours", () => {
-    expect(formatHoursSummary(site.openingHours)).toBe("Mon–Sat 7 AM–8 PM, Sun 9 AM–4 PM");
+    expect(formatHoursSummary(hours)).toBe("Mon–Sat 7 AM–8 PM, Sun 9 AM–4 PM");
   });
 });

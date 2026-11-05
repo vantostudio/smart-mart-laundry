@@ -135,7 +135,6 @@ function answerList(url: URL, products: Product[]) {
 
 type ShopApi = {
   products?: Product[];
-  settings?: Record<string, number | string>;
   /** Every product request answers 503. */
   failing?: boolean;
 };
@@ -157,10 +156,4 @@ export async function mockShopApi(page: Page, api: ShopApi = {}) {
       ? route.fulfill({ json: found })
       : route.fulfill({ status: 404, json: { error: { code: "NOT_FOUND" } } });
   });
-  await page.unroute("**/api/settings").catch(() => {});
-  await page.route("**/api/settings", (route) =>
-    api.settings
-      ? route.fulfill({ json: api.settings })
-      : route.fulfill({ status: 503, json: { error: { code: "INTERNAL" } } }),
-  );
 }

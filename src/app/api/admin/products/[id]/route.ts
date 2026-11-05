@@ -1,8 +1,11 @@
+import { revalidateTag } from "next/cache";
+
 import { apiMessages } from "@/features/admin/messages";
 import { removePhotos } from "@/features/products/lib/photos";
 import { deleteProduct, getProduct, updateProduct } from "@/features/products/lib/products";
 import { productId, updateProductInput } from "@/features/products/schema";
 import { adminRoute, parseBody } from "@/lib/api";
+import { cacheTags } from "@/lib/cache-tags";
 import { getDb } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 
@@ -28,6 +31,7 @@ export const PATCH = adminRoute<Context>(async ({ request, context }) => {
   // Only a patch that sets `images` can drop a photo, so only then is the old list needed.
   const before = patch.images ? (await getProduct(db, id)).images : [];
   const updated = await updateProduct(db, id, patch);
+  revalidateTag(cacheTags.products, { expire: 0 });
   await removePhotos(
     db,
     before.filter((key) => !updated.images.includes(key)),
@@ -37,6 +41,8 @@ export const PATCH = adminRoute<Context>(async ({ request, context }) => {
 
 export const DELETE = adminRoute<Context>(async ({ context }) => {
   const db = getDb();
-  await removePhotos(db, await deleteProduct(db, await idFrom(context)));
+  const images = await deleteProduct(db, await idFrom(context));
+  revalidateTag(cacheTags.products, { expire: 0 });
+  await removePhotos(db, images);
   return new Response(null, { status: 204 });
 });
