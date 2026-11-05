@@ -101,9 +101,25 @@ function ProductProblem({
             {shopMessages.retry}
           </Button>
         )}
-        <Button type="button" variant="secondary" size="lg" block onClick={onClose}>
+        <Button
+          type="button"
+          variant={problem === "not-found" ? "primary" : "secondary"}
+          size="lg"
+          block
+          onClick={onClose}
+        >
           {shopMessages.backToShop}
         </Button>
+        {problem === "not-found" && (
+          <WhatsAppButton
+            message={shopMessages.askWhatsAppMessage}
+            variant="secondary"
+            size="lg"
+            block
+          >
+            {shopMessages.askWhatsApp}
+          </WhatsAppButton>
+        )}
       </SheetFooter>
     </>
   );

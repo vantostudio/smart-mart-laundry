@@ -91,10 +91,11 @@ export function ProductCardSkeleton() {
   return (
     <div aria-hidden className="flex min-w-0 flex-col">
       <div className="aspect-4/5 animate-pulse rounded-3xl bg-muted" />
-      <div className="mt-3 grid gap-2 px-1">
-        <div className="h-4 w-4/5 animate-pulse rounded-full bg-muted" />
-        <div className="h-3 w-1/2 animate-pulse rounded-full bg-muted" />
-        <div className="h-4 w-1/3 animate-pulse rounded-full bg-muted" />
+      {/* Empty lines in the card's own type sizes, so the heights match. */}
+      <div className="mt-3 px-1">
+        <p className="w-4/5 animate-pulse rounded-full bg-muted text-body font-semibold">&nbsp;</p>
+        <p className="mt-px w-1/2 animate-pulse rounded-full bg-muted text-caption">&nbsp;</p>
+        <p className="mt-1 w-1/3 animate-pulse rounded-full bg-muted text-body">&nbsp;</p>
       </div>
     </div>
   );

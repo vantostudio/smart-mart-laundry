@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { ChoiceChips } from "@/components/shared/choice-chips";
 import { PerkList } from "@/components/shared/perk-list";
@@ -81,6 +81,7 @@ export function ShopCatalogue({ params }: { params: Params }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const list = useProducts(filters);
+  const status = useRef<HTMLParagraphElement>(null);
   const { items: results, total, loading } = list;
   const firstLoad = loading && results.length === 0;
   const item = useProduct(
@@ -112,6 +113,12 @@ export function ShopCatalogue({ params }: { params: Params }) {
     if (f.size && !sizeChoices(f.cat).includes(f.size)) f.size = null;
     setFilters(f);
     writeUrl(f, itemCode);
+  }
+
+  /** Try again disappears with the notice, so keep keyboard users in the same place. */
+  function retry() {
+    list.retry();
+    status.current?.focus();
   }
 
   function openItem(code: string | null) {
@@ -266,7 +273,12 @@ export function ShopCatalogue({ params }: { params: Params }) {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <p aria-live="polite" className="mr-1 text-body-sm font-semibold figures">
+            <p
+              ref={status}
+              tabIndex={-1}
+              aria-live="polite"
+              className="mr-1 text-body-sm font-semibold figures outline-none"
+            >
               {firstLoad ? (
                 shopMessages.loadingList
               ) : list.problem ? null : (
@@ -309,10 +321,7 @@ export function ShopCatalogue({ params }: { params: Params }) {
               ))}
             </ul>
           ) : list.problem ? (
-            <LoadProblemNotice
-              {...shopMessages.list[listProblem(list.problem)]}
-              onRetry={list.retry}
-            >
+            <LoadProblemNotice {...shopMessages.list[listProblem(list.problem)]} onRetry={retry}>
               <WhatsAppButton
                 message={shopMessages.askWhatsAppMessage}
                 variant="secondary"

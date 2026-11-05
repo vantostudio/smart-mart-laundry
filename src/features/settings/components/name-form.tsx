@@ -12,12 +12,12 @@ import { SaveRow, SettingsPanel, useSave } from "./settings-form";
 /** Everyone's own display name, so the admin never needs to show an email. */
 export function NameForm({ name: initial }: { name: string | null }) {
   const [name, setName] = useState(initial ?? "");
-  const { saving, saved, failure, submit } = useSave(() => saveOwnName(name));
+  const { saving, saved, failure, submit, form, edited } = useSave(() => saveOwnName(name));
   const error = failure?.field === "name" ? failure.message : undefined;
 
   return (
     <SettingsPanel heading={m.yourNameHeading} body={m.yourNameBody}>
-      <form onSubmit={submit} noValidate className="grid gap-4">
+      <form ref={form} onSubmit={submit} onChange={edited} noValidate className="grid gap-4">
         <FormField name="name" label={m.yourNameLabel} htmlFor="own-name" error={error}>
           <Input
             id="own-name"

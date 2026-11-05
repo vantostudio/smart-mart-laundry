@@ -18,14 +18,14 @@ const FIELDS = ["deliveryFee", "deliveryFreeFrom"];
 export function DeliveryForm({ settings }: { settings: ShopSettings }) {
   const [fee, setFee] = useState(String(settings.deliveryFee));
   const [freeFrom, setFreeFrom] = useState(String(settings.deliveryFreeFrom));
-  const { saving, saved, failure, submit } = useSave(() =>
+  const { saving, saved, failure, submit, form, edited } = useSave(() =>
     saveShopSettings({ deliveryFee: amount(fee), deliveryFreeFrom: amount(freeFrom) }),
   );
   const errorFor = (field: string) => (failure?.field === field ? failure.message : undefined);
 
   return (
     <SettingsPanel heading={m.deliveryHeading} body={m.deliveryBody}>
-      <form onSubmit={submit} noValidate className="grid gap-4">
+      <form ref={form} onSubmit={submit} onChange={edited} noValidate className="grid gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             name="deliveryFee"

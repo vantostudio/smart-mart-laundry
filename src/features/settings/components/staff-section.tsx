@@ -136,7 +136,7 @@ function AddStaff() {
   const [name, setName] = useState("");
   const [role, setRole] = useState<AdminRole>("admin");
   const [addedName, setAddedName] = useState<string | null>(null);
-  const { saving, failure, submit } = useSave(() => addStaffMember({ email, name, role }));
+  const { saving, failure, submit, form } = useSave(() => addStaffMember({ email, name, role }));
 
   async function onSubmit(event: Parameters<typeof submit>[0]) {
     setAddedName(null);
@@ -157,7 +157,12 @@ function AddStaff() {
   const nameError = failure?.field === "name" ? failure.message : undefined;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-5 grid gap-4 border-t border-border pt-5">
+    <form
+      ref={form}
+      onSubmit={onSubmit}
+      noValidate
+      className="mt-5 grid gap-4 border-t border-border pt-5"
+    >
       <h3 className="text-body font-semibold">{m.addHeading}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField

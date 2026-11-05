@@ -13,14 +13,16 @@ import { SaveRow, SettingsPanel, useSave } from "./settings-form";
 
 type HourField = "weekOpen" | "weekClose" | "sundayOpen" | "sundayClose";
 
-const hourFields: { field: HourField; label: string }[] = [
-  { field: "weekOpen", label: m.weekOpen },
-  { field: "weekClose", label: m.weekClose },
-  { field: "sundayOpen", label: m.sundayOpen },
-  { field: "sundayClose", label: m.sundayClose },
-];
+/** A day can open from midnight (0) and close as late as the next midnight (24). */
+const openingHours = Array.from({ length: 24 }, (_, hour) => hour);
+const closingHours = openingHours.map((hour) => hour + 1);
 
-const hours = Array.from({ length: 25 }, (_, hour) => hour);
+const hourFields: { field: HourField; label: string; hours: number[] }[] = [
+  { field: "weekOpen", label: m.weekOpen, hours: openingHours },
+  { field: "weekClose", label: m.weekClose, hours: closingHours },
+  { field: "sundayOpen", label: m.sundayOpen, hours: openingHours },
+  { field: "sundayClose", label: m.sundayClose, hours: closingHours },
+];
 
 const FIELDS = ["phone", ...hourFields.map((h) => h.field)];
 
@@ -32,7 +34,9 @@ export function ContactForm({ settings }: { settings: ShopSettings }) {
     sundayOpen: settings.sundayOpen,
     sundayClose: settings.sundayClose,
   });
-  const { saving, saved, failure, submit } = useSave(() => saveShopSettings({ phone, ...times }));
+  const { saving, saved, failure, submit, form, edited } = useSave(() =>
+    saveShopSettings({ phone, ...times }),
+  );
 
   const phoneError = failure?.field === "phone" ? m.phoneInvalid : undefined;
   const hourError = (field: HourField) =>
@@ -40,7 +44,7 @@ export function ContactForm({ settings }: { settings: ShopSettings }) {
 
   return (
     <SettingsPanel heading={m.contactHeading} body={m.contactBody}>
-      <form onSubmit={submit} noValidate className="grid gap-4">
+      <form ref={form} onSubmit={submit} onChange={edited} noValidate className="grid gap-4">
         <FormField
           name="phone"
           label={m.phone}
@@ -59,7 +63,7 @@ export function ContactForm({ settings }: { settings: ShopSettings }) {
           />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
-          {hourFields.map(({ field, label }) => (
+          {hourFields.map(({ field, label, hours }) => (
             <FormField
               key={field}
               name={field}
@@ -76,7 +80,7 @@ export function ContactForm({ settings }: { settings: ShopSettings }) {
               >
                 {hours.map((hour) => (
                   <option key={hour} value={hour}>
-                    {longTime(hour)}
+                    {hour === 24 ? m.midnight : longTime(hour)}
                   </option>
                 ))}
               </NativeSelect>

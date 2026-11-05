@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { ProblemText } from "@/features/admin/components/problem-text";
 import { problemFrom, type Problem, type Result } from "@/features/admin/lib/api-call";
@@ -27,12 +27,24 @@ export function SettingsPanel({
   );
 }
 
-/** Sends a form and tracks how it went. On success the page reloads its server data. */
+/**
+ * Sends a form and tracks how it went. On success the page reloads its server data. On failure it
+ * goes to the field at fault, or the message, which can be off screen on a phone. Put `form` and
+ * `onChange={edited}` on the `<form>`, so "Saved" doesn't stay beside changes that aren't.
+ */
 export function useSave<T>(save: () => Promise<Result<T>>) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [failure, setFailure] = useState<Problem | null>(null);
+  const form = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!failure) return;
+    const field = form.current?.querySelector(`[data-field="${failure.field}"]`);
+    field?.querySelector<HTMLElement>("input, select")?.focus();
+    (field ?? form.current?.querySelector('[role="alert"]'))?.scrollIntoView?.({ block: "center" });
+  }, [failure]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -50,7 +62,7 @@ export function useSave<T>(save: () => Promise<Result<T>>) {
     return result;
   }
 
-  return { saving, saved, failure, submit };
+  return { saving, saved, failure, submit, form, edited: () => setSaved(false) };
 }
 
 /** The Save button with what happened next to it. */

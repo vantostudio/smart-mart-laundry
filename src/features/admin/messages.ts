@@ -131,6 +131,7 @@ export const settingsMessages = {
   sundayOpen: "Sunday, opens",
   sundayClose: "Sunday, closes",
   closesAfterOpens: "Closing time must be after opening time.",
+  midnight: "Midnight",
   staffHeading: "Staff",
   staffBody: "Who can sign in to the admin. Owners can also change these shop settings and staff.",
   you: "You",

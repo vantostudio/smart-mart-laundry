@@ -92,7 +92,40 @@ describe("DeliveryForm", () => {
   });
 });
 
+describe("after a save", () => {
+  it("stops saying Saved once something changes again", async () => {
+    fetchMock.mockResolvedValue(Response.json(defaultShopSettings));
+    render(<DeliveryForm settings={defaultShopSettings} />);
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByText(settingsMessages.savedForShop);
+
+    await userEvent.type(screen.getByLabelText(settingsMessages.deliveryFee), "5");
+    expect(screen.queryByText(settingsMessages.savedForShop)).toBeNull();
+  });
+
+  it("moves focus to the field that needs fixing", async () => {
+    refuse("VALIDATION", "Check this and try again.", "deliveryFreeFrom");
+    render(<DeliveryForm settings={defaultShopSettings} />);
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await screen.findByRole("alert");
+    expect(screen.getByLabelText(settingsMessages.deliveryFreeFrom)).toHaveFocus();
+  });
+});
+
 describe("ContactForm", () => {
+  it("offers midnight only as a closing time", () => {
+    render(<ContactForm settings={defaultShopSettings} />);
+    const options = (label: string) =>
+      within(screen.getByLabelText(label))
+        .getAllByRole("option")
+        .map((o) => o.textContent);
+    expect(options(settingsMessages.weekClose)).toContain("Midnight");
+    expect(options(settingsMessages.weekOpen)).not.toContain("Midnight");
+    expect(options(settingsMessages.weekOpen)[0]).toBe("12:00 AM");
+    expect(options(settingsMessages.weekClose)[0]).toBe("1:00 AM");
+  });
+
   it("shows the number readably and sends hours as numbers", async () => {
     fetchMock.mockResolvedValue(Response.json(defaultShopSettings));
     render(<ContactForm settings={defaultShopSettings} />);

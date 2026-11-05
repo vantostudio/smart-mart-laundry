@@ -165,6 +165,7 @@ test("when the shop can't load it says so, offers WhatsApp and can try again", a
   await mockShopApi(page);
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(count(page)).toHaveText("21 items");
+  await expect(count(page)).toBeFocused();
 });
 
 test("an empty shop says stock is coming, not that nothing matches", async ({ page }) => {
@@ -178,6 +179,7 @@ test("an old link to something sold says so and leads back", async ({ page }) =>
   await page.goto("/shop?item=SM-9999");
   const sheet = page.getByRole("dialog", { name: "This item is no longer available" });
   await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Ask on WhatsApp" })).toBeVisible();
   await sheet.getByRole("button", { name: "Back to the shop" }).click();
   await expect(page).toHaveURL(/\/shop$/);
   await expect(sheet).toHaveCount(0);
