@@ -30,7 +30,7 @@ describe("toErrorShape", () => {
   });
 
   it("lists every code once", () => {
-    expect(new Set(appErrorCodes).size).toBe(10);
+    expect(new Set(appErrorCodes).size).toBe(appErrorCodes.length);
     expect(appErrorCodes).toContain("AUTH_UNAVAILABLE");
   });
 });
