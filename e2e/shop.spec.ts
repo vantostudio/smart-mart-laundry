@@ -156,7 +156,9 @@ test("a failed Show more keeps what's loaded and can try again", async ({ page }
 test("when the shop can't load it says so, offers WhatsApp and can try again", async ({ page }) => {
   await mockShopApi(page, { failing: true });
   await page.goto("/shop");
-  await expect(page.getByRole("alert")).toContainText("We couldn't load the shop just now");
+  await expect(page.locator("#catalogue").getByRole("alert")).toContainText(
+    "We couldn't load the shop just now",
+  );
   await expect(page.getByRole("link", { name: "Ask on WhatsApp" }).first()).toBeVisible();
   await expect(count(page)).toHaveCount(0);
 
