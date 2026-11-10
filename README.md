@@ -50,9 +50,11 @@ pnpm cf:deploy --env preview    # the `street-mart-preview` Worker, on its own w
 pnpm exec wrangler rollback     # back to the previous deployed version
 ```
 
-Build without `.env*` files that hold values (only `.env.example`): OpenNext can carry `.env`
-values into the Worker bundle. Secrets go in `wrangler secret put <NAME>` (add `--env preview`
-for the preview Worker), and in `.dev.vars` for local preview.
+`pnpm cf:build` stops before building when the repo root holds any `.env*` file other than
+`.env.example` (`scripts/check-no-env-files.mjs`), because OpenNext copies `.env` values into the
+Worker bundle and the deployed Worker would fall back to them for any secret Wrangler doesn't set.
+Move `.env.local` aside while you build. Secrets go in `wrangler secret put <NAME>` (add
+`--env preview` for the preview Worker), and in `.dev.vars` for local preview.
 
 Static files are served by Workers Static Assets without running the Worker, so their headers
 (the favicon's content type, long caching for `_next/static`) are set in `public/_headers`.
