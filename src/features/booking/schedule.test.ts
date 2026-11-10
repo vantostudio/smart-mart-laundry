@@ -8,6 +8,7 @@ import {
   formatDay,
   fromIsoDate,
   isCollectionDay,
+  openingWeek,
   isReturnDay,
   isSameDay,
   parseDates,
@@ -41,6 +42,15 @@ describe("collection days", () => {
     expect(firstCollectionDay(at(WED, 19))).toBe("2026-10-29");
     // Sunday closes at 4 PM.
     expect(firstCollectionDay(at(SUN, 15))).toBe("2026-11-02");
+  });
+
+  it("follows the hours staff set", () => {
+    const shorter = openingWeek([
+      { days: [1, 2, 3, 4, 5, 6], open: "08:00", close: "12:00" },
+      { days: [0], open: "09:00", close: "16:00" },
+    ]);
+    expect(firstCollectionDay(at(WED, 11), shorter)).toBe("2026-10-29");
+    expect(isCollectionDay(WED, at(WED, 11), shorter)).toBe(false);
   });
 
   it("allows two weeks ahead and nothing in the past", () => {

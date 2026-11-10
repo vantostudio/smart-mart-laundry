@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { device } from "./helpers";
+import { device, mockShopApi } from "./helpers";
 
 /*
  * Every page at phone, tablet and desktop widths: no sideways scroll, the type scale in
@@ -56,6 +56,7 @@ for (const vp of viewports) {
 
     for (const { path, h1, h2 } of pages) {
       test(path, async ({ page }) => {
+        await mockShopApi(page);
         await page.goto(path);
         await settle(page);
         const expected = scale[deviceClass(vp.width)];

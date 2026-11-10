@@ -1,0 +1,2 @@
+ALTER TABLE "product" DROP CONSTRAINT "product_category_check";--> statement-breakpoint
+ALTER TABLE "product" ADD CONSTRAINT "product_category_check" CHECK ("product"."category" in ('ladies', 'men', 'shoes'));

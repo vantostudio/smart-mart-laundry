@@ -11,6 +11,20 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [{ source: "/egikomba", destination: "/shop", permanent: true }];
   },
+  // Staff pages: never framed (clickjacking), no referrer leaving the site, never cached anywhere.
+  async headers() {
+    return [
+      {
+        source: "/admin/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Referrer-Policy", value: "same-origin" },
+          { key: "Cache-Control", value: "private, no-store" },
+        ],
+      },
+    ];
+  },
   // Unsplash resizes on its own CDN, so images never go through the Next optimizer
   // (no remotePatterns needed); see src/lib/image-loader.ts.
   images: { loader: "custom", loaderFile: "./src/lib/image-loader.ts" },

@@ -8,14 +8,20 @@
  * slips to the wrong day.
  */
 
-import { site } from "@/config/site";
-import type { Weekday } from "@/lib/opening-hours";
+import { defaultShopSettings, openingHoursOf } from "@/config/shop-settings";
+import type { OpeningHours, Weekday } from "@/lib/opening-hours";
 
-/** Opening hours in whole hours (24 h clock) from the site config, indexed by Date#getDay. */
-const openingHours = Array.from({ length: 7 }, (_, day) => {
-  const period = site.openingHours.find((p) => p.days.includes(day as Weekday))!;
-  return { open: parseInt(period.open, 10), close: parseInt(period.close, 10) };
-});
+/** Opening hours as whole hours (24 h clock), indexed by Date#getDay. */
+export function openingWeek(hours: OpeningHours) {
+  return Array.from({ length: 7 }, (_, day) => {
+    const period = hours.find((p) => p.days.includes(day as Weekday))!;
+    return { open: parseInt(period.open, 10), close: parseInt(period.close, 10) };
+  });
+}
+
+type OpeningWeek = ReturnType<typeof openingWeek>;
+
+const usualWeek = openingWeek(openingHoursOf(defaultShopSettings));
 
 /** How many days ahead a collection can be booked, today included. */
 export const COLLECTION_DAYS = 14;
@@ -100,8 +106,8 @@ export function formatDay(iso: string, { month = false }: { month?: boolean } = 
   return month ? `${p.weekday} ${p.day} ${p.month}` : `${p.weekday} ${p.day}`;
 }
 
-export function hoursFor(iso: string): { open: number; close: number } {
-  return openingHours[partsOf(iso).dow]!;
+function closingHour(iso: string, week: OpeningWeek): number {
+  return week[partsOf(iso).dow]!.close;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -109,17 +115,18 @@ export function hoursFor(iso: string): { open: number; close: number } {
 // ---------------------------------------------------------------------------------------------
 
 /** First day a collection can be booked: today until an hour before closing, then tomorrow. */
-export function firstCollectionDay(now: Date): string {
+export function firstCollectionDay(now: Date, week = usualWeek): string {
   const today = toIsoDate(now);
-  const cutOff = hoursFor(today).close - LEAD_TIME_HOURS;
+  const cutOff = closingHour(today, week) - LEAD_TIME_HOURS;
   return now.getHours() < cutOff ? today : addDays(today, 1);
 }
 
 /** Bookable collection day: from the first open day up to COLLECTION_DAYS from today. */
-export function isCollectionDay(iso: string, now: Date): boolean {
+export function isCollectionDay(iso: string, now: Date, week = usualWeek): boolean {
   const today = toIsoDate(now);
   return (
-    daysBetween(firstCollectionDay(now), iso) >= 0 && daysBetween(today, iso) < COLLECTION_DAYS
+    daysBetween(firstCollectionDay(now, week), iso) >= 0 &&
+    daysBetween(today, iso) < COLLECTION_DAYS
   );
 }
 
@@ -139,10 +146,10 @@ export const isSameDay = (d: BookingDates) => d.pickup !== null && d.pickup === 
 type ParamSource = Pick<URLSearchParams, "get"> | null | undefined;
 
 /** Dates from the URL, dropping any that can no longer be booked. */
-export function parseDates(params: ParamSource, now: Date): BookingDates {
+export function parseDates(params: ParamSource, now: Date, week = usualWeek): BookingDates {
   const pickupParam = params?.get("pickup") ?? null;
   const pickup =
-    pickupParam && fromIsoDate(pickupParam) && isCollectionDay(pickupParam, now)
+    pickupParam && fromIsoDate(pickupParam) && isCollectionDay(pickupParam, now, week)
       ? pickupParam
       : null;
   const backParam = params?.get("back") ?? null;

@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 import { site } from "@/config/site";
+import { useOpeningHours } from "@/features/settings/shop-settings-provider";
 import { getOpenStatus } from "@/lib/opening-hours";
 import { cn } from "@/lib/utils";
 
@@ -20,10 +21,9 @@ const serverMinute = () => null;
 /** "Open now, closes 8 PM" / "Closed, opens 7 AM", computed in the browser in shop time. */
 export function OpenNow({ className }: { className?: string }) {
   const minute = useSyncExternalStore(subscribe, currentMinute, serverMinute);
+  const hours = useOpeningHours();
   const status =
-    minute === null
-      ? null
-      : getOpenStatus(new Date(minute * MINUTE), site.openingHours, site.timeZone);
+    minute === null ? null : getOpenStatus(new Date(minute * MINUTE), hours, site.timeZone);
 
   return (
     // Fixed line height so nothing shifts when the text appears.

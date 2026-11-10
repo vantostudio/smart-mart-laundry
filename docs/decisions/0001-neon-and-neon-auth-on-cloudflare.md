@@ -8,7 +8,9 @@ Status: **Accepted**, 2026-11-03. Plan: `.factory/plans/001-backend-auth-for-adm
   sent over WhatsApp and nothing stored beyond the visitor's own `localStorage`.
 - 3 to 5 named Street Mart staff must sign in to a private `/admin` area.
 - The site is moving to Cloudflare (slice `hosting` adds the config).
-- The public pages stay static and never touch the database.
+- The public pages stay static and never touch the database. (Later: they load products in the
+  browser from a public API. Since [0002](0002-server-cached-public-reads.md) three cached server
+  reads are the only exception: shop settings, product pages and the sitemap.)
 - The project's scale moves from `small` to `growing`, because staff now log in.
 
 ## Options considered
@@ -104,6 +106,56 @@ photos (drift item 3 in the plan).
 - A partner asks for SSO.
 - Real orders depend on the backend: add Sentry.
 
+## Auth details (slice auth-core)
+
+- **Package:** `@neon/auth` 0.8.2 (its Next.js entry `@neon/auth/next/server`), pinned by
+  `pnpm-lock.yaml`. The plan guessed `@neondatabase/auth`; the real name differs. It brings Better
+  Auth 1.7 as its own dependency; we don't depend on Better Auth directly.
+- **Variables:** `NEON_AUTH_BASE_URL` comes from `neon deploy` and includes the path; use it as
+  written, `https` only. `NEON_AUTH_COOKIE_SECRET` is
+  ours, not Neon's: generate it with `openssl rand -base64 32` (the SDK refuses fewer than 32
+  characters) and store it as a Wrangler secret. Both are read by `authEnv()` in
+  `src/config/env.ts`, apart from `serverEnv()`, so the database and `/api/health` never need them.
+- **Mount:** `GET|POST /api/auth/[...path]` proxies to Neon Auth. The SDK instance is built on
+  first use in a request, because it throws at creation without the secret; without env the
+  route answers `503 AUTH_UNAVAILABLE`.
+- **Cookies** the SDK sets: `__Secure-neon-auth.session_token`, `__Secure-neon-auth.local.session_data`
+  and `__Secure-neon-auth.session_challenge`, all `HttpOnly`, `Secure` and `SameSite=Lax` (the
+  default, which we don't override, nor the domain).
+- **Session cache:** the server reads the session from the signed `local.session_data` cookie for
+  up to 300 s (`sessionDataTtl`, the default) before asking Neon Auth again. Access still ends at
+  once when someone's `admin_user` row is deleted, because the allowlist is read on every admin
+  request; the cache only spares the call to Neon Auth.
+- **No middleware:** the SDK's `.middleware()` adds only the OAuth `neon_auth_session_verifier`
+  exchange after the Google redirect. The browser client (`createAuthClient()` from
+  `@neon/auth/next`) does the same exchange in its `get-session` call through our handler. So
+  `requireAdmin()` on every page, `requireAdminForAction()` on every action, and the handler are
+  enough; there is no `proxy.ts`.
+- **No cookie writes while rendering a page:** if Neon Auth's `get-session` answers with
+  `Set-Cookie`, the SDK calls `cookies().set()`, which Next forbids in a Server Component. In
+  Better Auth 1.7 that happens on a session refresh (once `updateAge` has passed), when it clears
+  an expired or revoked session, and when it expires a stale cache cookie. `readSession()` passes
+  `query: { disableRefresh: "true" }`, which the SDK forwards as a query parameter, so a server
+  read never refreshes. Refreshes happen through the browser client's `get-session` calls to our
+  handler, which may set cookies. The clearing writes can still come, and so can a Better Auth
+  cookie-cache refresh (`cookieRefreshCache`, which runs before `disableRefresh` is looked at) if
+  Neon Auth enables it. Next then throws its read-only cookies error, and `readSession()` reads
+  that as signed out (deny by default) and logs one `auth_session_cleared` line with the request
+  id, so an expired session sends people to sign in rather than reporting an outage, and a valid
+  session refused this way shows in the logs. Server actions and
+  route handlers may write cookies, so there the SDK clears them normally.
+- **CSRF:** the SDK forwards the request's Origin to Neon Auth, where Better Auth checks it
+  against the Neon Auth trusted domains. Next server actions compare Origin with Host or
+  `x-forwarded-host`. The cookies are `SameSite=Lax`. Nothing custom.
+- **Workers and OpenNext:** the SDK's server entry imports only `jose`, `better-auth/cookies`,
+  `next/headers` and `next/server`, and uses `fetch` and WebCrypto with no `node:` built-ins, so it
+  should run on the Node.js runtime with `nodejs_compat`. Not yet proven with `cf:build`, because
+  slice `hosting` is parked.
+- **Rate limits:** not documented, not relied on. Checked 2026-11-04: Neon Auth's
+  `production-checklist.md` and `overview.md` mention only the rate limit of the shared SMTP
+  sender, which we don't use. The backup is a Cloudflare WAF rate-limit rule on `/api/auth/*`.
+  Sign-in is Google only, so there is no password to guess through our app.
+
 ## Hosting findings (slice `hosting`, 2026-11-04)
 
 Versions: `@opennextjs/cloudflare` 1.20.15 (with `@opennextjs/aws` 4.1.14) and `wrangler` 4.156.2
@@ -194,5 +246,8 @@ Other choices:
 
 ## Open, filled in by later slices
 
-- Whether Neon Auth rate-limits sign-in (slice `auth-core`).
-- The exact Neon Auth package and variable names (after `neon deploy`).
+- OpenNext support for `cacheComponents`, `typedRoutes`, the custom image loader and server
+  actions, and the measured Worker bundle size (slice `hosting`).
+- The OpenNext Origin/Host check: confirm under `cf:preview` that `x-forwarded-host` and `host`
+  agree, so Next's server-action Origin check and Neon Auth's trusted-origin check pass behind
+  Cloudflare. Owed when slice `hosting` (job 003) lands; `admin-shell` adds no server actions.

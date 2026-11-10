@@ -1,4 +1,7 @@
-export type LaundryCategory = "baskets" | "duvets" | "mats" | "shoes";
+import { unsplash } from "@/lib/images";
+import type { LaundryCategory } from "@/lib/db/schema";
+
+export type { LaundryCategory };
 
 export type LaundryItem = {
   id: string;
@@ -6,12 +9,15 @@ export type LaundryItem = {
   name: string;
   desc: string;
   price: number;
-  /** Unsplash photo id for the item's card. */
+  /** An Unsplash photo id, or the address of a photo staff uploaded. */
   image: string;
   /** Size shown on the item's card ("S", "6×6", "5×8"). */
-  mark?: string;
-  tag?: string;
+  mark?: string | null;
 };
+
+/** Where to load an item's photo from. */
+export const laundryPhoto = (image: string, width: number) =>
+  image.startsWith("https://") ? image : unsplash(image, width);
 
 /** Tabs on the laundry page, in order, with the heading and note the price list shows. */
 export const laundryCategories: {
@@ -52,6 +58,10 @@ export const laundryCategories: {
   },
 ];
 
+/**
+ * The items as first added by the migration. Staff manage the real ones at `/admin/laundry`; these
+ * show only when the database can't be read.
+ */
 export const laundryItems: LaundryItem[] = [
   {
     id: "basket-small",
@@ -61,7 +71,6 @@ export const laundryItems: LaundryItem[] = [
     price: 150,
     image: "photo-1591130901959-9723d22a59ed",
     mark: "S",
-    tag: "Popular",
   },
   {
     id: "basket-medium",
@@ -168,17 +177,13 @@ export const laundryItems: LaundryItem[] = [
   },
 ];
 
-export const itemsIn = (category: LaundryCategory) =>
-  laundryItems.filter((i) => i.category === category);
+/** A category's items. */
+export const itemsIn = (category: LaundryCategory, items = laundryItems) =>
+  items.filter((i) => i.category === category);
 
 /** Cheapest basket, for "baskets from KSh …" lines. */
-export const basketFrom = Math.min(...itemsIn("baskets").map((i) => i.price));
-
-/** The price list: each category with its items' names and prices. */
-export const priceGroups = laundryCategories.map((c) => ({
-  ...c,
-  items: itemsIn(c.id).map((i) => ({ label: i.name, price: i.price })),
-}));
+export const basketFrom = (items = laundryItems) =>
+  Math.min(...itemsIn("baskets", items).map((i) => i.price));
 
 export const turnaroundOptions = [
   { label: "Same day", note: "Collected in the morning, back by evening" },

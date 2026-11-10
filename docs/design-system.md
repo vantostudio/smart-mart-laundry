@@ -137,7 +137,9 @@ cart/bag bars apply it. Set `[--ink:…]` to change the light colour.
 | `Marquee`      | Magic UI (`@magicui` registry in `components.json`): scrolling reviews row                                                                                                                  |
 
 Use a `gradient-*` button for the single main action in a view, solid buttons for secondary actions,
-and `inverse` / `outline-inverse` on brand bands.
+and `inverse` / `outline-inverse` on brand bands. `destructive` is only for a confirmed delete.
+
+The `google` Button variant is the one exception to our palette: Sign in with Google uses Google's fixed colours (`--google*`), Google Sans and the unchanged "G" (`src/features/admin/components/google-g.png`), per [their branding rules](https://developers.google.com/identity/branding-guidelines). Use it only for that button.
 
 **Shared** (`src/components/shared`, built from the primitives):
 
@@ -149,6 +151,7 @@ and `inverse` / `outline-inverse` on brand bands.
 | `StaggerGrid`          | Grid whose columns sit at different heights: 2 columns (right one dropped) on phones, 3 or 4 on lg                                                      |
 | `MediaCard`            | Visual + title + copy (+ footer): horizontal on phones (mirrored in a StaggerGrid), stacked from 640px                                                  |
 | `ChoiceChips`          | Radio group as chips, calendar dates or icon tiles; rail scrolls on narrow cards, grid on wide                                                          |
+| `ToggleChip`           | A pill that stays pressed, for picking several or none                                                                                                  |
 | `Price`                | KSh amount in the display face with tabular figures                                                                                                     |
 | `QuantityStepper`      | − qty + control with a 44px hit area, optional `max` (one-off mtumba pieces)                                                                            |
 | `OrderSent`            | "Your order is ready in WhatsApp" with Copy order / Call us, after a send                                                                               |

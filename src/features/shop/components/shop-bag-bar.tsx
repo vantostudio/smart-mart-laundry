@@ -5,6 +5,7 @@ import { ShoppingBag } from "lucide-react";
 import { FloatingCartBar } from "@/components/shared/floating-cart-bar";
 import { Button } from "@/components/ui/button";
 import { useBag } from "@/features/cart/cart-provider";
+import { useShopSettings } from "@/features/settings/shop-settings-provider";
 import { deliveryFor } from "@/features/shop/lib/delivery";
 import { ksh } from "@/lib/format";
 
@@ -14,7 +15,7 @@ import { ksh } from "@/lib/format";
  */
 export function ShopBagBar({ hidden, onOpen }: { hidden: boolean; onOpen: () => void }) {
   const { count, total } = useBag();
-  const delivery = deliveryFor(total, "delivery");
+  const delivery = deliveryFor(total, "delivery", useShopSettings());
 
   return (
     <FloatingCartBar

@@ -76,8 +76,8 @@ describe("SiteHeader", () => {
     localStorage.setItem(
       CART_STORAGE_KEY,
       JSON.stringify([
-        { id: "shirt", name: "Shirt", price: 50, qty: 2 },
-        { id: "duvet", name: "Duvet", price: 400, qty: 1 },
+        { id: "basket-small", name: "Small basket", price: 50, qty: 2 },
+        { id: "duvet-6x6", name: "Duvet", price: 400, qty: 1 },
       ]),
     );
     renderHeader();
@@ -90,7 +90,9 @@ describe("SiteHeader", () => {
   it("shows only the shop bag when the laundry cart is empty", async () => {
     localStorage.setItem(
       BAG_STORAGE_KEY,
-      JSON.stringify([{ id: "SM-1001:M", name: "Denim jacket", price: 1200, qty: 1, max: 1 }]),
+      JSON.stringify([
+        { id: "SM-1001:M", name: "Denim jacket", price: 1200, qty: 1, max: 1, photo: null },
+      ]),
     );
     renderHeader();
 
@@ -106,7 +108,9 @@ describe("SiteHeader", () => {
     );
     localStorage.setItem(
       BAG_STORAGE_KEY,
-      JSON.stringify([{ id: "SM-1001:M", name: "Denim jacket", price: 1200, qty: 1, max: 1 }]),
+      JSON.stringify([
+        { id: "SM-1001:M", name: "Denim jacket", price: 1200, qty: 1, max: 1, photo: null },
+      ]),
     );
     renderHeader();
 

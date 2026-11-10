@@ -1,24 +1,23 @@
 import type { CartItem } from "@/features/cart/cart-provider";
-import { products, type Product } from "@/features/shop/data";
+import type { PublicProduct } from "@/features/products/public";
 import { ksh } from "@/lib/format";
 
-import { deliveryFor, fulfilOptions, type FulfilMethod } from "./delivery";
+import { deliveryFor, fulfilOptions, type DeliveryRates, type FulfilMethod } from "./delivery";
 
-/** A bag line is one product in one size. */
-export const bagLineId = (p: Product, size: string) => `${p.code}:${size}`;
+/** A bag line is one product in one size. `size` is null for a one-size item. */
+export const bagLineId = (p: PublicProduct, size: string | null) => `${p.code}:${size ?? ""}`;
 
-export function bagLine(p: Product, size: string): Omit<CartItem, "qty"> {
+export function bagLine(p: PublicProduct, size: string | null): Omit<CartItem, "qty"> {
   return {
     id: bagLineId(p, size),
     name: p.name,
     price: p.price,
-    detail: `${p.code} · Size ${size}`,
+    detail: size ? `${p.code} · Size ${size}` : p.code,
     max: p.stock,
+    photo: p.thumbnail,
+    fullPhoto: p.photos[0] ?? null,
   };
 }
-
-/** The product behind a bag line, for its photo (lines from an old catalogue return undefined). */
-export const productForLine = (id: string) => products.find((p) => id.startsWith(`${p.code}:`));
 
 type ShopDetails = {
   method: FulfilMethod;
@@ -47,9 +46,9 @@ export function shopGaps(itemCount: number, d: ShopDetails): ShopGap[] {
  * The WhatsApp message sent from the bag. It arrives from the customer's own number, so their
  * name and phone aren't asked for. Payment is on delivery or at the counter.
  */
-export function buildShopMessage(items: CartItem[], d: ShopDetails): string {
+export function buildShopMessage(items: CartItem[], d: ShopDetails, rates: DeliveryRates): string {
   const subtotal = items.reduce((sum, i) => sum + i.qty * i.price, 0);
-  const delivery = deliveryFor(subtotal, d.method);
+  const delivery = deliveryFor(subtotal, d.method, rates);
   const method = fulfilOptions.find((o) => o.id === d.method)!;
   return [
     "Hi Street Mart! I'd like to order from the shop.",

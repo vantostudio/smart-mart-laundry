@@ -84,6 +84,13 @@
   --destructive: var(--berry-600);
   --destructive-soft: var(--berry-200);
 
+  /* Sign in with Google, light theme: Google's fixed brand values, not ours to restyle
+     (developers.google.com/identity/branding-guidelines). */
+  --google: #ffffff;
+  --google-hover: #f2f2f2;
+  --google-foreground: #1f1f1f;
+  --google-stroke: #747775;
+
   /* Text on photos (category tiles, hero overlays) */
   --on-media: var(--cream-50);
 
@@ -144,6 +151,8 @@
   /* Families */
   --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-clash), var(--font-satoshi), ui-sans-serif, sans-serif;
+  /* Only the Sign in with Google button; loaded by the admin layout */
+  --font-google: var(--font-google-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
   /* Colours */
@@ -167,6 +176,10 @@
   --color-success-soft: var(--success-soft);
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
+  --color-google: var(--google);
+  --color-google-hover: var(--google-hover);
+  --color-google-foreground: var(--google-foreground);
+  --color-google-stroke: var(--google-stroke);
   --color-on-media: var(--on-media);
   --color-skin: var(--skin);
   --color-border: var(--border);

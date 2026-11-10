@@ -4,11 +4,10 @@ import { LayoutGrid } from "lucide-react";
 import Image from "next/image";
 
 import { useCart } from "@/features/cart/cart-provider";
-import { laundryCategories, laundryItems, type LaundryCategory } from "@/features/laundry/data";
+import { laundryCategories, type LaundryCategory } from "@/features/laundry/data";
+import { useLaundryItems } from "@/features/laundry/laundry-items-provider";
 import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
-
-const categoryOf = new Map(laundryItems.map((i) => [i.id, i.category]));
 
 type Props = {
   value: LaundryCategory | null;
@@ -21,6 +20,8 @@ type Props = {
  */
 export function LaundryRail({ value, onChange }: Props) {
   const { items } = useCart();
+  const laundryItems = useLaundryItems();
+  const categoryOf = new Map(laundryItems.map((i) => [i.id, i.category]));
   const countIn = (c: LaundryCategory) =>
     items.reduce((sum, i) => (categoryOf.get(i.id) === c ? sum + i.qty : sum), 0);
   const options = [{ id: null, label: "All", image: null }, ...laundryCategories];

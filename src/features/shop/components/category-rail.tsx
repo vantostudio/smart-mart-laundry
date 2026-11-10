@@ -3,19 +3,20 @@
 import { LayoutGrid } from "lucide-react";
 import Image from "next/image";
 
-import { shopCategories, type ShopCategoryId } from "@/features/shop/data";
+import { shopCategories } from "@/features/shop/data";
+import type { ProductCategory } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  value: ShopCategoryId | null;
-  onChange: (value: ShopCategoryId | null) => void;
-  /** Items per category for the current search, so empty aisles show as such. */
-  counts: Record<ShopCategoryId, number>;
+  value: ProductCategory | null;
+  onChange: (value: ProductCategory | null) => void;
+  /** Items per category for the current search, so empty aisles show as such. Null while loading. */
+  counts: Record<ProductCategory, number> | null;
 };
 
 /**
  * Aisles as round photo buttons with a label, "All" first. One row that scrolls sideways on
- * phones and spreads out on wider screens. Tapping the selected aisle again shows everything.
+ * phones. Tapping the selected aisle again shows everything.
  */
 export function CategoryRail({ value, onChange, counts }: Props) {
   const options = [
@@ -24,11 +25,11 @@ export function CategoryRail({ value, onChange, counts }: Props) {
   ];
 
   return (
-    <fieldset className="-mx-gutter flex min-w-0 snap-x scroll-px-gutter [scrollbar-width:none] gap-2 overflow-x-auto px-gutter pt-1 pb-2 sm:gap-3 lg:justify-between">
+    <fieldset className="-mx-gutter flex min-w-0 snap-x scroll-px-gutter [scrollbar-width:none] gap-2 overflow-x-auto px-gutter pt-1 pb-2 sm:gap-3">
       <legend className="sr-only">Category</legend>
       {options.map((o) => {
         const selected = value === o.id;
-        const empty = o.id !== null && counts[o.id] === 0;
+        const empty = o.id !== null && counts?.[o.id] === 0;
         return (
           <button
             key={o.id ?? "all"}

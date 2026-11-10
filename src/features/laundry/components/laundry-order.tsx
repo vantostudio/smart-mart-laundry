@@ -7,11 +7,18 @@ import { useState } from "react";
 import { FloatingCartBar } from "@/components/shared/floating-cart-bar";
 import { Section } from "@/components/shared/section";
 import { Button } from "@/components/ui/button";
-import { dateParams, parseDates, type BookingDates } from "@/features/booking/schedule";
+import {
+  dateParams,
+  openingWeek,
+  parseDates,
+  type BookingDates,
+} from "@/features/booking/schedule";
+import { useOpeningHours } from "@/features/settings/shop-settings-provider";
 import { useNow } from "@/features/booking/use-now";
 import { useCart } from "@/features/cart/cart-provider";
 import { useOpenCart } from "@/features/cart/open-cart";
 import { itemsIn, laundryCategories, type LaundryCategory } from "@/features/laundry/data";
+import { useLaundryItems } from "@/features/laundry/laundry-items-provider";
 import { parseCategory } from "@/features/laundry/lib/tabs";
 
 import { BookingSheet } from "./booking-sheet";
@@ -38,11 +45,13 @@ export function LaundryOrder({ params }: { params: Params }) {
   const nowMs = useNow();
   const now = nowMs === null ? null : new Date(nowMs);
   const { count, total } = useCart();
+  const laundryItems = useLaundryItems();
 
   const [category, setCategory] = useState(() => parseCategory(params?.get("cat")));
   // The customer's own choices win over the URL once they start picking days.
   const [draftDates, setDraftDates] = useState<BookingDates | null>(null);
-  const dates = draftDates ?? (now ? parseDates(params, now) : { pickup: null, back: null });
+  const week = openingWeek(useOpeningHours());
+  const dates = draftDates ?? (now ? parseDates(params, now, week) : { pickup: null, back: null });
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // The header's orders button opens the sheet here, or links to /laundry#cart from other pages.
@@ -83,7 +92,7 @@ export function LaundryOrder({ params }: { params: Params }) {
               <p className="text-caption font-medium text-muted-foreground">{c.note}</p>
             </div>
             <ul className={grid}>
-              {itemsIn(c.id).map((item) => (
+              {itemsIn(c.id, laundryItems).map((item) => (
                 <li key={item.id} className="min-w-0">
                   <LaundryCard item={item} />
                 </li>

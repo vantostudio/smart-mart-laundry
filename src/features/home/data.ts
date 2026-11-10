@@ -30,7 +30,7 @@ export const faqs = [
   {
     question: "Which basket do I need?",
     answer:
-      "Small fits a week of clothes for one person. Medium suits a couple's weekly load, large a family load, and extra large heavy household loads. Baskets cost KSh 150 to 400, ironing included.",
+      "Small fits a week of clothes for one person. Medium suits a couple's weekly load, large a family load, and extra large heavy household loads. Ironing is included in every basket price.",
   },
   {
     question: "Where do you pick up from?",

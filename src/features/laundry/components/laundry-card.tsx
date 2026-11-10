@@ -6,8 +6,7 @@ import Image from "next/image";
 import { Price } from "@/components/shared/price";
 import { QuantityStepper } from "@/components/shared/quantity-stepper";
 import { useCart } from "@/features/cart/cart-provider";
-import type { LaundryItem } from "@/features/laundry/data";
-import { unsplash } from "@/lib/images";
+import { laundryPhoto, type LaundryItem } from "@/features/laundry/data";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,7 +21,7 @@ export function LaundryCard({ item }: { item: LaundryItem }) {
   const picture = (
     <div className="relative aspect-4/3 bg-muted">
       <Image
-        src={unsplash(item.image, 500)}
+        src={laundryPhoto(item.image, 500)}
         alt=""
         fill
         sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 24vw, (min-width: 640px) 31vw, 46vw"

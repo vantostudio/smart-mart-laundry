@@ -3,7 +3,8 @@ import { MessageCircle } from "lucide-react";
 import type * as React from "react";
 
 import { Button, type buttonVariants } from "@/components/ui/button";
-import { WHATSAPP_ORDER_DEFAULT, waLink } from "@/lib/whatsapp";
+
+import { WhatsAppLink } from "./contact";
 
 type Props = Omit<React.ComponentProps<"a">, "href"> &
   VariantProps<typeof buttonVariants> & {
@@ -13,7 +14,7 @@ type Props = Omit<React.ComponentProps<"a">, "href"> &
 
 /** Button with the chat icon that opens WhatsApp with a pre-filled message, in a new tab. */
 export function WhatsAppButton({
-  message = WHATSAPP_ORDER_DEFAULT,
+  message,
   variant = "clay",
   size,
   block,
@@ -22,10 +23,10 @@ export function WhatsAppButton({
 }: Props) {
   return (
     <Button asChild variant={variant} size={size} block={block}>
-      <a href={waLink(message)} target="_blank" rel="noreferrer" {...props}>
+      <WhatsAppLink message={message} {...props}>
         <MessageCircle aria-hidden />
         {children}
-      </a>
+      </WhatsAppLink>
     </Button>
   );
 }

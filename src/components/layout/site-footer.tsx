@@ -1,20 +1,18 @@
 import { ChevronRight, MapPin, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
 
+import { HoursSummary, PhoneLink, PhoneNumber, WhatsAppLink } from "@/components/shared/contact";
 import { Container } from "@/components/shared/section";
 import { Wordmark } from "@/components/shared/wordmark";
 import { Button } from "@/components/ui/button";
 import { siteNav } from "@/config/navigation";
-import { areasText, phoneHref, site } from "@/config/site";
-import { formatHoursSummary } from "@/lib/opening-hours";
-import { WHATSAPP_ORDER_DEFAULT, waLink } from "@/lib/whatsapp";
+import { areasText, site } from "@/config/site";
 
 import { SITE_FOOTER_ID } from "./action-bar-visibility";
 import { OpenNow } from "./open-now";
 
 // Evaluated once per server start / build, so the footer stays fully static.
 const copyrightYear = new Date().getFullYear();
-const hoursSummary = formatHoursSummary(site.openingHours);
 
 // Tall tile: icon above a short label.
 const actionClass = "h-auto min-h-16 flex-col gap-1 rounded-2xl px-2 py-2.5 text-body-sm";
@@ -23,21 +21,16 @@ function FooterActions() {
   return (
     <div className="grid grid-cols-3 gap-2">
       <Button asChild variant="outline-inverse" className={actionClass}>
-        <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
+        <PhoneLink>
           <Phone aria-hidden className="size-5" />
           Call
-        </a>
+        </PhoneLink>
       </Button>
       <Button asChild variant="gradient-clay" className={actionClass}>
-        <a
-          href={waLink(WHATSAPP_ORDER_DEFAULT)}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Chat on WhatsApp"
-        >
+        <WhatsAppLink aria-label="Chat on WhatsApp">
           <MessageCircle aria-hidden className="size-5" />
           WhatsApp
-        </a>
+        </WhatsAppLink>
       </Button>
       <Button asChild variant="outline-inverse" className={actionClass}>
         <a href={site.mapsUrl} target="_blank" rel="noreferrer">
@@ -78,7 +71,9 @@ export function SiteFooter() {
           <p>
             {site.location.point}, {site.location.town}
           </p>
-          <p className="text-muted-foreground">{hoursSummary}</p>
+          <p className="text-muted-foreground">
+            <HoursSummary />
+          </p>
           <p className="mt-2 text-muted-foreground">Pickup and delivery: {areasText}</p>
         </div>
 
@@ -109,9 +104,9 @@ export function SiteFooter() {
           </p>
           <p>
             Pay on delivery ·{" "}
-            <a href={phoneHref} className="font-mono transition-colors hover:text-clay">
-              {site.phoneDisplay}
-            </a>
+            <PhoneLink showsNumber className="font-mono transition-colors hover:text-clay">
+              <PhoneNumber />
+            </PhoneLink>
           </p>
         </Container>
       </div>

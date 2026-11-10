@@ -3,6 +3,8 @@ import { Suspense } from "react";
 
 import { PerkList } from "@/components/shared/perk-list";
 
+import type { LaundryItem } from "../data";
+
 import { GoodToKnow } from "./good-to-know";
 import { LaundryOrder, LaundryOrderFromUrl } from "./laundry-order";
 
@@ -12,7 +14,7 @@ const perks = [
   { icon: Wallet, label: "Pay on delivery" },
 ];
 
-export function LaundryPage() {
+export function LaundryPage({ items }: { items: LaundryItem[] }) {
   return (
     <>
       <section>
@@ -30,7 +32,7 @@ export function LaundryPage() {
         <LaundryOrderFromUrl />
       </Suspense>
 
-      <GoodToKnow />
+      <GoodToKnow items={items} />
     </>
   );
 }

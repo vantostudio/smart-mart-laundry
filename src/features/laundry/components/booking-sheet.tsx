@@ -26,6 +26,7 @@ import {
   addDays,
   COLLECTION_DAYS,
   firstCollectionDay,
+  openingWeek,
   formatDay,
   isCollectionDay,
   isReturnDay,
@@ -35,14 +36,15 @@ import {
   type BookingDates,
 } from "@/features/booking/schedule";
 import { useCart } from "@/features/cart/cart-provider";
-import { laundryItems } from "@/features/laundry/data";
+import { useOpeningHours } from "@/features/settings/shop-settings-provider";
+import { laundryPhoto } from "@/features/laundry/data";
+import { useLaundryItems } from "@/features/laundry/laundry-items-provider";
 import {
   bookingGaps,
   buildPickupMessage,
   gapLabels,
   type BookingGap,
 } from "@/features/laundry/lib/pickup-message";
-import { unsplash } from "@/lib/images";
 import { useOrderPlace } from "@/lib/saved-details";
 import { cn } from "@/lib/utils";
 
@@ -58,8 +60,6 @@ type Props = {
   now: Date | null;
 };
 
-const imageOf = new Map(laundryItems.map((i) => [i.id, i.image]));
-
 /**
  * Laundry checkout, shop style: the items, a calendar for the collection and return days, the
  * area as three big buttons, then one WhatsApp message. No typing (an optional note aside); the
@@ -67,7 +67,10 @@ const imageOf = new Map(laundryItems.map((i) => [i.id, i.image]));
  */
 export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: Props) {
   const { items, count, total, setQty } = useCart();
+  const laundryItems = useLaundryItems();
+  const imageOf = new Map(laundryItems.map((i) => [i.id, i.image]));
   const { area, setArea, note, setNote, remember } = useOrderPlace(site.areas);
+  const week = openingWeek(useOpeningHours());
   // Which day the calendar is choosing; it moves on to Return once collection is picked.
   const [picking, setPicking] = useState<"pickup" | "back">(dates.pickup ? "back" : "pickup");
   const [sentMessage, setSentMessage] = useState<string | null>(null);
@@ -96,7 +99,7 @@ export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: 
   }
 
   const today = now ? toIsoDate(now) : null;
-  const first = now ? firstCollectionDay(now) : null;
+  const first = now ? firstCollectionDay(now, week) : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -119,7 +122,7 @@ export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: 
                     <span className="relative size-14 shrink-0 overflow-hidden rounded-2xl bg-muted">
                       {image && (
                         <Image
-                          src={unsplash(image, 160)}
+                          src={laundryPhoto(image, 160)}
                           alt=""
                           fill
                           sizes="56px"
@@ -202,7 +205,7 @@ export function BookingSheet({ open, onOpenChange, dates, onDatesChange, now }: 
                   active={picking === "pickup" ? dates.pickup : dates.back}
                   isEnabled={(day) =>
                     picking === "pickup"
-                      ? isCollectionDay(day, now)
+                      ? isCollectionDay(day, now, week)
                       : dates.pickup !== null && isReturnDay(day, dates.pickup)
                   }
                   onSelect={choose}

@@ -3,30 +3,30 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { MobilePaymentsIllustration } from "@/components/illustrations/mobile-payments";
+import { HoursGrid, PhoneLink } from "@/components/shared/contact";
 import { Price } from "@/components/shared/price";
 import { Section } from "@/components/shared/section";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { WhatsAppButton } from "@/components/shared/whatsapp-button";
 import { Button } from "@/components/ui/button";
-import { areasText, phoneHref, site } from "@/config/site";
+import { areasText, site } from "@/config/site";
 import { homeImages } from "@/features/home/data";
 import {
   basketFrom,
   itemsIn,
-  priceGroups,
+  laundryCategories,
   turnaroundOptions,
   type LaundryCategory,
+  type LaundryItem,
 } from "@/features/laundry/data";
 import { ksh } from "@/lib/format";
 import { unsplash } from "@/lib/images";
 import { cn } from "@/lib/utils";
 
-const baskets = itemsIn("baskets");
-
 // Bar heights for the basket size ladder, smallest to largest.
 const ladder = ["h-14 sm:h-16", "h-20 sm:h-24", "h-26 sm:h-32", "h-32 sm:h-40"];
 
-const group = (id: LaundryCategory) => priceGroups.find((g) => g.id === id)!;
+const group = (id: LaundryCategory) => laundryCategories.find((c) => c.id === id)!;
 
 const tones = {
   card: "bg-card shadow-card",
@@ -59,13 +59,34 @@ function TileIcon({ icon: Icon }: { icon: LucideIcon }) {
 }
 
 /** One price group as a compact list; prices drop under the label when the tile is narrow. */
+/** The ladder's columns get too narrow for their prices beyond this many baskets. */
+const LADDER_MAX = 4;
+
+function PriceRows({ items, label }: { items: LaundryItem[]; label?: string }) {
+  return (
+    <ul
+      aria-label={label}
+      className="mt-3 divide-y divide-dashed divide-foreground/12 text-body-sm"
+    >
+      {items.map((item) => (
+        <li key={item.id} className="flex flex-wrap items-baseline justify-between gap-x-3 py-2">
+          <span className="min-w-0">{item.name}</span>
+          <Price amount={item.price} size="sm" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function PriceTile({
   id,
+  items,
   icon,
   tone,
   className,
 }: {
   id: LaundryCategory;
+  items: LaundryItem[];
   icon: LucideIcon;
   tone?: keyof typeof tones;
   className?: string;
@@ -76,23 +97,14 @@ function PriceTile({
       <TileIcon icon={icon} />
       <h3 className="mt-4 display text-title">{g.title}</h3>
       <p className="text-caption text-muted-foreground">{g.note}</p>
-      <ul className="mt-3 divide-y divide-dashed divide-foreground/12 text-body-sm">
-        {g.items.map((item) => (
-          <li
-            key={item.label}
-            className="flex flex-wrap items-baseline justify-between gap-x-3 py-2"
-          >
-            <span className="min-w-0">{item.label}</span>
-            <Price amount={item.price} size="sm" />
-          </li>
-        ))}
-      </ul>
+      <PriceRows items={itemsIn(id, items)} />
     </Tile>
   );
 }
 
 /** The cheapest-first basket ladder on the brand green: the price list people check most. */
-function BasketsTile() {
+function BasketsTile({ items }: { items: LaundryItem[] }) {
+  const baskets = itemsIn("baskets", items);
   return (
     <article className="relative min-w-0 overflow-hidden rounded-4xl bg-mesh p-5 surface-inverse sm:p-7">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
@@ -101,30 +113,37 @@ function BasketsTile() {
           <p className="mt-1 text-body-sm text-muted-foreground">{group("baskets").note}</p>
         </div>
         <p className="text-body-sm text-muted-foreground">
-          from <Price amount={basketFrom} size="lg" className="text-foreground" />
+          from <Price amount={basketFrom(items)} size="lg" className="text-foreground" />
         </p>
       </div>
 
-      <ol aria-label="Basket prices" className="mt-6 grid grid-cols-4 items-end gap-2 sm:gap-3">
-        {baskets.map((b, i) => (
-          <li key={b.id} className="flex min-w-0 flex-col items-center gap-2">
-            <span
-              aria-hidden
-              className={cn(
-                "flex w-full items-end justify-center rounded-2xl pb-2.5 display text-title",
-                ladder[i],
-                b.tag ? "bg-clay text-clay-foreground" : "bg-card",
-              )}
-            >
-              {b.mark}
-            </span>
-            <span className="sr-only">{b.name}</span>
-            <span className="font-display text-caption font-bold tracking-tight whitespace-nowrap figures @sm:text-body">
-              {ksh(b.price)}
-            </span>
-          </li>
-        ))}
-      </ol>
+      {baskets.length > LADDER_MAX ? (
+        <PriceRows items={baskets} label="Basket prices" />
+      ) : (
+        <ol
+          aria-label="Basket prices"
+          className="mt-6 grid auto-cols-fr grid-flow-col items-end gap-2 sm:gap-3"
+        >
+          {baskets.map((b, i) => (
+            <li key={b.id} className="flex min-w-0 flex-col items-center gap-2">
+              <span
+                aria-hidden
+                className={cn(
+                  "flex w-full items-end justify-center rounded-2xl pb-2.5 display text-title",
+                  ladder[Math.min(i, ladder.length - 1)],
+                  i === 0 ? "bg-clay text-clay-foreground" : "bg-card",
+                )}
+              >
+                {b.mark}
+              </span>
+              <span className="sr-only">{b.name}</span>
+              <span className="text-center font-display text-caption font-bold tracking-tight figures @sm:text-body">
+                {ksh(b.price)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
 
       <p className="mt-5 text-body-sm text-muted-foreground">
         Most people start with a small basket: a week of clothes for one person.
@@ -213,12 +232,7 @@ function HoursTile({ className }: { className?: string }) {
     <Tile className={className}>
       <h3 className="display text-title">Open daily</h3>
       <dl className="mt-3 grid gap-x-4 gap-y-2 text-body-sm @sm:grid-cols-2">
-        {site.hours.map((h) => (
-          <div key={h.days}>
-            <dt className="text-caption text-muted-foreground">{h.days}</dt>
-            <dd className="font-semibold">{h.time}</dd>
-          </div>
-        ))}
+        <HoursGrid />
       </dl>
       <p className="mt-3 text-caption text-muted-foreground">{site.hoursNote}</p>
     </Tile>
@@ -234,9 +248,9 @@ function HelpTile() {
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild variant="inverse" size="md" className="flex-1">
-          <a href={phoneHref} aria-label={`Call ${site.phoneDisplay}`}>
+          <PhoneLink>
             <Phone aria-hidden /> Call us
-          </a>
+          </PhoneLink>
         </Button>
         <WhatsAppButton
           message="Hi Street Mart, which laundry basket size do I need?"
@@ -257,7 +271,7 @@ function HelpTile() {
  * Phones get one column with the short tiles paired side by side; tiles size from their stack's
  * width (container queries), so the same tiles work beside or below each other.
  */
-export function GoodToKnow() {
+export function GoodToKnow({ items }: { items: LaundryItem[] }) {
   return (
     <Section id="prices" tone="muted" className="overflow-hidden">
       <SectionHeading
@@ -267,15 +281,15 @@ export function GoodToKnow() {
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-6">
         <div className="@container grid min-w-0 content-start gap-4 sm:gap-5 lg:gap-6">
-          <BasketsTile />
+          <BasketsTile items={items} />
           <div className="grid grid-cols-1 items-start gap-4 sm:gap-5 @lg:grid-cols-2 @lg:gap-6">
             <div className="grid gap-4 sm:gap-5 @lg:gap-6">
-              <PriceTile id="duvets" icon={BedDouble} />
+              <PriceTile id="duvets" items={items} icon={BedDouble} />
               <PayTile />
             </div>
             <div className="grid grid-cols-1 items-start gap-4 sm:gap-5 @xs:grid-cols-2 @lg:mt-12 @lg:grid-cols-1 @lg:gap-6">
-              <PriceTile id="mats" icon={Layers} tone="accent" />
-              <PriceTile id="shoes" icon={Footprints} className="@xs:mt-8 @lg:mt-0" />
+              <PriceTile id="mats" items={items} icon={Layers} tone="accent" />
+              <PriceTile id="shoes" items={items} icon={Footprints} className="@xs:mt-8 @lg:mt-0" />
             </div>
           </div>
         </div>
