@@ -163,11 +163,12 @@ First measured on 2026-11-04 on the static site, then measured again on 2026-11-
 `main` with the backend (Neon, Neon Auth, the admin, route handlers and the `use cache` reads).
 The figures below are from the second run.
 
-Versions: `@opennextjs/cloudflare` 1.20.15 (with `@opennextjs/aws` 4.1.14) and `wrangler` 4.159.0
-(workerd 1.20261109.1). The adapter is pinned exactly to 1.20.15: 1.20.16 needs `next >=16.4.5`,
-and the repo pins `next` 16.4.3. 1.20.12 to 1.20.15 accept `next >=16.4.1`. Docs read:
-<https://opennext.js.org/cloudflare> and its pages on getting started, caching, images, the CLI,
-env vars and dev and deploy.
+Versions (since job 011, 2026-11-11): `next` 16.4.5, `@opennextjs/cloudflare` 1.20.16 (with
+`@opennextjs/aws` 4.1.15) and `wrangler` 4.159.0 (workerd 1.20261109.1). `next` and the adapter
+are pinned exactly. The measurements from "Under `pnpm cf:preview`" on were taken by job 003 on
+`next` 16.4.3 with the adapter held at 1.20.15 (with `@opennextjs/aws` 4.1.14); "Job 011" at
+the end of this section repeats them on the current versions. Docs read: <https://opennext.js.org/cloudflare> and its
+pages on getting started, caching, images, the CLI, env vars and dev and deploy.
 
 Under `pnpm cf:preview` with no `.dev.vars` (so no database and no Neon Auth), the same `.next`
 build was compared with `next start`, within minutes of the build:
@@ -228,13 +229,25 @@ Feature support:
     `setTimeout()`" and React's "Expected the resume to render <io> in this slot but instead it
     rendered <io2>". On `/admin/*` React falls back to rendering in the browser. On
     `/shop/[code]` (`ensureStatic = "navigation"`), and on every public page once its
-    prerendered copy has expired, the request hangs until workerd cancels it. It is not known
-    whether this comes from the read-only cache or from workerd itself; it needs checking once
-    the shared cache is in place.
+    prerendered copy has expired, the request hangs until workerd cancels it. Job 011 found the
+    same on `next` 16.4.5 and the adapter 1.20.16, and narrowed it only partly: the
+    `setTimeout()` warning is Next's own runtime check, and the file that issues it
+    (`dist/server/app-render/app-render-scheduling.js`) is unchanged from 16.4.3 to 16.4.5; the
+    read-only cache still refuses every `use cache` entry. Whether the hang comes from the
+    read-only cache or from workerd's timers is still open, and is settled only by running with
+    the shared cache (job 010).
   - The trigger for R2 and a tag cache has fired: on-demand revalidation (`revalidateTag` on every
     admin save) is in `main`. That work, and proving `/shop/<code>` works, is the
     [0002](0002-server-cached-public-reads.md) "Checklist for the Cloudflare slice" (job 010).
-    Until then, this setup is not fit for the live site.
+    Until then, this setup is not fit for the live site. On top of that checklist, job 010 must:
+    - (a) prove under `cf:preview` that the full Playwright suite passes against a build more
+      than one hour old (same build, `.open-next/` untouched since `cf:build`), not only right
+      after the build;
+    - (b) switch to 0002's named fallback if, with the shared incremental cache and the tag cache
+      in place, `/shop/<code>` still hangs or answers `500` where `next start` doesn't, or any
+      public page fails once the build is over an hour old. The fallback is to drop `use cache`
+      for every server read in 0002's table: `getLiveShopSettings`, `getLiveLaundryItems`,
+      `getCachedPublicProduct` and `getCachedSitemapCodes`.
 - **`partialPrefetching`: Supported with caveat.** The docs don't name it. It is a client router
   and prerender feature, and the adapter has no special handling for it. Seen under `cf:preview`:
   the page responses carry the same `Vary: rsc, next-router-state-tree, next-router-prefetch,
@@ -297,11 +310,12 @@ Other choices:
   Worker falls back to them for any variable Wrangler doesn't set (`dist/cli/templates/init.js`).
   So `pnpm cf:build` runs `scripts/check-no-env-files.mjs` first, which stops the build when the
   repo root holds any `.env*` file other than `.env.example`.
-- **Worker size.** `wrangler deploy --dry-run` reports `Total Upload: 18553.36 KiB / gzip:
-  4145.49 KiB`, the same for `--env preview`. That is 4.05 MiB compressed: over the Free limit
-  (3 MiB) and under the Paid limit (10 MiB) with 5.95 MiB to spare. The static site measured
-  2172.44 KiB gzip; Drizzle, the Neon driver, Neon Auth, the storage client and the admin
-  roughly doubled it.
+- **Worker size.** On `next` 16.4.5 and the adapter 1.20.16 (job 011), `wrangler deploy
+  --dry-run` reports `Total Upload: 18292.85 KiB / gzip: 4125.51 KiB`. That is 4.03 MiB
+  compressed: over the Free limit (3 MiB) and under the Paid limit (10 MiB) with 5.97 MiB to
+  spare. Job 003 measured `18553.36 KiB / gzip: 4145.49 KiB` on the old versions, the same for
+  `--env preview`. The static site measured 2172.44 KiB gzip; Drizzle, the Neon driver, Neon
+  Auth, the storage client and the admin roughly doubled it.
 - **Workers Paid needed: yes**, because the Worker is over the Free plan's 3 MiB size limit, and
   because of CPU.
   - Every page request runs the Worker: the prerendered HTML sits in `cdn-cgi/_next_cache`, which
@@ -313,6 +327,96 @@ Other choices:
     Free plan's 10 ms of CPU. At that wall time they are likely to go over it often, and on Free
     a request over the cap fails.
   - Confirm with the CPU time in Workers Logs after the first preview deploy.
+
+### Job 011: `next` 16.4.5 and the adapter 1.20.16 (2026-11-11)
+
+Job 011 moved `next` from 16.4.3 to 16.4.5 and `@opennextjs/cloudflare` from 1.20.15 to 1.20.16
+(`@opennextjs/aws` 4.1.14 to 4.1.15), to see whether the problems above are fixed upstream. The
+release-age policy accepted both. `react`, `react-dom` and `wrangler` are unchanged, and no app
+code changed. The adapter's `templates/wrangler.jsonc` is byte-identical between 1.20.15 and
+1.20.16, so only the version in the comment at the top of `wrangler.jsonc` changed.
+
+Method: `pnpm cf:build` (finished 10:46:27 UTC), then `pnpm cf:preview` with no `.dev.vars` and
+`next start` on the same `.next` build, measured from 10:47 UTC, within two minutes of the build.
+The Worker's console output was read from Wrangler's local observability store. A real in-stock
+code was not measured: there is no database in the preview.
+
+| Path                                | `next start`                  | Worker, within the hour                   |
+| ----------------------------------- | ----------------------------- | ----------------------------------------- |
+| `/`, `/laundry`, `/shop`, `/about`  | `200 text/html`, same bytes   | `200 text/html`, same bytes               |
+| `/shop/not-a-code`                  | `404 text/html`               | `500 text/plain` (hung)                   |
+| `/shop/placeholder`                 | `404 text/html`               | `404 text/html`, same bytes               |
+| `/shop/SM-1003`                     | `500 text/html` (`error.tsx`) | `500 text/plain` (hung)                   |
+| `/admin`                            | `307` to `/admin/products`    | `307` to `/admin/products`                |
+| `/admin/sign-in`, `/admin/products` | `200 text/html`               | `200 text/html`, missing the dynamic part |
+
+Problems, each judged by whether the Worker answers what `next start` answers on the same build
+and the related log line is gone:
+
+1. **Not fixed.** `/shop/<code>` answers `500` because the request hangs. `/shop/not-a-code` and
+   `/shop/SM-1003` give workerd's "Worker's code had hung" error, after "Failed to get from
+   cache" and the `setTimeout()` warning. `/shop/placeholder` now matches `next start` within the
+   hour, because it is served from its prerendered copy. Both `e2e/product-page.spec.ts` tests
+   fail, and after a few hung requests `/shop/not-a-code` got no answer at all within 45 s while
+   `/` still answered `200`.
+2. **Not fixed.** The public pages answer `500` once the build is over an hour old. The hour-later
+   run on the build above was not measured in job 011 (stopped on the owner's instruction); job
+   010 must prove it. Evidence from an earlier build of the same commit (`cf:build` finished
+   07:05:18 UTC; the machine was suspended in between): a fresh `cf:preview` at 10:44 UTC, 3 h 39
+   min after that build, answered `500 text/plain` (hung) for `/`, `/laundry`, `/shop`, `/about`
+   and `/shop/placeholder`, where `next start` on the same `.next` answered `200` and `404`.
+3. **Not fixed.** `use cache` misses with the composable cache: every read logs "Failed to get
+   from cache … Composable cache is not supported in static assets incremental cache" and
+   "Failed to set to read-only cache … type=composable". Expected: the read-only cache refuses
+   composable entries by design, in 1.20.16 too. The keys are now 64-character hashes (the
+   `@opennextjs/aws` 4.1.15 fix below).
+4. **Not fixed.** Stale pages never regenerate: the first request to each of `/`, `/laundry`,
+   `/shop`, `/about`, `/shop/placeholder` and `/sitemap.xml` logs "Failed to revalidate stale
+   page … FatalError: Dummy queue is not implemented".
+5. **Not fixed.** Admin pages fall back to client rendering: `/admin/sign-in` and
+   `/admin/products` log "Expected the resume to render <io> in this slot but instead it
+   rendered <io2>". The Worker's HTML lacks the streamed part `next start` sends (the sign-in
+   button on `/admin/sign-in`, 26,902 bytes against 32,064; the redirect to
+   `/admin/sign-in?reason=AUTH_UNAVAILABLE` on `/admin/products`, 24,452 bytes against 27,605).
+   The browser still gets the redirect from the page's data.
+
+Playwright against the preview:
+
+- Within the hour: the full suite was not completed. A first full run was spoiled by the machine
+  suspending mid-run, and the second was stopped on the owner's instruction to keep the job
+  fast. Instead `e2e/product-page.spec.ts` and `e2e/home.spec.ts` ran on the build above at
+  10:48 UTC: **8 passed, 2 failed** (both `product-page.spec.ts` tests, `page.goto` aborted after
+  the 90 s timeout). The home specs passed.
+- More than an hour after the build: not measured in job 011. Job 010 must prove the full suite
+  passes then (see `cacheComponents` above).
+
+Release notes read for fixes to these problems:
+
+- `next` [v16.4.4](https://github.com/vercel/next.js/releases/tag/v16.4.4): "Emit the Turbopack
+  shared-runtime bootstrap in the PPR resume so it gets the CSP nonce" touches the PPR resume but
+  is about the CSP nonce, not a hang or the resume mismatch. No other relevant fix.
+- `next` [v16.4.5](https://github.com/vercel/next.js/releases/tag/v16.4.5) (security release):
+  "Cache poisoning of shared fallback shells in Cache Components via request-supplied
+  placeholder route params"
+  ([GHSA-vvgp-ww4w-46vf](https://github.com/vercel/next.js/security/advisories/GHSA-vvgp-ww4w-46vf))
+  and the `use cache` key advisories touch `generateStaticParams` routes and `use cache`, but
+  are security fixes; none addresses the hang, the `setTimeout()` warning, the resume mismatch
+  or regeneration.
+- `next` [v16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6): none found. No
+  reason to bump to it for these problems.
+- `@opennextjs/cloudflare`
+  [1.20.16](https://github.com/opennextjs/opennextjs-cloudflare/releases/tag/%40opennextjs/cloudflare%401.20.16):
+  "encode cache keys in the static assets incremental cache and the regional cache" touches the
+  static-assets cache, but only how keys become URLs; composable entries are still refused. The
+  rest (`run_worker_first` assets check, AVIF/HEIC detection, the `next >=16.4.5` floor) don't
+  touch these problems.
+- `@opennextjs/aws` [4.1.15](https://github.com/opennextjs/opennextjs-aws/releases/tag/v4.1.15):
+  "use a hash of the composable cache key as storage key" touches the composable cache, and "do
+  not route requests with dynamic segment placeholder values" touches routes like
+  `/shop/[code]`. Neither fixes a miss, a hang or regeneration.
+
+Worker size: `Total Upload: 18292.85 KiB / gzip: 4125.51 KiB` (17.86 MiB, 4.03 MiB gzip), down
+19.98 KiB gzip from 4145.49 KiB; 5.97 MiB under the Paid limit (10 MiB).
 
 ## Open, filled in by later slices
 
