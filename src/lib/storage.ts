@@ -3,13 +3,12 @@ import "server-only";
 import { AwsClient } from "aws4fetch";
 
 import { storageEnv } from "@/config/env";
+import { bucketObjectUrl } from "@/lib/photo-bucket";
 
 /*
  * Neon Object Storage, which speaks S3 with path-style URLs. `aws4fetch` signs a plain `fetch`, so
  * this runs on Workers. The bucket is declared in `neon.ts`: anyone can read, only we can write.
  */
-
-const BUCKET = "products";
 
 /** Carries only the status, for the log line. Neon's error body never leaves here. */
 class StorageError extends Error {
@@ -23,7 +22,7 @@ class StorageError extends Error {
 }
 
 function objectUrl(key: string): string {
-  return `${storageEnv().AWS_ENDPOINT_URL_S3.replace(/\/$/, "")}/${BUCKET}/${key}`;
+  return bucketObjectUrl(storageEnv().AWS_ENDPOINT_URL_S3, key);
 }
 
 /** The public address of a photo. Differs per Neon branch, which is why `images` holds keys. */
