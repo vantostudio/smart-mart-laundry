@@ -9,15 +9,15 @@ export type LaundryItem = {
   name: string;
   desc: string;
   price: number;
-  /** An Unsplash photo id, or the address of a photo staff uploaded. */
+  /** An Unsplash photo id, or the address of an uploaded photo: an https URL or a same-site path. */
   image: string;
   /** Size shown on the item's card ("S", "6×6", "5×8"). */
   mark?: string | null;
 };
 
-/** Where to load an item's photo from. */
+/** An address (an https URL or a same-site path) is used as it is; anything else is an Unsplash id. */
 export const laundryPhoto = (image: string, width: number) =>
-  image.startsWith("https://") ? image : unsplash(image, width);
+  image.startsWith("https://") || image.startsWith("/") ? image : unsplash(image, width);
 
 /** Tabs on the laundry page, in order, with the heading and note the price list shows. */
 export const laundryCategories: {
