@@ -1,5 +1,5 @@
 // Cloudflare Worker config for the site, built by OpenNext (`pnpm cf:build`) into `.open-next/`.
-// Based on the template in @opennextjs/cloudflare 1.20.15. No vars or secrets here: secrets go in
+// Based on the template in @opennextjs/cloudflare 1.20.16. No vars or secrets here: secrets go in
 // `wrangler secret put` and `.dev.vars`. See docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
