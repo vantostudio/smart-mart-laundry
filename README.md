@@ -96,6 +96,8 @@ A private `/admin` area for staff is on its way: Neon Postgres for data and Neon
 sign-in only) for staff, with our own allowlist deciding who gets in. Why these:
 [`docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md`](docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md).
 
+Running the admin day to day (staff, lockout, migrations, rollback, secrets, logs, Cloudflare rules): [`docs/admin.md`](docs/admin.md).
+
 Provisioning, done once by a person. The `db:*` and `cf:*` scripts exist.
 
 1. Neon:
