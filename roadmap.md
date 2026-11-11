@@ -23,7 +23,7 @@ small staff-only admin backend on Neon, live on Cloudflare Workers at streetmart
 ## Next
 
 - [ ] Cloudflare Rate Limiting binding in place of the in-memory store, and a WAF rule on `/api/*` and `/shop/*`
-- [ ] Cloudflare CDN in front of the Neon photo bucket
+- [x] Cloudflare CDN in front of the Neon photo bucket
 - [ ] Own Google OAuth client for Neon Auth (production uses Neon's shared keys)
 
 ## Later

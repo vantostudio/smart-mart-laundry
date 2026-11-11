@@ -59,6 +59,9 @@ Move `.env.local` aside while you build. Secrets go in `wrangler secret put <NAM
 Static files are served by Workers Static Assets without running the Worker, so their headers
 (the favicon's content type, long caching for `_next/static`) are set in `public/_headers`.
 
+- The entry (`cloudflare/worker.mjs`) answers `/photos/*` itself from the edge cache before
+  OpenNext (decision 0003); `X-Photo-Cache` shows HIT or MISS.
+
 Live since 2026-11-11 on `streetmart.africa` and `www.streetmart.africa` (custom domains in
 `wrangler.jsonc` `routes`; `workers.dev` is off). What the live Worker needs:
 
@@ -102,7 +105,7 @@ Provisioning, done once by a person. The `db:*` and `cf:*` scripts exist.
 
 1. Neon:
    `pnpm dlx neon@latest init -y --org-id <neon-org-id> --project-id <neon-project-id> --branch production --services postgres,auth`
-   (no object storage), with the org and project ids from the Neon console. If a browser sign-in
+   (the photo bucket is declared in `neon.ts` and created by `neon deploy`), with the org and project ids from the Neon console. If a browser sign-in
    opens, finish it there, or run `pnpm dlx neon@latest login` and retry. Review what `init` adds.
    Commit `neon.ts` and the Neon agent skills, never `.env.local`.
 2. `pnpm dlx neon@latest deploy` writes env into `.env.local`. Write down the variable names (not
@@ -156,7 +159,7 @@ Staff-only, JSON, under `/api/admin/products`: `GET` (`?page=&limit=&category=&c
 
 ### Public API
 
-No sign-in, GET only, cached by a CDN for up to 90 seconds: `/api/products` (`?page=&limit=&q=&category=&condition=&size=&price=&sort=`, gives `{ items, page, limit, total, counts }`), and `/api/products/<code>`. Only in-stock products appear, and they carry photo and thumbnail URLs but no ids or storage keys. The shop list, its quick view and the home rail load from these in the browser.
+No sign-in, GET only, cached by a CDN for up to 90 seconds: `/api/products` (`?page=&limit=&q=&category=&condition=&size=&price=&sort=`, gives `{ items, page, limit, total, counts }`), and `/api/products/<code>`. Only in-stock products appear, and they carry photo and thumbnail addresses (same-site `/photos/<key>` paths) but no ids or storage keys. The shop list, its quick view and the home rail load from these in the browser.
 
 Two things read the database on the server instead, through cached functions (see [`docs/decisions/0002-server-cached-public-reads.md`](docs/decisions/0002-server-cached-public-reads.md)): the shop settings (phone, hours, delivery), read once in the site layout so the HTML and search data already hold the real values, and the product page `/shop/<code>` with the sitemap. A product page answers 404 when the piece is sold out or deleted. Saving settings or a product expires these caches at once; the site needs `DATABASE_URL` and the `AWS_*` values wherever it runs, but with no database it still builds and renders, using the defaults in `src/config/shop-settings.ts`.
 
@@ -166,7 +169,7 @@ Two things read the database on the server instead, through cached functions (se
 
 `/admin/laundry`: owners change prices, and add, edit or remove laundry items, including their photos; other staff can only look. Each category keeps at least one item. A save shows on the site at once, and a page left open catches up when someone returns to it, or within 5 minutes.
 
-Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's on `dev` and production. Put Cloudflare in front of the photos before real traffic, because Neon has no CDN. Grids load a ~480px thumbnail of each photo to spare the transfer limit; photos uploaded before thumbnails existed fall back to the full photo.
+Photos live in the Neon `products` bucket declared in `neon.ts`. `pnpm dlx neon@latest deploy` creates it on the checked-out branch and pulls the `AWS_*` values. It's on `dev` and production. Neon has no CDN, so visitors never fetch the bucket: photos are served at `/photos/<key>` through the Worker's edge cache (decision 0003). Grids load a ~480px thumbnail of each photo to spare the transfer limit; photos uploaded before thumbnails existed fall back to the full photo.
 
 ### Auth
 

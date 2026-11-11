@@ -3,11 +3,14 @@ import "server-only";
 import { AwsClient } from "aws4fetch";
 
 import { storageEnv } from "@/config/env";
+import { photoPath } from "@/features/products/lib/image-keys";
 import { bucketObjectUrl } from "@/lib/photo-bucket";
 
 /*
  * Neon Object Storage, which speaks S3 with path-style URLs. `aws4fetch` signs a plain `fetch`, so
  * this runs on Workers. The bucket is declared in `neon.ts`: anyone can read, only we can write.
+ * Visitors never fetch it: the public address is `/photos/<key>` on every host and branch, served
+ * by the Worker's edge cache (decision 0003), and only the photo proxy reads the bucket.
  */
 
 /** Carries only the status, for the log line. Neon's error body never leaves here. */
@@ -25,9 +28,9 @@ function objectUrl(key: string): string {
   return bucketObjectUrl(storageEnv().AWS_ENDPOINT_URL_S3, key);
 }
 
-/** The public address of a photo. Differs per Neon branch, which is why `images` holds keys. */
+/** The public address of a photo: a same-site path, served through the edge cache. */
 export function productImageUrl(key: string): string {
-  return objectUrl(key);
+  return photoPath(key);
 }
 
 function signer(): AwsClient {

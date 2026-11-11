@@ -21,8 +21,8 @@ beforeEach(() => {
 });
 
 describe("storage", () => {
-  it("builds a path-style URL", () => {
-    expect(productImageUrl(key)).toBe("https://storage.test/products/products/a.webp");
+  it("gives the same-site photo path; writes still go to the bucket", () => {
+    expect(productImageUrl(key)).toBe("/photos/products/a.webp");
   });
 
   it("signs the upload and sends the bytes themselves, so the length is known", async () => {

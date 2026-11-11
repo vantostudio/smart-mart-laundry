@@ -253,6 +253,8 @@ Workers Logs for `requestId` equal to the code, or tail with `--search <code>` w
 | `admin_api_failed`                                       | error | `errorName`, `errorCode`                 | An admin API request failed unexpectedly; staff saw the "quote code" message.                                         |
 | `public_api_failed`                                      | error | `errorName`, `errorCode`                 | `/api/products` failed unexpectedly, usually the database.                                                            |
 | `photo_delete_failed`                                    | warn  | `error`, `code`                          | A photo file couldn't be deleted after its product or item changed. The file is left in storage; nothing else breaks. |
+| `photo_fetch_failed`                                     | warn  | `key`, `status`                          | A photo couldn't be read from the bucket (timeout, network, a Neon error or a non-image type); the visitor got a 502. |
+| `photo_unavailable`                                      | error | none                                     | `/photos/` has no storage endpoint (`AWS_ENDPOINT_URL_S3` unset); every photo answers 503.                            |
 | "Shop settings unavailable, using defaults"              | warn  | `requestId: "cache"`, `error`            | The site layout couldn't read the settings and showed the defaults for a short while.                                 |
 | "Laundry items unavailable, using defaults"              | warn  | `requestId: "cache"`, `error`            | The same for laundry items.                                                                                           |
 | "Sitemap products unavailable, listing fixed pages only" | warn  | `requestId: "cache"`, `error`            | The sitemap couldn't read products and listed only the fixed pages.                                                   |
@@ -272,6 +274,9 @@ starts_with(http.request.uri.path, "/admin") or starts_with(http.request.uri.pat
 Don't widen it to `/api/` as a whole: the public `/api/products` is meant to be cached at the edge
 for up to 90 seconds (`s-maxage=30, stale-while-revalidate=60`), which keeps traffic off Neon.
 
+Never add `/photos/` to this rule: the Worker caches photos itself and a bypass rule there would
+send every view to Neon's transfer limit.
+
 This rule is a backup. The app's own headers are the main guard: admin API responses send
 `Cache-Control: no-store`, and every `/admin` page sends `private, no-store`.
 
@@ -289,6 +294,9 @@ limiter.
 ```txt
 starts_with(http.request.uri.path, "/api/") or starts_with(http.request.uri.path, "/shop/")
 ```
+
+`/photos/` isn't counted by the app's limiter (the Worker answers it before the app). Add it to
+this WAF rule only if Neon's request counts spike.
 
 **Optional: a stricter rule on sign-in.** A WAF rate-limiting rule for `/api/auth/*`, counted per
 IP:
