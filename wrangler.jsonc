@@ -1,0 +1,44 @@
+// Cloudflare Worker config for the site, built by OpenNext (`pnpm cf:build`) into `.open-next/`.
+// Based on the template in @opennextjs/cloudflare 1.20.15. No vars or secrets here: secrets go in
+// `wrangler secret put` and `.dev.vars`. See docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "street-mart",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-02",
+  // nodejs_compat: Next runs on the Node.js runtime. global_fetch_strictly_public: fetch() can't
+  // reach the zone's origin or private addresses.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Prerendered pages and _next/static are served from Workers Static Assets.
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  // The adapter calls its own Worker through this binding; the service must match "name".
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "street-mart",
+    },
+  ],
+  // console output goes to Workers Logs.
+  "observability": {
+    "enabled": true,
+  },
+  "env": {
+    // `pnpm cf:deploy --env preview`: its own workers.dev URL. Services and observability aren't
+    // inherited, so they are repeated here.
+    "preview": {
+      "name": "street-mart-preview",
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "street-mart-preview",
+        },
+      ],
+      "observability": {
+        "enabled": true,
+      },
+    },
+  },
+}
