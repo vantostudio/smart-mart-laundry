@@ -24,6 +24,9 @@ import type { OpeningHours } from "@/lib/opening-hours";
 const BUSINESS_ID = `${site.url}/#business`;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+/** A photo address as a full URL: crawlers need one, and a same-site path is resolved on the site. */
+const absolute = (address: string) => new URL(address, site.url).href;
+
 export function openingHoursSpecification(hours: OpeningHours) {
   return hours.map((h) => ({
     "@type": "OpeningHoursSpecification",
@@ -117,7 +120,7 @@ export function laundryServiceJsonLd(items: LaundryItem[]) {
             "@type": "Service",
             name: i.name,
             description: i.desc,
-            image: laundryPhoto(i.image, 800),
+            image: absolute(laundryPhoto(i.image, 800)),
           },
           price: i.price,
           priceCurrency: "KES",
@@ -148,7 +151,7 @@ export function productJsonLd(p: PublicProduct) {
     url,
     description: shopMessages.productPage.description(p),
     category: categoryLabels[p.category],
-    ...(p.photos.length > 0 && { image: p.photos }),
+    ...(p.photos.length > 0 && { image: p.photos.map(absolute) }),
     offers: {
       "@type": "Offer",
       url,
