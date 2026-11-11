@@ -1,8 +1,8 @@
 # Roadmap — Street Mart Kenya
 
 Design goals: modern, minimal and clean; warm cream + bottle green + terracotta palette; Clash Display
-headings and Satoshi content; the public site stays static data; payment on delivery; a small
-staff-only admin backend on Neon and Cloudflare is being added.
+headings and Satoshi content; public pages stay static and client-loaded; payment on delivery; a
+small staff-only admin backend on Neon, live on Cloudflare Workers at streetmart.africa.
 
 ## Done
 
@@ -15,12 +15,17 @@ staff-only admin backend on Neon and Cloudflare is being added.
 - [x] About (/about), per-route metadata, sitemap and robots
 - [x] Header, phone action bar, footer with open-now status
 - [x] Unit tests (`pnpm test`) and Playwright checks at 320–1920px (`pnpm e2e`): no sideways scroll, per-device type scale, 44px targets, 16px fields, booking and shop flows end to end
+- [x] Staff admin (`/admin`) with Google sign-in (Neon Auth), owners and staff managed at `/admin/settings`
+- [x] Real shop stock: products with photos and thumbnails in Neon, sold-out items hidden, `/shop/[code]` pages
+- [x] Shop settings (delivery, phone, hours) and laundry items and prices edited in the admin
+- [x] Live on Cloudflare Workers via OpenNext, with rate limits and an admin runbook (`docs/admin.md`)
 
 ## Next
 
-- [ ] Admin sign-in for staff (Neon Auth, Google)
-- [ ] Real shop stock (replace the sample `products` in `src/features/shop/data.ts`), photos of actual pieces, marking sold mtumba
+- [ ] Cloudflare Rate Limiting binding in place of the in-memory store, and a WAF rule on `/api/*` and `/shop/*`
+- [ ] Cloudflare CDN in front of the Neon photo bucket
+- [ ] Own Google OAuth client for Neon Auth (production uses Neon's shared keys)
 
 ## Later
 
-- [ ] Backend for customers: real orders, order tracking, M-Pesa
+- [ ] Backend for customers: real orders, stock that goes down when something sells, order tracking, M-Pesa

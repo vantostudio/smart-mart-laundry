@@ -60,15 +60,10 @@ reach the others. So, when adding OpenNext:
       queue/self-reference bindings that revalidation needs. Check the OpenNext docs for the
       current names; they have changed between releases.
 - [ ] Confirm that this OpenNext version supports Next 16 `cacheComponents` and `use cache` with
-      `revalidateTag(tag, { expire: 0 })`. If it does not, or if, with the shared incremental
-      cache and tag cache in place, `/shop/<code>` still hangs or answers `500` where `next start`
-      doesn't, or any public page fails once the build is over an hour old (0001, "Hosting
-      findings", job 011), the fallback is to drop `use cache` for `unstable_cache` with the same
-      tags, or accept one indexed Neon query per request for these three reads. The pages still
-      work either way; only the speed and the freshness guarantee change.
-- [ ] Prove under `cf:preview` that the full Playwright suite passes against a build more than
-      one hour old (same build, `.open-next/` untouched since `cf:build`), not only right after
-      the build.
+      `revalidateTag(tag, { expire: 0 })`. If it does not, the fallback is to drop `use cache` for
+      `unstable_cache` with the same tags, or accept one indexed Neon query per request for these
+      three reads. The pages still work either way; only the speed and the freshness guarantee
+      change.
 - [ ] Prove it under `cf:preview`: save a setting and see the footer phone change on the next
       request; set a product's stock to 0 and see `/shop/<code>` return 404 and drop out of
       `/sitemap.xml` without a deploy.

@@ -59,8 +59,26 @@ Move `.env.local` aside while you build. Secrets go in `wrangler secret put <NAM
 Static files are served by Workers Static Assets without running the Worker, so their headers
 (the favicon's content type, long caching for `_next/static`) are set in `public/_headers`.
 
-`streetmart.africa` is attached to the `street-mart` Worker as a custom domain in the Cloudflare
-dashboard when the live deploy is switched over; `wrangler.jsonc` has no routes.
+Live since 2026-11-11 on `streetmart.africa` and `www.streetmart.africa` (custom domains in
+`wrangler.jsonc` `routes`; `workers.dev` is off). What the live Worker needs:
+
+- **Secrets** (Neon `main` branch, `neon env pull --branch main`): `DATABASE_URL`,
+  `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` (its own random value, not dev's),
+  `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`. Set each with
+  `pnpm exec wrangler secret put <NAME>`; they never go in the repo.
+- **Cache**: OpenNext's shared cache in KV (`NEXT_INC_CACHE_KV`) with tags in D1
+  (`NEXT_TAG_CACHE_D1`, database `street-mart-tag-cache`), so `use cache` entries and
+  `revalidateTag` work across instances. KV instead of R2 because R2 isn't enabled on the
+  account. `cf:deploy` creates the D1 table and fills KV.
+- **Cache Components on workerd**: `wrangler.jsonc` `main` is `cloudflare/worker.mjs`, which loads
+  `cloudflare/next-immediates.mjs` before Next so request-time renders don't hang; `next.config.ts`
+  sets `experimental.maxPostponedStateSize` to 25 MB (workerd caps zlib output); and
+  `patches/@opennextjs__cloudflare.patch` turns on esbuild `keepNames` so resumed pages match their
+  prerendered shell. Drop all three once the adapter ships the fix
+  (opennextjs/opennextjs-cloudflare#1318, #1349).
+- **Neon Auth** on `main` trusts `https://streetmart.africa` and `https://www.streetmart.africa`
+  (`neon neon-auth domain list --branch main`). Google sign-in uses Neon's shared keys for now.
+- **Size**: about 4.1 MiB gzip, so the account needs Workers Paid (Free allows 3 MiB).
 
 ## Where things live
 
@@ -77,6 +95,8 @@ build, preview and deploy it is in [Run on Cloudflare](#run-on-cloudflare-worker
 A private `/admin` area for staff is on its way: Neon Postgres for data and Neon Auth (Google
 sign-in only) for staff, with our own allowlist deciding who gets in. Why these:
 [`docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md`](docs/decisions/0001-neon-and-neon-auth-on-cloudflare.md).
+
+Running the admin day to day (staff, lockout, migrations, rollback, secrets, logs, Cloudflare rules): [`docs/admin.md`](docs/admin.md).
 
 Provisioning, done once by a person. The `db:*` and `cf:*` scripts exist.
 

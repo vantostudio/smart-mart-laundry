@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  experimental: {
+    // workerd caps zlib output at 128 MiB and Next inflates the postponed state with 5x this limit
+    // (default 100 MB), so resuming a partly prerendered page fails on Cloudflare without it.
+    maxPostponedStateSize: "25mb",
+  },
   partialPrefetching: true,
   typedRoutes: true,
   // Dev only: let phones and other machines on the network (and 127.0.0.1) load the dev scripts.

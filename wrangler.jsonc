@@ -4,7 +4,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "street-mart",
-  "main": ".open-next/worker.js",
+  // Loads the timer shim for Cache Components, then the OpenNext worker (`.open-next/worker.js`).
+  "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-11-02",
   // nodejs_compat: Next runs on the Node.js runtime. global_fetch_strictly_public: fetch() can't
   // reach the zone's origin or private addresses.
@@ -19,6 +20,26 @@
     {
       "binding": "WORKER_SELF_REFERENCE",
       "service": "street-mart",
+    },
+  ],
+  // The live domain. Cloudflare manages its DNS records and certificates.
+  "routes": [
+    { "pattern": "streetmart.africa", "custom_domain": true },
+    { "pattern": "www.streetmart.africa", "custom_domain": true },
+  ],
+  // OpenNext's shared cache (open-next.config.ts): pages and `use cache` entries in KV, tags in
+  // D1. Deploy creates the D1 table and fills KV.
+  "kv_namespaces": [
+    {
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "6269f408a92c453b8ce212d891e17ef3",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "street-mart-tag-cache",
+      "database_id": "6bb50c1c-2e94-47da-a916-7263b61108d1",
     },
   ],
   // console output goes to Workers Logs.
