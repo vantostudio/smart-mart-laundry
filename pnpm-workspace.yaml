@@ -5,3 +5,5 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - lucide-react@1.63.0
+patchedDependencies:
+  "@opennextjs/cloudflare": patches/@opennextjs__cloudflare.patch

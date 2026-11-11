@@ -1,0 +1,13 @@
+diff --git a/dist/cli/build/bundle-server.js b/dist/cli/build/bundle-server.js
+index 7420316008e9651c5a1e41d2edcc3d00b8d023f8..c7262cdcf8d0111f3c2e738bbf77cefeb97fa84b 100644
+--- a/dist/cli/build/bundle-server.js
++++ b/dist/cli/build/bundle-server.js
+@@ -83,6 +83,8 @@ export async function bundleServer(buildOpts, projectOpts) {
+         // Minify code as much as possible but stay safe by not renaming identifiers
+         minifyWhitespace: projectOpts.minify && !debug,
+         minifyIdentifiers: false,
++        // Keep function names: React matches the postponed state from `next build` by component name.
++        keepNames: true,
+         minifySyntax: projectOpts.minify && !debug,
+         legalComments: "none",
+         metafile: true,

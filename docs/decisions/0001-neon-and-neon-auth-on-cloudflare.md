@@ -314,6 +314,25 @@ Other choices:
     a request over the cap fails.
   - Confirm with the CPU time in Workers Logs after the first preview deploy.
 
+## Live deploy (2026-11-11)
+
+The Worker went live on `streetmart.africa`. Deploying it settled the `cacheComponents` gap above:
+
+- With the shared cache in place (KV incremental cache, D1 tag cache, memory queue), `/shop/<code>`
+  still hung, including `/shop/not-a-code`, which reads no cache. So the hang came from workerd,
+  not the cache: Next's fast-`setImmediate` patch waits for `process.nextTick`, which workerd runs
+  as an ordinary microtask, so a request-time render stops waiting too early and never finishes.
+  Fixed by seeding Next's timer registry before Next loads (`cloudflare/next-immediates.mjs`,
+  loaded by `cloudflare/worker.mjs`), as in opennextjs/opennextjs-cloudflare#1318.
+- React's "Expected the resume to render <io>" comes from OpenNext re-bundling without esbuild
+  `keepNames`; fixed with `patches/@opennextjs__cloudflare.patch`. Resuming also needs
+  `experimental.maxPostponedStateSize` at 25 MB, since workerd refuses Next's default inflate
+  limit (#1349).
+- Result on the live domain: every public page 200, `/shop/SM-1003` 200, `/shop/not-a-code` 404,
+  `/admin` 307 to sign-in. The 0002 fallback (dropping `use cache`) wasn't needed.
+- Known risk left: #1464, a hang when concurrent requests share one pending `use cache` write.
+  Watch Workers Logs for "had hung" and revisit when the adapter ships #1318.
+
 ## Open, filled in by later slices
 
 - Neon Auth's trusted-origin check behind Cloudflare: sign in on the preview Worker (job 010 and
