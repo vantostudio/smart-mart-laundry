@@ -13,9 +13,12 @@ export type PublicProduct = {
   /** Empty for one-size items. */
   sizes: string[];
   stock: number;
-  /** Public addresses, first one is the main photo. Can be empty. */
+  /** Public addresses (an https URL or a same-site path), first one is the main photo. Can be empty. */
   photos: string[];
-  /** A small copy of the first photo, or null. Photos from before thumbnails have none to find. */
+  /**
+   * The address (an https URL or a same-site path) of a small copy of the first photo, or null.
+   * Photos from before thumbnails have none to find.
+   */
   thumbnail: string | null;
   note: string | null;
 };
