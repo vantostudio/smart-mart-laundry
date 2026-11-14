@@ -331,6 +331,12 @@ The Worker went live on `streetmart.africa`. Deploying it settled the `cacheComp
 - Result on the live domain: every public page 200, `/shop/SM-1003` 200, `/shop/not-a-code` 404,
   `/admin` 307 to sign-in. The 0002 fallback (dropping `use cache`) wasn't needed.
 - Known risk left: #1464, a hang when concurrent requests share one pending `use cache` write.
+- 2026-11-14: the timer shim also made Next's HTML stream stop waiting between chunks
+  (`atLeastOneTask` and `scheduleImmediate` use `setImmediate`), so every page the Worker
+  re-rendered got a `<script>` spliced into a tag. `cloudflare/patch-stream-scheduler.mjs` makes
+  those two wait with `setTimeout(cb, 0)` in the built Worker, as Next does on edge. The same day,
+  shared `use cache` promises failing across requests took every page down;
+  `no_handle_cross_request_promise_resolution` in `wrangler.jsonc` lets them settle.
   Watch Workers Logs for "had hung" and revisit when the adapter ships #1318.
 
 ## Open, filled in by later slices

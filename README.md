@@ -85,10 +85,13 @@ Live since 2026-11-11 on `streetmart.africa` and `www.streetmart.africa` (custom
   default, a shared promise that outlived its request failed every later request and took every
   page down (2026-11-14). Keep it until Next or OpenNext stops sharing those promises.
 - **Cache Components on workerd**: `wrangler.jsonc` `main` is `cloudflare/worker.mjs`, which loads
-  `cloudflare/next-immediates.mjs` before Next so request-time renders don't hang; `next.config.ts`
-  sets `experimental.maxPostponedStateSize` to 25 MB (workerd caps zlib output); and
+  `cloudflare/next-immediates.mjs` before Next so request-time renders don't hang;
+  `cloudflare/patch-stream-scheduler.mjs`, the last step of `cf:build`, keeps Next's HTML stream
+  waiting a real task despite that shim, or re-rendered pages get a `<script>` spliced into a tag
+  (class names shown as text, pages wider than the screen); `next.config.ts` sets
+  `experimental.maxPostponedStateSize` to 25 MB (workerd caps zlib output); and
   `patches/@opennextjs__cloudflare.patch` turns on esbuild `keepNames` so resumed pages match their
-  prerendered shell. Drop all three once the adapter ships the fix
+  prerendered shell. Drop all four once the adapter ships the fix
   (opennextjs/opennextjs-cloudflare#1318, #1349).
 - **Neon Auth** on `main` trusts `https://streetmart.africa` and `https://www.streetmart.africa`
   (`neon neon-auth domain list --branch main`). Google sign-in uses Neon's shared keys for now.

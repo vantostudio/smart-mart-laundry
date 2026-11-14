@@ -15,7 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed-owner": "tsx --env-file-if-exists=.env.local scripts/seed-owner.ts",
-    "cf:build": "node scripts/check-no-env-files.mjs && opennextjs-cloudflare build",
+    "cf:build": "node scripts/check-no-env-files.mjs && opennextjs-cloudflare build && node cloudflare/patch-stream-scheduler.mjs",
     "cf:preview": "opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare deploy"
   },
