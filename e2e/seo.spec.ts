@@ -83,3 +83,10 @@ test("the first HTML already holds the shop's phone and hours, with no request f
   await expect(page.locator("footer").getByRole("link", { name: /^Call/ })).toBeVisible();
   expect(asked).not.toContain("/api/settings");
 });
+
+test("the footer links staff to the admin without inviting crawlers", async ({ page }) => {
+  await page.goto("/");
+  const staff = page.locator("footer").getByRole("link", { name: "Staff sign in" });
+  await expect(staff).toHaveAttribute("href", "/admin");
+  await expect(staff).toHaveAttribute("rel", "nofollow");
+});

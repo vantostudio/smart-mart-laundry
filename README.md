@@ -121,11 +121,11 @@ Provisioning, done once by a person. The `db:*` and `cf:*` scripts exist.
    one we generate, not Neon: `openssl rand -base64 32`, a different value per environment. Copy
    the dev values into `.dev.vars` for local preview. Switch the live deploy to `pnpm cf:deploy`,
    or to Workers Builds on the repo with the same command.
-   Rate limiting: the API counts requests in each Worker instance's memory
-   (`src/lib/rate-limit.ts`), so every instance has its own count. That is a basic guard only. At
-   this step add a Cloudflare Rate Limiting binding named `API_RATE_LIMIT` in `wrangler.jsonc`
-   (`ratelimits`), implement `RateLimitStore` over it and pass it to `setRateLimitStore`; no route
-   changes. Also add a Cloudflare WAF rate-limiting rule on `/api/*` and `/shop/*` in front of the Worker. `/shop/<code>` pages read the database without going through the limiter.
+   Rate limiting: on the Worker the API counts through Cloudflare Rate Limiting bindings, one per
+   group (`ratelimits` in `wrangler.jsonc`, the numbers from the table in `src/lib/rate-limit.ts`;
+   a test checks they match). Under `next dev`, in tests, or if a binding fails, it counts in
+   memory instead. Also add a Cloudflare WAF rate-limiting rule on `/api/*` and `/shop/*` in front of the Worker
+   ([admin runbook, section 10](docs/admin.md#10-rate-limiting)). `/shop/<code>` pages read the database without going through the limiter.
 5. After slice `db`: from a dev machine with the direct Neon URL, run `pnpm db:migrate` against
    `dev`, then `production`. Then run `pnpm db:seed-owner <owner-email>` on each.
 6. After slice `admin-shell`: sign in on the preview Worker, then production. Landing on `/admin`

@@ -100,7 +100,16 @@ export function SiteFooter() {
       <div className="border-t border-border py-4">
         <Container className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-caption text-muted-foreground">
           <p>
-            © {copyrightYear} {site.name}
+            © {copyrightYear} {site.name} ·{" "}
+            {/* For staff; the admin checks access itself and is noindex. */}
+            <Link
+              href="/admin"
+              prefetch={false}
+              rel="nofollow"
+              className="transition-colors hover:text-clay"
+            >
+              Staff sign in
+            </Link>
           </p>
           <p>
             Pay on delivery ·{" "}

@@ -282,10 +282,13 @@ This rule is a backup. The app's own headers are the main guard: admin API respo
 
 ## 10. Rate limiting
 
-**In the app.** Every API request is counted in the Worker's memory (`src/lib/rate-limit.ts`, the
-limits table at its top). Each Worker instance counts on its own, so it is a basic guard only. The
-fix is a Cloudflare Rate Limiting binding named `API_RATE_LIMIT`, passed to `setRateLimitStore`;
-see README step 4 in [Admin, database and hosting](../README.md#admin-database-and-hosting).
+**In the app.** Every API request is counted by a Cloudflare Rate Limiting binding, one per group
+(`ratelimits` in `wrangler.jsonc`; the limits table at the top of `src/lib/rate-limit.ts` is the
+source, and its test fails if the two differ). Cloudflare counts per location and lets a few
+requests through while counts sync, so the limits are approximate. To change a limit, edit both
+and deploy. If a binding is missing or fails, the Worker counts in its own memory instead, so the
+API never goes down because of the limiter. Over the limit, the API answers 429 with
+`Retry-After` and logs `rate_limited`.
 
 **WAF rule from the README.** A Cloudflare WAF rate-limiting rule on `/api/*` and `/shop/*`, per IP,
 in front of the Worker. `/shop/<code>` pages read the database without going through the app's

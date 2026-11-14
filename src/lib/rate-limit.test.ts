@@ -1,8 +1,19 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it, vi } from "vite-plus/test";
+
+import type { RateLimitBinding, RateLimitStore } from "./rate-limit";
 
 vi.mock("server-only", () => ({}));
 
-const { clientIdFrom, createMemoryStore, limits } = await import("./rate-limit");
+const { bindingNames, clientIdFrom, createBindingStore, createMemoryStore, limits } =
+  await import("./rate-limit");
+
+type RateLimitConfig = {
+  name: string;
+  namespace_id: string;
+  simple: { limit: number; period: number };
+};
 
 function clock(start = 1_000_000) {
   let t = start;
@@ -49,6 +60,60 @@ describe("memory store", () => {
     // Full of live entries: the oldest ("b", with its count) is dropped, so it starts fresh.
     await store.hit("e", "write");
     expect((await store.hit("b", "write")).allowed).toBe(true);
+  });
+});
+
+describe("binding store", () => {
+  type Limit = RateLimitBinding["limit"];
+  const binding = (success: boolean) => ({ limit: vi.fn<Limit>(async () => ({ success })) });
+  const memory = () => ({
+    hit: vi.fn<RateLimitStore["hit"]>(async () => ({ allowed: true })),
+  });
+
+  it("asks the group's binding, keyed by client", async () => {
+    const write = binding(true);
+    const fallback = memory();
+    const store = createBindingStore(() => ({ RATE_LIMIT_WRITE: write }), fallback);
+    expect(await store.hit("ip:1.1.1.1", "write")).toEqual({ allowed: true });
+    expect(write.limit).toHaveBeenCalledWith({ key: "ip:1.1.1.1" });
+    expect(fallback.hit).not.toHaveBeenCalled();
+  });
+
+  it("refuses with the whole window as Retry-After", async () => {
+    const store = createBindingStore(() => ({ RATE_LIMIT_UPLOAD: binding(false) }), memory());
+    expect(await store.hit("a", "upload")).toEqual({ allowed: false, retryAfterSeconds: 60 });
+  });
+
+  it("falls back when there are no bindings, the group's is missing, or it throws", async () => {
+    const fallback = memory();
+    const broken = { limit: vi.fn<Limit>(async () => Promise.reject(new Error("down"))) };
+    await createBindingStore(() => undefined, fallback).hit("a", "read");
+    await createBindingStore(() => ({ RATE_LIMIT_WRITE: binding(true) }), fallback).hit(
+      "a",
+      "read",
+    );
+    await createBindingStore(() => ({ RATE_LIMIT_READ: broken }), fallback).hit("a", "read");
+    expect(fallback.hit).toHaveBeenCalledTimes(3);
+  });
+
+  it("is declared in wrangler.jsonc with the limits table's numbers, in every environment", () => {
+    const jsonc = readFileSync("wrangler.jsonc", "utf8")
+      .replace(/^\s*\/\/.*$/gm, "")
+      .replace(/,(\s*[}\]])/g, "$1");
+    const config = JSON.parse(jsonc) as {
+      ratelimits: RateLimitConfig[];
+      env: Record<string, { ratelimits: RateLimitConfig[] }>;
+    };
+    const expected = Object.entries(limits).map(([group, { max, windowMs }]) => ({
+      name: bindingNames[group as keyof typeof limits],
+      simple: { limit: max, period: windowMs / 1000 },
+    }));
+    const environments = [config.ratelimits, ...Object.values(config.env).map((e) => e.ratelimits)];
+    const ids = environments.flat().map((r) => r.namespace_id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const ratelimits of environments) {
+      expect(ratelimits.map(({ name, simple }) => ({ name, simple }))).toEqual(expected);
+    }
   });
 });
 

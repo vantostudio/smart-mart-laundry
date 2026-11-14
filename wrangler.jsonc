@@ -42,19 +42,69 @@
       "database_id": "6bb50c1c-2e94-47da-a916-7263b61108d1",
     },
   ],
+  // The API's rate limits, one binding per group in src/lib/rate-limit.ts (its `limits` table is
+  // the source and its test checks these match). Counted per Cloudflare location. A namespace_id
+  // is the counter's account-wide identity: never reuse one for a different limit.
+  "ratelimits": [
+    { "name": "RATE_LIMIT_READ", "namespace_id": "1001", "simple": { "limit": 180, "period": 60 } },
+    {
+      "name": "RATE_LIMIT_ADMIN_GATE",
+      "namespace_id": "1002",
+      "simple": { "limit": 360, "period": 60 },
+    },
+    {
+      "name": "RATE_LIMIT_ADMIN_READ",
+      "namespace_id": "1003",
+      "simple": { "limit": 180, "period": 60 },
+    },
+    { "name": "RATE_LIMIT_WRITE", "namespace_id": "1004", "simple": { "limit": 90, "period": 60 } },
+    {
+      "name": "RATE_LIMIT_UPLOAD",
+      "namespace_id": "1005",
+      "simple": { "limit": 60, "period": 60 },
+    },
+  ],
   // console output goes to Workers Logs.
   "observability": {
     "enabled": true,
   },
   "env": {
-    // `pnpm cf:deploy --env preview`: its own workers.dev URL. Services and observability aren't
-    // inherited, so they are repeated here.
+    // `pnpm cf:deploy --env preview`: its own workers.dev URL. Services, rate limits and
+    // observability aren't inherited, so they are repeated here (rate limits with their own
+    // counters).
     "preview": {
       "name": "street-mart-preview",
       "services": [
         {
           "binding": "WORKER_SELF_REFERENCE",
           "service": "street-mart-preview",
+        },
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMIT_READ",
+          "namespace_id": "2001",
+          "simple": { "limit": 180, "period": 60 },
+        },
+        {
+          "name": "RATE_LIMIT_ADMIN_GATE",
+          "namespace_id": "2002",
+          "simple": { "limit": 360, "period": 60 },
+        },
+        {
+          "name": "RATE_LIMIT_ADMIN_READ",
+          "namespace_id": "2003",
+          "simple": { "limit": 180, "period": 60 },
+        },
+        {
+          "name": "RATE_LIMIT_WRITE",
+          "namespace_id": "2004",
+          "simple": { "limit": 90, "period": 60 },
+        },
+        {
+          "name": "RATE_LIMIT_UPLOAD",
+          "namespace_id": "2005",
+          "simple": { "limit": 60, "period": 60 },
         },
       ],
       "observability": {
