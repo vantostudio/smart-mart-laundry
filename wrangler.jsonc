@@ -8,8 +8,16 @@
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-11-02",
   // nodejs_compat: Next runs on the Node.js runtime. global_fetch_strictly_public: fetch() can't
-  // reach the zone's origin or private addresses.
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // reach the zone's origin or private addresses. no_handle_cross_request_promise_resolution: Next
+  // shares in-flight `use cache` fills and revalidations between requests through module-scope
+  // promises; with workerd's default, one that outlives its request fails every request waiting on
+  // it ("This promise was created by a request that has since ended"), which took every page down
+  // on 2026-11-14. Keep it until Next stops sharing them or OpenNext handles it.
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public",
+    "no_handle_cross_request_promise_resolution",
+  ],
   // Prerendered pages and _next/static are served from Workers Static Assets.
   "assets": {
     "directory": ".open-next/assets",
@@ -69,15 +77,32 @@
     "enabled": true,
   },
   "env": {
-    // `pnpm cf:deploy --env preview`: its own workers.dev URL. Services, rate limits and
-    // observability aren't inherited, so they are repeated here (rate limits with their own
-    // counters).
+    // `pnpm cf:deploy --env preview`: the development environment, on the Neon `dev` branch and its
+    // own workers.dev URL. Services, cache bindings, rate limits and observability aren't
+    // inherited, so they are repeated here, each with its own resource or counters.
     "preview": {
       "name": "street-mart-preview",
+      // `routes` IS inherited: without this empty list a preview deploy takes the live domains.
+      "routes": [],
+      "workers_dev": true,
+      "preview_urls": false,
       "services": [
         {
           "binding": "WORKER_SELF_REFERENCE",
           "service": "street-mart-preview",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "NEXT_INC_CACHE_KV",
+          "id": "5f175653528f4f6c9a7daf3b55304738",
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "NEXT_TAG_CACHE_D1",
+          "database_name": "street-mart-preview-tag-cache",
+          "database_id": "f16a2068-489e-4c14-8547-18d07e9799a1",
         },
       ],
       "ratelimits": [

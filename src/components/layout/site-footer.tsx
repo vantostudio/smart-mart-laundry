@@ -1,4 +1,4 @@
-import { ChevronRight, MapPin, MessageCircle, Phone } from "lucide-react";
+import { ChevronRight, LockKeyhole, MapPin, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
 
 import { HoursSummary, PhoneLink, PhoneNumber, WhatsAppLink } from "@/components/shared/contact";
@@ -98,25 +98,25 @@ export function SiteFooter() {
       </Container>
 
       <div className="border-t border-border py-4">
-        <Container className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-caption text-muted-foreground">
-          <p>
-            © {copyrightYear} {site.name} ·{" "}
-            {/* For staff; the admin checks access itself and is noindex. */}
-            <Link
-              href="/admin"
-              prefetch={false}
-              rel="nofollow"
-              className="transition-colors hover:text-clay"
-            >
+        <Container className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-caption text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p>
+              © {copyrightYear} {site.name}
+            </p>
+            <p>
+              Pay on delivery ·{" "}
+              <PhoneLink showsNumber className="font-mono transition-colors hover:text-clay">
+                <PhoneNumber />
+              </PhoneLink>
+            </p>
+          </div>
+          {/* For staff: the admin checks access itself and is noindex, so crawlers aren't sent there. */}
+          <Button asChild variant="outline-inverse" size="sm" className="h-11 lg:h-9">
+            <Link href="/admin" prefetch={false} rel="nofollow">
+              <LockKeyhole aria-hidden />
               Staff sign in
             </Link>
-          </p>
-          <p>
-            Pay on delivery ·{" "}
-            <PhoneLink showsNumber className="font-mono transition-colors hover:text-clay">
-              <PhoneNumber />
-            </PhoneLink>
-          </p>
+          </Button>
         </Container>
       </div>
     </footer>

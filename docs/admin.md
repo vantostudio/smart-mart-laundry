@@ -185,6 +185,13 @@ pnpm cf:deploy                  # add --env preview for the preview Worker
 
 A Worker rollback doesn't undo a database migration, or the cache data in KV and D1.
 
+**Every page answers 500.** Run `pnpm exec wrangler tail street-mart --format pretty` and load a
+page. If the error is "This promise was created by a request that has since ended", check that
+`no_handle_cross_request_promise_resolution` is still in `compatibility_flags` in `wrangler.jsonc`
+(README, Run on Cloudflare), then roll back. If the live domains serve the preview (dev data on
+streetmart.africa), a preview deploy took them: `pnpm exec wrangler triggers deploy` gives them
+back to production.
+
 ## 7. Rotating secrets
 
 For each secret: get the new value, put it in Wrangler, redeploy, check, then update your local

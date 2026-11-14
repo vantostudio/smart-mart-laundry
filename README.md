@@ -45,10 +45,17 @@ E2E_BASE_URL=http://localhost:8787 pnpm e2e   # browser checks against the previ
 Deploying needs `pnpm exec wrangler login` first:
 
 ```sh
+pnpm cf:deploy --env preview    # the development environment: deploy and check here first
 pnpm cf:deploy                  # the `street-mart` Worker (production)
-pnpm cf:deploy --env preview    # the `street-mart-preview` Worker, on its own workers.dev URL
 pnpm exec wrangler rollback     # back to the previous deployed version
 ```
+
+The preview Worker, https://street-mart-preview.smart-mart-laundry.workers.dev, is the development
+environment: the Neon `dev` branch, its own KV, D1 and rate limit counters, and secrets set with
+`--env preview`. Deploy there first and only promote to production once it works. Never load-test
+production. Wrangler inherits `routes` into named environments, so `env.preview` keeps
+`"routes": []`; without it a preview deploy takes the live domains (`src/wrangler-config.test.ts`
+guards it). If that ever happens, `pnpm exec wrangler triggers deploy` gives them back.
 
 `pnpm cf:build` stops before building when the repo root holds any `.env*` file other than
 `.env.example` (`scripts/check-no-env-files.mjs`), because OpenNext copies `.env` values into the
@@ -73,6 +80,10 @@ Live since 2026-11-11 on `streetmart.africa` and `www.streetmart.africa` (custom
   (`NEXT_TAG_CACHE_D1`, database `street-mart-tag-cache`), so `use cache` entries and
   `revalidateTag` work across instances. KV instead of R2 because R2 isn't enabled on the
   account. `cf:deploy` creates the D1 table and fills KV.
+- **Cross-request promises**: `no_handle_cross_request_promise_resolution` in
+  `compatibility_flags`. Next shares in-flight `use cache` work between requests; under workerd's
+  default, a shared promise that outlived its request failed every later request and took every
+  page down (2026-11-14). Keep it until Next or OpenNext stops sharing those promises.
 - **Cache Components on workerd**: `wrangler.jsonc` `main` is `cloudflare/worker.mjs`, which loads
   `cloudflare/next-immediates.mjs` before Next so request-time renders don't hang; `next.config.ts`
   sets `experimental.maxPostponedStateSize` to 25 MB (workerd caps zlib output); and

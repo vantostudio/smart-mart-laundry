@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
-
 import { describe, expect, it, vi } from "vite-plus/test";
+
+import { readWranglerConfig } from "@/test/wrangler-config";
 
 import type { RateLimitBinding, RateLimitStore } from "./rate-limit";
 
@@ -8,12 +8,6 @@ vi.mock("server-only", () => ({}));
 
 const { bindingNames, clientIdFrom, createBindingStore, createMemoryStore, limits } =
   await import("./rate-limit");
-
-type RateLimitConfig = {
-  name: string;
-  namespace_id: string;
-  simple: { limit: number; period: number };
-};
 
 function clock(start = 1_000_000) {
   let t = start;
@@ -97,18 +91,12 @@ describe("binding store", () => {
   });
 
   it("is declared in wrangler.jsonc with the limits table's numbers, in every environment", () => {
-    const jsonc = readFileSync("wrangler.jsonc", "utf8")
-      .replace(/^\s*\/\/.*$/gm, "")
-      .replace(/,(\s*[}\]])/g, "$1");
-    const config = JSON.parse(jsonc) as {
-      ratelimits: RateLimitConfig[];
-      env: Record<string, { ratelimits: RateLimitConfig[] }>;
-    };
+    const config = readWranglerConfig();
     const expected = Object.entries(limits).map(([group, { max, windowMs }]) => ({
       name: bindingNames[group as keyof typeof limits],
       simple: { limit: max, period: windowMs / 1000 },
     }));
-    const environments = [config.ratelimits, ...Object.values(config.env).map((e) => e.ratelimits)];
+    const environments = [config, ...Object.values(config.env)].map((e) => e.ratelimits ?? []);
     const ids = environments.flat().map((r) => r.namespace_id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const ratelimits of environments) {
